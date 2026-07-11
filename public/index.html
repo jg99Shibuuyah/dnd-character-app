@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Ledger</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+:root{
+  --void:#0a0a0f;
+  --void-2:#0d0d14;
+  --void-3:#111122;
+  --neon-cyan:#00ffd5;
+  --neon-magenta:#ff2a6d;
+  --neon-green:#05ffa1;
+  --neon-yellow:#f9f525;
+  --dark-panel: rgba(13,13,20,0.85);
+  --ink:#c8c8d4;
+  --ink-dim: rgba(200,200,212,0.5);
+  --border-glow: rgba(0,255,213,0.35);
+  --glow-cyan: 0 0 8px rgba(0,255,213,0.45), 0 0 24px rgba(0,255,213,0.15);
+  --glow-magenta: 0 0 8px rgba(255,42,109,0.45), 0 0 24px rgba(255,42,109,0.15);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse at 20% 0%, var(--void-3) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, var(--void-3) 0%, transparent 55%),
+    var(--void);
+  font-family:'EB Garamond', serif;
+  color: var(--ink);
+  padding: 28px 16px 60px;
+  min-height:100vh;
+}
+
+.sheet{
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------- Header ---------- */
+.hero{
+  background:
+    linear-gradient(180deg, var(--parchment) 0%, var(--parchment-2) 100%);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 22px 28px;
+  position: relative;
+  border: 1px solid rgba(0,0,0,0.15);
+  display:grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 22px;
+  align-items:center;
+}
+.hero::before{
+  content:"";
+  position:absolute; inset:6px;
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  pointer-events:none;
+  opacity:0.55;
+}
+.seal{
+  width: 84px; height:84px; border-radius:50%;
+  background: radial-gradient(circle at 35% 30%, var(--crimson-bright), var(--crimson) 60%, #5e1520 100%);
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column;
+  color: var(--parchment);
+  font-family:'Cinzel', serif;
+  box-shadow: inset 0 2px 6px rgba(255,255,255,0.25), inset 0 -4px 10px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.4);
+  border: 2px solid #3d0f16;
+  flex-shrink:0;
+}
+.seal .lvl-num{ font-size:26px; font-weight:700; line-height:1;}
+.seal .lvl-label{ font-size:9px; letter-spacing:2px; text-transform:uppercase; opacity:0.85; margin-top:2px;}
+
+.hero-name{
+  font-family:'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 34px;
+  font-weight:700;
+  color: var(--ink);
+  background: transparent;
+  border:none;
+  border-bottom: 1px dashed var(--parchment-line);
+  width:100%;
+  padding: 2px 0;
+}
+.hero-sub{
+  display:flex; flex-wrap:wrap; gap: 14px; margin-top:10px;
+}
+.hero-sub .field{ display:flex; flex-direction:column; min-width:110px;}
+.hero-sub label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:2px;}
+.hero-sub input{
+  font-family:'EB Garamond', serif; font-size:16px; font-style:italic;
+  background:transparent; border:none; border-bottom:1px solid var(--parchment-line); color:var(--ink); padding:2px 0;
+}
+.xp-block{ text-align:right; }
+.xp-block label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
+.xp-block input{ width:100px; text-align:right; font-family:'JetBrains Mono', monospace; font-size:18px; background:transparent; border:none; border-bottom:1px solid var(--parchment-line); color:var(--ink);}
+
+/* ---------- Layout ---------- */
+.grid{
+  display:grid;
+  grid-template-columns: 250px 1fr 300px;
+  gap: 18px;
+  margin-top: 18px;
+}
+@media (max-width: 980px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.panel{
+  background: linear-gradient(180deg, var(--parchment) 0%, var(--parchment-2) 100%);
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.15);
+  box-shadow: var(--shadow);
+  padding: 16px 18px 18px;
+  margin-bottom: 18px;
+  position:relative;
+}
+.panel h2{
+  font-family:'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--crimson);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--parchment-line);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel h2 .rune{ color:var(--gold); font-size:15px; }
+
+/* ---------- Ability scores ---------- */
+.ability{
+  display:grid;
+  grid-template-columns: 34px 1fr 50px;
+  align-items:center;
+  gap:10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--parchment-line);
+}
+.ability:last-child{ border-bottom:none; }
+.ability .abbr{
+  font-family:'Cinzel',serif; font-weight:700; font-size:13px; color:var(--ink-soft);
+}
+.ability .mod-badge{
+  width:46px;height:46px;border-radius:50%;
+  border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono', monospace; font-weight:600; font-size:18px;
+  background: rgba(255,255,255,0.3);
+  justify-self:center;
+}
+.ability .score-input{
+  width:50px; text-align:center;
+  font-family:'JetBrains Mono', monospace; font-size:16px;
+  border: 1px solid var(--parchment-line); border-radius:3px;
+  background: rgba(255,255,255,0.4); color:var(--ink);
+  padding:4px 0;
+  justify-self:end;
+}
+
+.mini-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:5px 0; border-bottom: 1px dashed var(--parchment-line);
+  font-size:14px;
+}
+.mini-row:last-child{border-bottom:none;}
+.mini-row .val{ font-family:'JetBrains Mono', monospace; font-weight:600; }
+.mini-row label{ display:flex; align-items:center; gap:8px;}
+
+/* Saves & Skills */
+.check-row{
+  display:flex; align-items:center; gap:8px; padding:4px 0; font-size:14px;
+}
+.check-row input[type=checkbox]{ accent-color: var(--crimson); width:14px;height:14px; }
+.check-row .bonus{ font-family:'JetBrains Mono', monospace; font-weight:600; width:30px; text-align:right;}
+.check-row .name{ flex:1; }
+.check-row .abbr-tag{ font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1px; width:26px;}
+
+/* ---------- Combat stat blocks ---------- */
+.stat-strip{
+  display:grid; grid-template-columns: repeat(3,1fr); gap:12px; margin-bottom:14px;
+}
+.stat-box{
+  text-align:center; background: rgba(255,255,255,0.35);
+  border:1px solid var(--parchment-line); border-radius:4px; padding:10px 4px;
+}
+.stat-box label{ font-family:'Cinzel',serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
+.stat-box input{
+  width:100%; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:600; font-size:22px;
+  background:transparent; border:none; color:var(--ink);
+}
+.stat-box .computed{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:22px; }
+
+.hp-row{ display:flex; gap:10px; align-items:center; margin-bottom:10px;}
+.hp-field{ flex:1; text-align:center; }
+.hp-field label{ font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:3px;}
+.hp-field input{ width:100%; text-align:center; font-family:'JetBrains Mono',monospace; font-size:20px; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); padding:5px 0; color:var(--ink);}
+.hp-field.current input{ color:var(--crimson); font-weight:700; }
+
+.death-saves{ display:flex; justify-content:space-between; margin-top:6px; font-size:12px;}
+.death-saves .grp{ display:flex; gap:6px; align-items:center;}
+.death-saves .pip{ width:13px;height:13px;border-radius:50%; border:1.5px solid var(--ink-soft); cursor:pointer; }
+.death-saves .pip.success.filled{ background:var(--green); border-color:var(--green);}
+.death-saves .pip.fail.filled{ background:var(--crimson); border-color:var(--crimson);}
+
+/* Attacks table */
+table.attacks{ width:100%; border-collapse:collapse; font-size:13px;}
+table.attacks th{ font-family:'Cinzel',serif; font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); text-align:left; padding:4px 4px; border-bottom:1px solid var(--parchment-line);}
+table.attacks td{ padding:3px 4px; border-bottom: 1px dashed var(--parchment-line);}
+table.attacks input{ width:100%; background:transparent; border:none; font-family:'EB Garamond',serif; font-size:14px; color:var(--ink);}
+table.attacks input.narrow{ text-align:center; font-family:'JetBrains Mono',monospace;}
+.row-del{ cursor:pointer; color:var(--crimson); font-weight:700; }
+
+.add-btn{
+  font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  background: var(--crimson); color: var(--parchment); border:none; border-radius:3px;
+  padding:6px 12px; cursor:pointer; margin-top:8px;
+}
+.add-btn:hover{ background: var(--crimson-bright); }
+
+textarea.trait{
+  width:100%; min-height:60px; resize:vertical;
+  font-family:'EB Garamond', serif; font-style:italic; font-size:14px;
+  background: rgba(255,255,255,0.35); border:1px solid var(--parchment-line); border-radius:3px;
+  padding:8px; color:var(--ink);
+}
+
+/* Inventory */
+.inv-row{ display:flex; gap:6px; align-items:center; padding:3px 0; border-bottom:1px dashed var(--parchment-line);}
+.inv-row input.item-name{ flex:1; background:transparent; border:none; font-size:14px; color:var(--ink);}
+.inv-row input.item-qty{ width:36px; text-align:center; background:transparent; border:none; font-family:'JetBrains Mono',monospace; color:var(--ink);}
+.currency{ display:grid; grid-template-columns: repeat(5,1fr); gap:6px; margin-bottom:10px;}
+.currency .c{ text-align:center; }
+.currency label{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; color:var(--gold); display:block;}
+.currency input{ width:100%; text-align:center; font-family:'JetBrains Mono',monospace; background: rgba(255,255,255,0.35); border:1px solid var(--parchment-line); border-radius:3px; padding:3px 0; color:var(--ink);}
+
+/* Spell slots */
+.slot-level{ display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px;}
+.slot-level .lv{ font-family:'Cinzel',serif; width:52px; color:var(--ink-soft); font-size:11px; letter-spacing:1px;}
+.slot-level input.total{ width:32px; text-align:center; font-family:'JetBrains Mono',monospace; border:1px solid var(--parchment-line); border-radius:3px; background:rgba(255,255,255,0.4); color:var(--ink);}
+.slot-pips{ display:flex; gap:4px; flex-wrap:wrap; }
+.slot-pip{ width:15px;height:15px;border-radius:50%; border:1.5px solid var(--gold); cursor:pointer; }
+.slot-pip.filled{ background:var(--gold); }
+
+.spell-lib-controls{ display:flex; gap:8px; margin-bottom:10px; }
+.spell-lib-controls select, .spell-lib-controls input{
+  font-family:'EB Garamond', serif; font-size:13px; padding:5px 6px;
+  border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); color:var(--ink);
+}
+.spell-lib-controls select{ flex:0 0 140px; }
+.spell-lib-controls input{ flex:1; }
+.spell-lib-list{ max-height: 260px; overflow-y:auto; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.25); padding:4px 6px; }
+.spell-lib-group-label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin:8px 0 3px; }
+.spell-lib-item{ display:flex; justify-content:space-between; align-items:center; padding:3px 2px; font-size:13px; border-bottom:1px dashed var(--parchment-line); }
+.spell-lib-item .spell-add-btn{ cursor:pointer; color:var(--crimson); font-weight:700; font-family:'Cinzel',serif; font-size:12px; padding:0 4px; }
+.spell-lib-item .spell-add-btn.added{ color: var(--ink-soft); cursor:default; }
+.spell-lib-empty{ font-style:italic; color:var(--ink-soft); font-size:13px; padding:6px 2px; }
+.custom-spell-row{ display:flex; gap:6px; margin-top:10px; align-items:center; }
+.custom-spell-row input{ font-family:'EB Garamond',serif; font-size:13px; padding:5px 6px; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); color:var(--ink); }
+.custom-spell-row input:first-child{ flex:1; }
+.custom-spell-row input.lv-input{ width:44px; text-align:center; }
+.custom-spell-row .add-btn{ margin-top:0; white-space:nowrap; }
+.known-spell-group-label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--crimson); margin:8px 0 3px; }
+.known-spell-item{ display:flex; justify-content:space-between; align-items:center; padding:3px 2px; font-size:13px; border-bottom:1px dashed var(--parchment-line); }
+.known-spell-item .spell-remove{ cursor:pointer; color:var(--ink-soft); font-weight:700; }
+.known-spell-item .custom-tag{ font-size:9px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-left:6px; }
+
+.footer-note{
+  text-align:center; color: var(--parchment-2); font-family:'EB Garamond',serif; font-style:italic;
+  font-size:12px; margin-top:6px; opacity:0.7;
+}
+
+.profile-bar{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  background: var(--void-3); border:1px solid rgba(201,162,39,0.3); border-radius:4px;
+  padding:10px 16px; margin-bottom:16px;
+}
+.profile-bar label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); }
+.profile-bar select{
+  font-family:'EB Garamond',serif; font-size:14px; padding:5px 8px; border-radius:3px;
+  border:1px solid rgba(201,162,39,0.4); background: var(--void-2); color:var(--parchment); min-width:180px;
+}
+.pbtn{
+  font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  background: transparent; color: var(--gold-bright); border:1px solid var(--gold); border-radius:3px;
+  padding:6px 12px; cursor:pointer;
+}
+.pbtn:hover{ background: rgba(201,162,39,0.15); }
+.pbtn.danger{ color: var(--crimson-bright); border-color: var(--crimson); }
+.pbtn.danger:hover{ background: rgba(139,38,53,0.2); }
+.save-status{ margin-left:auto; font-family:'EB Garamond',serif; font-style:italic; font-size:13px; color: var(--parchment-2); opacity:0.75; }
+.save-status.saving{ color: var(--gold-bright); opacity:1; }
+
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-thumb{ background: var(--gold); border-radius:4px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="profile-bar">
+    <label>Profile</label>
+    <select id="profileSelect"></select>
+    <button class="pbtn" id="newCharBtn">+ New</button>
+    <button class="pbtn" id="dupCharBtn">Duplicate</button>
+    <button class="pbtn danger" id="delCharBtn">Delete</button>
+    <span class="save-status" id="saveStatus">Saved</span>
+  </div>
+
+  <div class="hero">
+    <div class="seal">
+      <div class="lvl-num" id="sealLevel">1</div>
+      <div class="lvl-label">Level</div>
+    </div>
+    <div>
+      <input class="hero-name" id="charName" value="Unnamed Adventurer" placeholder="Character Name">
+      <div class="hero-sub">
+        <div class="field"><label>Class</label><input id="charClass" placeholder="e.g. Ranger"></div>
+        <div class="field"><label>Level</label><input id="charLevel" type="number" min="1" max="20" value="1"></div>
+        <div class="field"><label>Race / Lineage</label><input id="charRace" placeholder="e.g. Wood Elf"></div>
+        <div class="field"><label>Background</label><input id="charBackground" placeholder="e.g. Outlander"></div>
+        <div class="field"><label>Alignment</label><input id="charAlignment" placeholder="e.g. Chaotic Good"></div>
+      </div>
+    </div>
+    <div class="xp-block">
+      <label>Experience</label>
+      <input id="charXP" type="number" min="0" value="0">
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- LEFT COLUMN: Abilities, Saves, Skills -->
+    <div>
+      <div class="panel" id="abilitiesPanel">
+        <h2><span>Ability Scores</span><span class="rune">✦</span></h2>
+        <!-- filled by JS -->
+      </div>
+
+      <div class="panel">
+        <h2><span>Saving Throws</span><span class="rune">✦</span></h2>
+        <div id="savesPanel"></div>
+        <div class="mini-row" style="margin-top:8px; border-top:1px solid var(--parchment-line); padding-top:8px;">
+          <label>Proficiency Bonus</label>
+          <span class="val" id="profBonusDisplay">+2</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span>Skills</span><span class="rune">✦</span></h2>
+        <div id="skillsPanel"></div>
+      </div>
+    </div>
+
+    <!-- CENTER COLUMN: Combat -->
+    <div>
+      <div class="panel">
+        <h2><span>Combat</span><span class="rune">⚔</span></h2>
+        <div class="stat-strip">
+          <div class="stat-box"><label>Armor Class</label><input id="statAC" type="number" value="10"></div>
+          <div class="stat-box"><label>Initiative</label><div class="computed" id="statInit">+0</div></div>
+          <div class="stat-box"><label>Speed</label><input id="statSpeed" type="number" value="30"></div>
+        </div>
+
+        <div class="hp-row">
+          <div class="hp-field"><label>Max HP</label><input id="hpMax" type="number" value="10"></div>
+          <div class="hp-field current"><label>Current HP</label><input id="hpCurrent" type="number" value="10"></div>
+          <div class="hp-field"><label>Temp HP</label><input id="hpTemp" type="number" value="0"></div>
+        </div>
+        <div class="stat-strip" style="margin-bottom:0;">
+          <div class="stat-box"><label>Hit Dice</label><input id="hitDice" value="1d10"></div>
+          <div class="stat-box" style="grid-column: span 2;">
+            <label>Death Saves</label>
+            <div class="death-saves">
+              <div class="grp">Success<span class="pip success" data-idx="0"></span><span class="pip success" data-idx="1"></span><span class="pip success" data-idx="2"></span></div>
+              <div class="grp">Fail<span class="pip fail" data-idx="0"></span><span class="pip fail" data-idx="1"></span><span class="pip fail" data-idx="2"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span>Attacks &amp; Spellcasting</span><span class="rune">⚔</span></h2>
+        <table class="attacks">
+          <thead><tr><th style="width:34%">Name</th><th style="width:16%">Bonus</th><th style="width:34%">Damage / Type</th><th></th></tr></thead>
+          <tbody id="attacksBody"></tbody>
+        </table>
+        <button class="add-btn" id="addAttack">+ Add Attack</button>
+      </div>
+
+      <div class="panel">
+        <h2><span>Features &amp; Traits</span><span class="rune">✦</span></h2>
+        <textarea class="trait" id="featuresText" placeholder="Class features, racial traits, feats..."></textarea>
+      </div>
+
+      <div class="panel">
+        <h2><span>Personality</span><span class="rune">✦</span></h2>
+        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Traits</label>
+        <textarea class="trait" id="persTraits" style="min-height:36px;"></textarea>
+        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Ideals</label>
+        <textarea class="trait" id="persIdeals" style="min-height:36px;"></textarea>
+        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Bonds</label>
+        <textarea class="trait" id="persBonds" style="min-height:36px;"></textarea>
+        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Flaws</label>
+        <textarea class="trait" id="persFlaws" style="min-height:36px;"></textarea>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Equipment & Spells -->
+    <div>
+      <div class="panel">
+        <h2><span>Currency</span><span class="rune">◆</span></h2>
+        <div class="currency">
+          <div class="c"><label>CP</label><input id="cCP" type="number" value="0"></div>
+          <div class="c"><label>SP</label><input id="cSP" type="number" value="0"></div>
+          <div class="c"><label>EP</label><input id="cEP" type="number" value="0"></div>
+          <div class="c"><label>GP</label><input id="cGP" type="number" value="0"></div>
+          <div class="c"><label>PP</label><input id="cPP" type="number" value="0"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span>Inventory</span><span class="rune">◆</span></h2>
+        <div id="inventoryList"></div>
+        <button class="add-btn" id="addItem">+ Add Item</button>
+      </div>
+
+      <div class="panel">
+        <h2><span>Spell Slots</span><span class="rune">✶</span></h2>
+        <div id="spellSlots"></div>
+      </div>
+
+      <div class="panel spell-list">
+        <h2><span>Spell Library</span><span class="rune">✶</span></h2>
+        <div class="spell-lib-controls">
+          <select id="spellClassSelect"></select>
+          <input id="spellSearch" type="text" placeholder="Search spells...">
+        </div>
+        <div id="spellLibraryList" class="spell-lib-list"></div>
+        <div class="custom-spell-row">
+          <input id="customSpellName" placeholder="Custom / homebrew spell name">
+          <input id="customSpellLevel" type="number" min="0" max="9" placeholder="Lv" class="lv-input">
+          <button class="add-btn" id="addCustomSpell">+ Add</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span>Known Spells</span><span class="rune">✶</span></h2>
+        <div id="knownSpellsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
+</div>
+
+<script>
+// Curated subset of SRD spells per class, by spell level (0 = cantrip).
+// Not exhaustive of the full 5e SRD list -- easy to extend by adding entries here.
+const SPELL_DATA = {
+  Bard: [
+    {name:'Vicious Mockery', level:0},{name:'Prestidigitation', level:0},{name:'Mage Hand', level:0},{name:'Minor Illusion', level:0},
+    {name:"Healing Word", level:1},{name:'Charm Person', level:1},{name:'Dissonant Whispers', level:1},{name:'Faerie Fire', level:1},{name:'Sleep', level:1},{name:'Thunderwave', level:1},
+    {name:'Suggestion', level:2},{name:'Invisibility', level:2},{name:'Shatter', level:2},{name:'Heat Metal', level:2},{name:'Hold Person', level:2},
+    {name:'Hypnotic Pattern', level:3},{name:'Fear', level:3},{name:'Dispel Magic', level:3},{name:'Speak with Dead', level:3},
+    {name:'Greater Invisibility', level:4},{name:'Polymorph', level:4},{name:'Confusion', level:4},
+    {name:'Mass Cure Wounds', level:5},{name:"Hold Monster", level:5},{name:'Legend Lore', level:5},
+  ],
+  Cleric: [
+    {name:'Sacred Flame', level:0},{name:'Guidance', level:0},{name:'Spare the Dying', level:0},{name:'Light', level:0},{name:'Thaumaturgy', level:0},
+    {name:'Cure Wounds', level:1},{name:'Healing Word', level:1},{name:'Bless', level:1},{name:'Guiding Bolt', level:1},{name:'Shield of Faith', level:1},{name:'Command', level:1},
+    {name:'Spiritual Weapon', level:2},{name:'Prayer of Healing', level:2},{name:'Lesser Restoration', level:2},{name:'Hold Person', level:2},{name:'Silence', level:2},{name:'Aid', level:2},
+    {name:"Mass Healing Word", level:3},{name:'Spirit Guardians', level:3},{name:'Revivify', level:3},{name:'Dispel Magic', level:3},{name:'Beacon of Hope', level:3},
+    {name:'Death Ward', level:4},{name:'Guardian of Faith', level:4},{name:'Freedom of Movement', level:4},
+    {name:'Mass Cure Wounds', level:5},{name:'Flame Strike', level:5},{name:'Raise Dead', level:5},
+  ],
+  Druid: [
+    {name:'Produce Flame', level:0},{name:'Guidance', level:0},{name:'Shillelagh', level:0},{name:'Druidcraft', level:0},
+    {name:'Cure Wounds', level:1},{name:'Entangle', level:1},{name:'Faerie Fire', level:1},{name:'Goodberry', level:1},{name:'Healing Word', level:1},{name:'Thunderwave', level:1},
+    {name:'Moonbeam', level:2},{name:'Barkskin', level:2},{name:'Flame Blade', level:2},{name:'Spike Growth', level:2},{name:'Animal Messenger', level:2},
+    {name:'Call Lightning', level:3},{name:'Conjure Animals', level:3},{name:'Plant Growth', level:3},{name:'Dispel Magic', level:3},{name:'Sleet Storm', level:3},
+    {name:'Ice Storm', level:4},{name:'Polymorph', level:4},{name:'Blight', level:4},{name:'Freedom of Movement', level:4},
+    {name:'Insect Plague', level:5},{name:'Mass Cure Wounds', level:5},{name:'Tree Stride', level:5},{name:'Reincarnate', level:5},
+  ],
+  Paladin: [
+    {name:'Cure Wounds', level:1},{name:'Bless', level:1},{name:'Shield of Faith', level:1},{name:'Command', level:1},{name:'Detect Evil and Good', level:1},{name:'Divine Favor', level:1},
+    {name:'Lesser Restoration', level:2},{name:'Zone of Truth', level:2},{name:'Find Steed', level:2},{name:'Aid', level:2},
+    {name:'Aura of Vitality', level:3},{name:'Dispel Magic', level:3},{name:'Revivify', level:3},{name:'Blinding Smite', level:3},
+    {name:'Death Ward', level:4},{name:'Aura of Life', level:4},{name:'Staggering Smite', level:4},
+    {name:'Circle of Power', level:5},{name:'Destructive Wave', level:5},{name:'Raise Dead', level:5},
+  ],
+  Ranger: [
+    {name:"Hunter's Mark", level:1},{name:'Cure Wounds', level:1},{name:'Goodberry', level:1},{name:'Ensnaring Strike', level:1},
+    {name:'Spike Growth', level:2},{name:'Pass without Trace', level:2},{name:'Silence', level:2},{name:'Barkskin', level:2},
+    {name:'Conjure Animals', level:3},{name:'Plant Growth', level:3},{name:'Lightning Arrow', level:3},
+    {name:'Freedom of Movement', level:4},{name:'Grasping Vine', level:4},
+    {name:'Tree Stride', level:5},{name:'Swift Quiver', level:5},
+  ],
+  Sorcerer: [
+    {name:'Fire Bolt', level:0},{name:'Mage Hand', level:0},{name:'Minor Illusion', level:0},{name:'Prestidigitation', level:0},{name:'Ray of Frost', level:0},{name:'Light', level:0},
+    {name:'Magic Missile', level:1},{name:'Shield', level:1},{name:'Burning Hands', level:1},{name:'Charm Person', level:1},{name:'Chromatic Orb', level:1},
+    {name:'Misty Step', level:2},{name:'Scorching Ray', level:2},{name:'Mirror Image', level:2},{name:'Suggestion', level:2},
+    {name:'Fireball', level:3},{name:'Haste', level:3},{name:'Counterspell', level:3},{name:'Lightning Bolt', level:3},{name:'Fly', level:3},
+    {name:'Polymorph', level:4},{name:'Greater Invisibility', level:4},{name:'Dimension Door', level:4},
+    {name:'Cone of Cold', level:5},{name:'Telekinesis', level:5},{name:'Hold Monster', level:5},
+  ],
+  Warlock: [
+    {name:'Eldritch Blast', level:0},{name:'Minor Illusion', level:0},{name:'Prestidigitation', level:0},{name:'Mage Hand', level:0},
+    {name:'Hex', level:1},{name:'Charm Person', level:1},{name:'Armor of Agathys', level:1},{name:'Witch Bolt', level:1},
+    {name:'Suggestion', level:2},{name:'Invisibility', level:2},{name:'Mirror Image', level:2},{name:'Hold Person', level:2},
+    {name:'Counterspell', level:3},{name:'Fear', level:3},{name:'Hunger of Hadar', level:3},{name:'Fly', level:3},
+    {name:'Dimension Door', level:4},{name:'Banishment', level:4},{name:'Greater Invisibility', level:4},
+    {name:'Hold Monster', level:5},{name:'Contact Other Plane', level:5},
+  ],
+  Wizard: [
+    {name:'Fire Bolt', level:0},{name:'Mage Hand', level:0},{name:'Prestidigitation', level:0},{name:'Minor Illusion', level:0},{name:'Ray of Frost', level:0},{name:'Light', level:0},
+    {name:'Magic Missile', level:1},{name:'Shield', level:1},{name:'Detect Magic', level:1},{name:'Identify', level:1},{name:'Mage Armor', level:1},{name:'Sleep', level:1},{name:'Burning Hands', level:1},{name:'Find Familiar', level:1},
+    {name:'Misty Step', level:2},{name:'Scorching Ray', level:2},{name:'Web', level:2},{name:'Invisibility', level:2},{name:'Mirror Image', level:2},{name:'Suggestion', level:2},
+    {name:'Fireball', level:3},{name:'Counterspell', level:3},{name:'Fly', level:3},{name:'Haste', level:3},{name:'Lightning Bolt', level:3},{name:'Dispel Magic', level:3},
+    {name:'Polymorph', level:4},{name:'Greater Invisibility', level:4},{name:'Ice Storm', level:4},{name:'Dimension Door', level:4},
+    {name:'Wall of Force', level:5},{name:'Cone of Cold', level:5},{name:'Telekinesis', level:5},{name:'Hold Monster', level:5},
+  ],
+};
+const SPELL_CLASSES = Object.keys(SPELL_DATA);
+
+const ABILITIES = [
+  {key:'str', name:'Strength'},
+  {key:'dex', name:'Dexterity'},
+  {key:'con', name:'Constitution'},
+  {key:'int', name:'Intelligence'},
+  {key:'wis', name:'Wisdom'},
+  {key:'cha', name:'Charisma'},
+];
+
+const SKILLS = [
+  {name:'Acrobatics', ability:'dex'},
+  {name:'Animal Handling', ability:'wis'},
+  {name:'Arcana', ability:'int'},
+  {name:'Athletics', ability:'str'},
+  {name:'Deception', ability:'cha'},
+  {name:'History', ability:'int'},
+  {name:'Insight', ability:'wis'},
+  {name:'Intimidation', ability:'cha'},
+  {name:'Investigation', ability:'int'},
+  {name:'Medicine', ability:'wis'},
+  {name:'Nature', ability:'int'},
+  {name:'Perception', ability:'wis'},
+  {name:'Performance', ability:'cha'},
+  {name:'Persuasion', ability:'cha'},
+  {name:'Religion', ability:'int'},
+  {name:'Sleight of Hand', ability:'dex'},
+  {name:'Stealth', ability:'dex'},
+  {name:'Survival', ability:'wis'},
+];
+
+function defaultCharacter(){
+  return {
+    id: null,
+    name:'Unnamed Adventurer', class:'', level:1, race:'', background:'', alignment:'', xp:0,
+    abilities:{str:10,dex:10,con:10,int:10,wis:10,cha:10},
+    saveProf:{str:false,dex:false,con:false,int:false,wis:false,cha:false},
+    skillProf:{},
+    ac:10, speed:30, hpMax:10, hpCurrent:10, hpTemp:0, hitDice:'1d10',
+    deathSuccess:[false,false,false], deathFail:[false,false,false],
+    attacks:[{name:'',bonus:'',dmg:''}],
+    features:'', persTraits:'', persIdeals:'', persBonds:'', persFlaws:'',
+    currency:{cp:0,sp:0,ep:0,gp:0,pp:0},
+    inventory:[{name:'',qty:1}],
+    spellSlots: [1,2,3,4,5,6,7,8,9].map(()=>({total:0, used:0})),
+    spellClass: 'Wizard',
+    knownSpells: [] // {name, level, custom:bool}
+  };
+}
+
+let state = defaultCharacter();
+
+function mod(score){ return Math.floor((score-10)/2); }
+function fmt(n){ return (n>=0?'+':'') + n; }
+function profBonus(level){
+  if(level>=17) return 6;
+  if(level>=13) return 5;
+  if(level>=9) return 4;
+  if(level>=5) return 3;
+  return 2;
+}
+
+function el(tag, cls, html){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(html!==undefined) e.innerHTML = html;
+  return e;
+}
+
+// ---------- Build Abilities Panel ----------
+function buildAbilities(){
+  const panel = document.getElementById('abilitiesPanel');
+  panel.querySelectorAll('.ability').forEach(n=>n.remove());
+  ABILITIES.forEach(a=>{
+    const row = el('div','ability');
+    row.innerHTML = `
+      <div class="abbr">${a.key.toUpperCase()}</div>
+      <div class="mod-badge" id="modBadge_${a.key}">+0</div>
+      <input class="score-input" type="number" id="score_${a.key}" value="${state.abilities[a.key]}">
+    `;
+    panel.appendChild(row);
+  });
+  ABILITIES.forEach(a=>{
+    document.getElementById('score_'+a.key).addEventListener('input', e=>{
+      state.abilities[a.key] = parseInt(e.target.value)||0;
+      recalc(); save();
+    });
+  });
+}
+
+function buildSaves(){
+  const panel = document.getElementById('savesPanel');
+  panel.innerHTML='';
+  ABILITIES.forEach(a=>{
+    const row = el('div','check-row');
+    row.innerHTML = `
+      <input type="checkbox" id="save_${a.key}" ${state.saveProf[a.key]?'checked':''}>
+      <span class="abbr-tag">${a.key.toUpperCase()}</span>
+      <span class="name">${a.name} Save</span>
+      <span class="bonus" id="saveBonus_${a.key}">+0</span>
+    `;
+    panel.appendChild(row);
+  });
+  ABILITIES.forEach(a=>{
+    document.getElementById('save_'+a.key).addEventListener('change', e=>{
+      state.saveProf[a.key] = e.target.checked;
+      recalc(); save();
+    });
+  });
+}
+
+function buildSkills(){
+  const panel = document.getElementById('skillsPanel');
+  panel.innerHTML='';
+  SKILLS.forEach((s,i)=>{
+    const key = 'sk'+i;
+    if(!(key in state.skillProf)) state.skillProf[key]=false;
+    const row = el('div','check-row');
+    row.innerHTML = `
+      <input type="checkbox" id="skillProf_${key}" ${state.skillProf[key]?'checked':''}>
+      <span class="abbr-tag">${s.ability.toUpperCase()}</span>
+      <span class="name">${s.name}</span>
+      <span class="bonus" id="skillBonus_${key}">+0</span>
+    `;
+    panel.appendChild(row);
+  });
+  SKILLS.forEach((s,i)=>{
+    const key='sk'+i;
+    document.getElementById('skillProf_'+key).addEventListener('change', e=>{
+      state.skillProf[key] = e.target.checked;
+      recalc(); save();
+    });
+  });
+}
+
+function buildAttacks(){
+  const body = document.getElementById('attacksBody');
+  body.innerHTML='';
+  state.attacks.forEach((a,i)=>{
+    const tr = el('tr');
+    tr.innerHTML = `
+      <td><input value="${a.name}" data-i="${i}" class="atk-name" placeholder="Longsword"></td>
+      <td><input value="${a.bonus}" data-i="${i}" class="atk-bonus narrow" placeholder="+5"></td>
+      <td><input value="${a.dmg}" data-i="${i}" class="atk-dmg" placeholder="1d8+3 slashing"></td>
+      <td><span class="row-del" data-i="${i}">✕</span></td>
+    `;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('.atk-name').forEach(i=>i.addEventListener('input', e=>{state.attacks[e.target.dataset.i].name=e.target.value; save();}));
+  body.querySelectorAll('.atk-bonus').forEach(i=>i.addEventListener('input', e=>{state.attacks[e.target.dataset.i].bonus=e.target.value; save();}));
+  body.querySelectorAll('.atk-dmg').forEach(i=>i.addEventListener('input', e=>{state.attacks[e.target.dataset.i].dmg=e.target.value; save();}));
+  body.querySelectorAll('.row-del').forEach(i=>i.addEventListener('click', e=>{
+    state.attacks.splice(e.target.dataset.i,1);
+    if(state.attacks.length===0) state.attacks.push({name:'',bonus:'',dmg:''});
+    buildAttacks(); save();
+  }));
+}
+
+function buildInventory(){
+  const list = document.getElementById('inventoryList');
+  list.innerHTML='';
+  state.inventory.forEach((item,i)=>{
+    const row = el('div','inv-row');
+    row.innerHTML = `
+      <input class="item-name" data-i="${i}" value="${item.name}" placeholder="Item name">
+      <input class="item-qty" data-i="${i}" type="number" value="${item.qty}">
+      <span class="row-del" data-i="${i}">✕</span>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.item-name').forEach(i=>i.addEventListener('input', e=>{state.inventory[e.target.dataset.i].name=e.target.value; save();}));
+  list.querySelectorAll('.item-qty').forEach(i=>i.addEventListener('input', e=>{state.inventory[e.target.dataset.i].qty=parseInt(e.target.value)||0; save();}));
+  list.querySelectorAll('.row-del').forEach(i=>i.addEventListener('click', e=>{
+    state.inventory.splice(e.target.dataset.i,1);
+    if(state.inventory.length===0) state.inventory.push({name:'',qty:1});
+    buildInventory(); save();
+  }));
+}
+
+function buildSpellSlots(){
+  const panel = document.getElementById('spellSlots');
+  panel.innerHTML='';
+  state.spellSlots.forEach((slot,idx)=>{
+    const row = el('div','slot-level');
+    let pips='';
+    for(let p=0;p<slot.total;p++){
+      pips += `<span class="slot-pip ${p<slot.used?'filled':''}" data-lvl="${idx}" data-p="${p}"></span>`;
+    }
+    row.innerHTML = `
+      <div class="lv">Level ${idx+1}</div>
+      <input class="total" type="number" min="0" max="9" value="${slot.total}" data-lvl="${idx}">
+      <div class="slot-pips">${pips}</div>
+    `;
+    panel.appendChild(row);
+  });
+  panel.querySelectorAll('input.total').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const lvl = e.target.dataset.lvl;
+      state.spellSlots[lvl].total = Math.max(0, parseInt(e.target.value)||0);
+      if(state.spellSlots[lvl].used > state.spellSlots[lvl].total) state.spellSlots[lvl].used = state.spellSlots[lvl].total;
+      buildSpellSlots(); save();
+    });
+  });
+  panel.querySelectorAll('.slot-pip').forEach(p=>{
+    p.addEventListener('click', e=>{
+      const lvl = e.target.dataset.lvl, idx = parseInt(e.target.dataset.p);
+      const slot = state.spellSlots[lvl];
+      slot.used = (idx < slot.used) ? idx : idx+1;
+      buildSpellSlots(); save();
+    });
+  });
+}
+
+function levelLabel(lvl){ return lvl===0 ? 'Cantrip' : 'Level '+lvl; }
+
+function isKnown(name){
+  return state.knownSpells.some(s=>s.name.toLowerCase()===name.toLowerCase());
+}
+
+function buildSpellClassSelect(){
+  const sel = document.getElementById('spellClassSelect');
+  sel.innerHTML = SPELL_CLASSES.map(c=>`<option value="${c}" ${c===state.spellClass?'selected':''}>${c}</option>`).join('');
+  sel.onchange = e=>{
+    state.spellClass = e.target.value;
+    buildSpellLibrary(); save();
+  };
+}
+
+function buildSpellLibrary(){
+  const container = document.getElementById('spellLibraryList');
+  const query = (document.getElementById('spellSearch').value || '').toLowerCase();
+  const list = (SPELL_DATA[state.spellClass] || []).filter(s => s.name.toLowerCase().includes(query));
+  if(list.length===0){
+    container.innerHTML = '<div class="spell-lib-empty">No spells match.</div>';
+    return;
+  }
+  const byLevel = {};
+  list.forEach(s=>{ (byLevel[s.level] = byLevel[s.level]||[]).push(s); });
+  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
+  let html='';
+  levels.forEach(lvl=>{
+    html += `<div class="spell-lib-group-label">${levelLabel(lvl)}</div>`;
+    byLevel[lvl].forEach(s=>{
+      const already = isKnown(s.name);
+      html += `<div class="spell-lib-item">
+        <span>${s.name}</span>
+        <span class="spell-add-btn ${already?'added':''}" data-name="${s.name}" data-level="${lvl}">${already?'Added':'+ Add'}</span>
+      </div>`;
+    });
+  });
+  container.innerHTML = html;
+  container.querySelectorAll('.spell-add-btn:not(.added)').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const name = e.target.dataset.name, level = parseInt(e.target.dataset.level);
+      if(!isKnown(name)){
+        state.knownSpells.push({name, level, custom:false});
+        buildSpellLibrary(); buildKnownSpells(); save();
+      }
+    });
+  });
+}
+
+function buildKnownSpells(){
+  const container = document.getElementById('knownSpellsList');
+  if(state.knownSpells.length===0){
+    container.innerHTML = '<div class="spell-lib-empty">No spells added yet — pick from the library above.</div>';
+    return;
+  }
+  const byLevel = {};
+  state.knownSpells.forEach((s,i)=>{ (byLevel[s.level] = byLevel[s.level]||[]).push({...s, idx:i}); });
+  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
+  let html='';
+  levels.forEach(lvl=>{
+    html += `<div class="known-spell-group-label">${levelLabel(lvl)}</div>`;
+    byLevel[lvl].forEach(s=>{
+      html += `<div class="known-spell-item">
+        <span>${s.name}${s.custom?'<span class="custom-tag">Homebrew</span>':''}</span>
+        <span class="spell-remove" data-idx="${s.idx}">✕</span>
+      </div>`;
+    });
+  });
+  container.innerHTML = html;
+  container.querySelectorAll('.spell-remove').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      state.knownSpells.splice(parseInt(e.target.dataset.idx),1);
+      buildSpellLibrary(); buildKnownSpells(); save();
+    });
+  });
+}
+
+function recalc(){
+  const pb = profBonus(state.level);
+  document.getElementById('profBonusDisplay').textContent = fmt(pb);
+  document.getElementById('sealLevel').textContent = state.level;
+
+  ABILITIES.forEach(a=>{
+    const m = mod(state.abilities[a.key]);
+    document.getElementById('modBadge_'+a.key).textContent = fmt(m);
+    const saveBonus = m + (state.saveProf[a.key] ? pb : 0);
+    document.getElementById('saveBonus_'+a.key).textContent = fmt(saveBonus);
+  });
+
+  SKILLS.forEach((s,i)=>{
+    const key = 'sk'+i;
+    const m = mod(state.abilities[s.ability]);
+    const bonus = m + (state.skillProf[key] ? pb : 0);
+    const elBonus = document.getElementById('skillBonus_'+key);
+    if(elBonus) elBonus.textContent = fmt(bonus);
+  });
+
+  document.getElementById('statInit').textContent = fmt(mod(state.abilities.dex));
+
+  state.deathSuccess.forEach((v,i)=>{
+    const p = document.querySelector(`.pip.success[data-idx="${i}"]`);
+    if(p) p.classList.toggle('filled', v);
+  });
+  state.deathFail.forEach((v,i)=>{
+    const p = document.querySelector(`.pip.fail[data-idx="${i}"]`);
+    if(p) p.classList.toggle('filled', v);
+  });
+}
+
+function bindStaticInputs(){
+  const bind = (id, prop, isNum) => {
+    const e = document.getElementById(id);
+    e.addEventListener('input', ()=>{
+      state[prop] = isNum ? (parseFloat(e.value)||0) : e.value;
+      recalc(); save();
+    });
+  };
+  bind('charName','name'); bind('charClass','class'); bind('charLevel','level',true);
+  bind('charRace','race'); bind('charBackground','background'); bind('charAlignment','alignment');
+  bind('charXP','xp',true);
+  bind('statAC','ac',true); bind('statSpeed','speed',true);
+  bind('hpMax','hpMax',true); bind('hpCurrent','hpCurrent',true); bind('hpTemp','hpTemp',true);
+  bind('hitDice','hitDice');
+  bind('featuresText','features'); bind('persTraits','persTraits'); bind('persIdeals','persIdeals');
+  bind('persBonds','persBonds'); bind('persFlaws','persFlaws');
+
+  document.getElementById('spellSearch').addEventListener('input', ()=> buildSpellLibrary());
+  document.getElementById('addCustomSpell').addEventListener('click', ()=>{
+    const nameEl = document.getElementById('customSpellName');
+    const lvlEl = document.getElementById('customSpellLevel');
+    const name = nameEl.value.trim();
+    if(!name) return;
+    const level = Math.max(0, Math.min(9, parseInt(lvlEl.value)||0));
+    state.knownSpells.push({name, level, custom:true});
+    nameEl.value=''; lvlEl.value='';
+    buildKnownSpells(); save();
+  });
+  document.getElementById('cCP').addEventListener('input', e=>{state.currency.cp=parseInt(e.target.value)||0; save();});
+  document.getElementById('cSP').addEventListener('input', e=>{state.currency.sp=parseInt(e.target.value)||0; save();});
+  document.getElementById('cEP').addEventListener('input', e=>{state.currency.ep=parseInt(e.target.value)||0; save();});
+  document.getElementById('cGP').addEventListener('input', e=>{state.currency.gp=parseInt(e.target.value)||0; save();});
+  document.getElementById('cPP').addEventListener('input', e=>{state.currency.pp=parseInt(e.target.value)||0; save();});
+
+  document.querySelectorAll('.pip.success').forEach(p=>{
+    p.addEventListener('click', e=>{
+      const i = parseInt(e.target.dataset.idx);
+      state.deathSuccess[i] = !state.deathSuccess[i];
+      recalc(); save();
+    });
+  });
+  document.querySelectorAll('.pip.fail').forEach(p=>{
+    p.addEventListener('click', e=>{
+      const i = parseInt(e.target.dataset.idx);
+      state.deathFail[i] = !state.deathFail[i];
+      recalc(); save();
+    });
+  });
+
+  document.getElementById('addAttack').addEventListener('click', ()=>{
+    state.attacks.push({name:'',bonus:'',dmg:''});
+    buildAttacks(); save();
+  });
+  document.getElementById('addItem').addEventListener('click', ()=>{
+    state.inventory.push({name:'',qty:1});
+    buildInventory(); save();
+  });
+}
+
+function applyStateToInputs(){
+  document.getElementById('charName').value = state.name;
+  document.getElementById('charClass').value = state.class;
+  document.getElementById('charLevel').value = state.level;
+  document.getElementById('charRace').value = state.race;
+  document.getElementById('charBackground').value = state.background;
+  document.getElementById('charAlignment').value = state.alignment;
+  document.getElementById('charXP').value = state.xp;
+  document.getElementById('statAC').value = state.ac;
+  document.getElementById('statSpeed').value = state.speed;
+  document.getElementById('hpMax').value = state.hpMax;
+  document.getElementById('hpCurrent').value = state.hpCurrent;
+  document.getElementById('hpTemp').value = state.hpTemp;
+  document.getElementById('hitDice').value = state.hitDice;
+  document.getElementById('featuresText').value = state.features;
+  document.getElementById('persTraits').value = state.persTraits;
+  document.getElementById('persIdeals').value = state.persIdeals;
+  document.getElementById('persBonds').value = state.persBonds;
+  document.getElementById('persFlaws').value = state.persFlaws;
+  document.getElementById('cCP').value = state.currency.cp;
+  document.getElementById('cSP').value = state.currency.sp;
+  document.getElementById('cEP').value = state.currency.ep;
+  document.getElementById('cGP').value = state.currency.gp;
+  document.getElementById('cPP').value = state.currency.pp;
+}
+
+// ---------- API helpers ----------
+async function apiListCharacters(){
+  const r = await fetch('/api/characters');
+  return r.json();
+}
+async function apiGetCharacter(id){
+  const r = await fetch('/api/characters/'+id);
+  return r.json();
+}
+async function apiCreateCharacter(name, data){
+  const r = await fetch('/api/characters', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, data })
+  });
+  return r.json();
+}
+async function apiUpdateCharacter(id, name, data){
+  const r = await fetch('/api/characters/'+id, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, data })
+  });
+  return r.json();
+}
+async function apiDuplicateCharacter(id){
+  const r = await fetch(`/api/characters/${id}/duplicate`, { method:'POST' });
+  return r.json();
+}
+async function apiDeleteCharacter(id){
+  const r = await fetch('/api/characters/'+id, { method:'DELETE' });
+  return r.json();
+}
+
+// ---------- Save status indicator ----------
+function setSaveStatus(status){
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  if(status==='saving'){ el.textContent='Saving…'; el.classList.add('saving'); }
+  else if(status==='error'){ el.textContent='Save failed — check the server'; el.classList.remove('saving'); }
+  else { el.textContent='Saved'; el.classList.remove('saving'); }
+}
+
+// ---------- Debounced autosave to the local database ----------
+let saveTimeout=null;
+function save(){
+  clearTimeout(saveTimeout);
+  setSaveStatus('saving');
+  saveTimeout = setTimeout(async ()=>{
+    try{
+      if(state.id){
+        await apiUpdateCharacter(state.id, state.name, state);
+      } else {
+        const res = await apiCreateCharacter(state.name, state);
+        state.id = res.id;
+      }
+      await refreshProfileList(state.id);
+      setSaveStatus('saved');
+    }catch(err){
+      console.error('Save failed', err);
+      setSaveStatus('error');
+    }
+  }, 500);
+}
+
+// ---------- Profile bar ----------
+async function refreshProfileList(selectedId){
+  const list = await apiListCharacters();
+  const sel = document.getElementById('profileSelect');
+  if(list.length===0){
+    sel.innerHTML = '<option value="">No saved characters</option>';
+    return;
+  }
+  sel.innerHTML = list.map(c=>
+    `<option value="${c.id}" ${String(c.id)===String(selectedId)?'selected':''}>${(c.name||'Unnamed')} — ${c.class||'?'} ${c.level||1}</option>`
+  ).join('');
+}
+
+function renderCharacter(){
+  buildAbilities();
+  buildSaves();
+  buildSkills();
+  buildAttacks();
+  buildInventory();
+  buildSpellSlots();
+  buildSpellClassSelect();
+  buildSpellLibrary();
+  buildKnownSpells();
+  applyStateToInputs();
+  recalc();
+}
+
+async function loadCharacter(id){
+  const res = await apiGetCharacter(id);
+  state = Object.assign(defaultCharacter(), res.data, { id: res.id, name: res.name });
+  renderCharacter();
+  setSaveStatus('saved');
+}
+
+function bindProfileBar(){
+  document.getElementById('profileSelect').addEventListener('change', e=>{
+    if(e.target.value) loadCharacter(e.target.value);
+  });
+
+  document.getElementById('newCharBtn').addEventListener('click', async ()=>{
+    state = defaultCharacter();
+    const res = await apiCreateCharacter(state.name, state);
+    state.id = res.id;
+    renderCharacter();
+    await refreshProfileList(state.id);
+    setSaveStatus('saved');
+  });
+
+  document.getElementById('dupCharBtn').addEventListener('click', async ()=>{
+    if(!state.id){ alert('Save the current character before duplicating it.'); return; }
+    const res = await apiDuplicateCharacter(state.id);
+    await loadCharacter(res.id);
+    await refreshProfileList(res.id);
+  });
+
+  document.getElementById('delCharBtn').addEventListener('click', async ()=>{
+    if(!state.id){ state = defaultCharacter(); renderCharacter(); return; }
+    if(!confirm(`Delete "${state.name}"? This can't be undone.`)) return;
+    await apiDeleteCharacter(state.id);
+    const list = await apiListCharacters();
+    if(list.length>0){
+      await loadCharacter(list[0].id);
+    } else {
+      state = defaultCharacter();
+      renderCharacter();
+    }
+    await refreshProfileList(state.id);
+  });
+}
+
+async function init(){
+  const list = await apiListCharacters();
+  if(list.length>0){
+    await loadCharacter(list[0].id);
+  } else {
+    const res = await apiCreateCharacter(state.name, state);
+    state.id = res.id;
+    renderCharacter();
+  }
+  await refreshProfileList(state.id);
+  bindStaticInputs();
+  bindProfileBar();
+  setSaveStatus('saved');
+}
+
+init();
+</script>
+</body>
+</html>

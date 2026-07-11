@@ -1,0 +1,5 @@
+node_modules/
+characters.db
+characters.db-shm
+characters.db-wal
+server.log
