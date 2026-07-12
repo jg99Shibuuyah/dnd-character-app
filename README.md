@@ -20,6 +20,62 @@ That's it — a file called `characters.db` will be created in this folder
 the first time you run it. That file *is* your database; back it up or
 copy it elsewhere if you want to keep a snapshot of your characters.
 
+### Platform-specific setup
+
+#### Windows
+
+1. **Install Node.js** 18+ from [nodejs.org](https://nodejs.org) (pick the LTS version)
+   - During installation, check the box: *"Automatically install the necessary tools needed for Native Modules"*
+2. **Open PowerShell or Command Prompt** and navigate to the project folder:
+   ```powershell
+   cd path\to\dnd-character-app
+   npm install
+   npm start
+   ```
+3. Open **http://localhost:3000** in your browser
+
+> If `npm install` fails with a C++ compilation error, install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and select the *"Desktop development with C++"* workload.
+
+#### macOS
+
+1. **Install Xcode command-line tools**:
+   ```bash
+   xcode-select --install
+   ```
+2. **Install Node.js** 18+ via Homebrew (if not already installed):
+   ```bash
+   brew install node
+   ```
+3. **Navigate to the project folder and start:**
+   ```bash
+   cd path/to/dnd-character-app
+   npm install
+   npm start
+   ```
+4. Open **http://localhost:3000** in your browser
+
+#### Linux (Ubuntu/Debian)
+
+1. **Install build dependencies**:
+   ```bash
+   sudo apt update
+   sudo apt install build-essential python3 git
+   ```
+2. **Install Node.js** 18+:
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt install nodejs
+   ```
+3. **Navigate to the project folder and start:**
+   ```bash
+   cd path/to/dnd-character-app
+   npm install
+   npm start
+   ```
+4. Open **http://localhost:3000** in your browser
+
+> For other Linux distributions, ensure you have a C++ compiler (`g++`), Python 3, and Node.js 18+ installed, then run `npm install && npm start`.
+
 ## What you get
 
 - A profile bar at the top of the sheet: switch between characters, create
