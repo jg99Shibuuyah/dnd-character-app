@@ -281,6 +281,14 @@ textarea.trait{
 .slot-pips{ display:flex; gap:4px; flex-wrap:wrap; }
 .slot-pip{ width:15px;height:15px;border-radius:50%; border:1.5px solid var(--gold); cursor:pointer; }
 .slot-pip.filled{ background:var(--gold); }
+.slot-mode{ display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.slot-mode-label{ font-size:11px; color:var(--ink-dim); letter-spacing:0.5px; }
+.slot-mode-btn{ font-size:10px; padding:3px 9px; }
+.slot-level input.total:disabled{ opacity:0.55; cursor:not-allowed; }
+.slot-level .total.pact-total{ width:32px; text-align:center; font-family:'JetBrains Mono',monospace; color:var(--neon-magenta); }
+.slot-level.pact-row .lv{ color:var(--neon-magenta); width:auto; padding-right:8px; }
+.slot-level.pact-row .slot-pip{ border-color:var(--neon-magenta); }
+.slot-level.pact-row .slot-pip.filled{ background:var(--neon-magenta); }
 
 .spell-lib-controls{ display:flex; gap:8px; margin-bottom:10px; }
 .spell-lib-controls select, .spell-lib-controls input{
@@ -432,6 +440,51 @@ textarea.trait{
   color: var(--neon-yellow); border:1px solid rgba(249,245,37,0.4); border-radius:2px;
   font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:1px 5px; margin-left:8px;
 }
+/* Source tags: cyan = 5E, green = 5.5E, yellow = homebrew/imported */
+.src-tag{
+  font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:1px 5px;
+  border-radius:2px; border:1px solid currentColor; white-space:nowrap;
+}
+.src-tag.src-5e{ color: var(--neon-cyan); }
+.src-tag.src-55e{ color: var(--neon-green); }
+.src-tag.src-homebrew{ color: var(--neon-yellow); }
+.src-tag.src-custom{ color: var(--neon-magenta); }
+
+/* Class source filter + import form */
+.filter-bar{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; align-items:center; }
+.filter-bar .filter-label{ font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--ink-dim); margin-right:2px; }
+.filter-chip{
+  font-size:11px; padding:4px 10px; cursor:pointer; user-select:none;
+  background: var(--void-2); color: var(--ink-soft);
+  border:1px solid rgba(200,200,212,0.2); border-radius:2px;
+}
+.filter-chip:hover{ border-color: var(--border-glow); }
+.filter-chip.on{ color: var(--neon-cyan); border-color: var(--neon-cyan); box-shadow: 0 0 8px rgba(0,255,213,0.25); }
+.import-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.import-grid .full{ grid-column:1 / -1; }
+.import-note{ font-size:10.5px; color: var(--ink-dim); margin-top:3px; line-height:1.45; }
+.import-msg{ font-size:12px; margin-top:10px; min-height:16px; }
+.import-msg.ok{ color: var(--neon-green); }
+.import-msg.err{ color: var(--neon-magenta); }
+.imported-item{
+  display:flex; align-items:center; gap:8px; padding:6px 2px;
+  border-bottom:1px dashed rgba(200,200,212,0.15); font-size:13px;
+}
+.imported-item:last-child{ border-bottom:none; }
+.imported-item .ii-name{ flex:1; color: var(--ink); }
+.ability-toggles{ display:flex; flex-wrap:wrap; gap:6px; }
+.mini-toggle{
+  font-size:11px; padding:4px 9px; cursor:pointer; user-select:none;
+  background: var(--void-2); color: var(--ink-soft);
+  border:1px solid rgba(200,200,212,0.2); border-radius:2px; text-transform:uppercase; letter-spacing:1px;
+}
+.mini-toggle.on{ color: var(--neon-green); border-color: var(--neon-green); }
+textarea.import-ta{
+  width:100%; min-height:90px; resize:vertical; font-size:13px; padding:8px;
+  background: var(--void-2); color: var(--ink);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
 .skill-chips{ display:flex; flex-wrap:wrap; gap:7px; }
 .skill-chip{
   font-size:12px; padding:5px 10px; cursor:pointer; user-select:none;
@@ -488,6 +541,91 @@ textarea.trait{
 .feat-head .f-name{ font-weight:600; color: var(--ink); }
 .feat-desc{ color: var(--ink-soft); font-size:12px; margin-top:3px; line-height:1.5; }
 
+/* ---------- Notes / reference tab ---------- */
+.note-p{ font-size:13.5px; line-height:1.65; color: var(--ink-soft); margin:0 0 12px; }
+.note-hl{ color: var(--neon-cyan); }
+.note-sub{
+  font-family:'Orbitron', sans-serif; font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+  color: var(--neon-magenta); text-shadow: 0 0 8px rgba(255,42,109,0.35);
+  margin:18px 0 10px; padding-top:12px; border-top:1px solid var(--parchment-line);
+}
+.note-cite{ font-size:10.5px; color: var(--ink-dim); font-style:italic; margin-top:14px; }
+.align-grid{
+  display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin:6px 0 4px;
+}
+@media (max-width: 860px){ .align-grid{ grid-template-columns: 1fr; } }
+.align-card{
+  background: var(--void-2); border:1px solid var(--parchment-line); border-radius:3px;
+  padding:10px 12px;
+}
+.align-card .a-abbr{
+  font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--neon-green);
+  border:1px solid rgba(5,255,161,0.4); border-radius:2px; padding:1px 5px; margin-right:6px;
+}
+.align-card .a-name{
+  font-family:'Orbitron', sans-serif; font-size:12px; letter-spacing:0.5px; color: var(--ink);
+}
+.align-card .a-desc{ font-size:12px; line-height:1.55; color: var(--ink-soft); margin-top:7px; }
+.align-card .a-eg{ font-size:11px; color: var(--ink-dim); margin-top:6px; }
+.align-card .a-eg b{ color: var(--neon-cyan); font-weight:normal; }
+
+/* ---------- Ability badge: gear-modified states ---------- */
+.ability .mod-badge.buffed{ border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 8px rgba(5,255,161,0.4); }
+.ability .mod-badge.nerfed{ border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
+
+/* ---------- Equipment tab ---------- */
+.equip-card{
+  background: var(--void-2); border:1px solid var(--parchment-line); border-radius:3px;
+  padding:12px 14px; margin-bottom:12px; opacity:0.6;
+}
+.equip-card.equipped{ opacity:1; border-color: var(--border-glow); box-shadow: 0 0 10px rgba(0,255,213,0.08); }
+.equip-head{ display:flex; align-items:center; gap:10px; }
+.equip-toggle{ display:flex; align-items:center; gap:5px; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; cursor:pointer; }
+.equip-toggle input{ accent-color: var(--neon-green); width:14px; height:14px; }
+.equip-head .eq-name{
+  flex:1; font-size:15px; padding:6px 8px;
+  background: var(--void-3); color: var(--ink);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+.equip-head .eq-name:focus{ outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+.equip-card textarea.eq-desc{
+  width:100%; min-height:44px; resize:vertical; margin-top:8px;
+  font-family:'JetBrains Mono', monospace; font-size:12.5px;
+  background: var(--void-3); color: var(--ink-soft);
+  border:1px solid var(--parchment-line); border-radius:2px; padding:7px 8px;
+}
+.eq-effects{ margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+.eq-field-group{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.eq-lbl{
+  font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color: var(--neon-cyan); width:60px; flex-shrink:0;
+}
+.eq-effects input, .eq-effects select{
+  font-size:13px; padding:5px 7px;
+  background: var(--void-3); color: var(--ink);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+.eq-effects input:focus, .eq-effects select:focus{ outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+.eq-atk-bonus{ width:80px; }
+.eq-atk-dmg{ flex:1; min-width:120px; }
+.eq-ab{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+.eq-ab span{ font-size:9px; color: var(--ink-dim); letter-spacing:0.5px; }
+.eq-ab input{ width:50px; text-align:center; }
+.eq-chip{
+  display:inline-flex; align-items:center; gap:5px; font-size:12px;
+  background: var(--void-3); color: var(--ink-soft);
+  border:1px solid rgba(0,255,213,0.25); border-radius:2px; padding:3px 7px;
+}
+.eq-chip em{ color: var(--neon-magenta); font-style:normal; font-size:10px; }
+.eq-chip .eq-skill-del, .eq-chip .eq-spell-del{ cursor:pointer; color: var(--neon-magenta); font-weight:700; }
+.eq-skill-list, .eq-spell-list{ display:flex; flex-wrap:wrap; gap:5px; }
+.eq-effects .add-btn{ margin-top:0; padding:5px 10px; }
+
+/* Read-only equipped-weapon list under the Character-tab attacks table */
+.equip-atk-head{ font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color: var(--neon-green); margin:10px 0 4px; }
+.equip-atk-row{ display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:3px 2px; border-bottom:1px dashed rgba(200,200,212,0.15); }
+.equip-atk-row span:last-child{ color: var(--ink-soft); font-family:'JetBrains Mono', monospace; font-size:12px; }
+
 ::-webkit-scrollbar{ width:8px; }
 ::-webkit-scrollbar-thumb{ background: var(--gold); border-radius:4px; }
 </style>
@@ -523,10 +661,13 @@ textarea.trait{
   <nav class="tab-bar">
     <button class="tab-btn active" data-tab="sheet">Character</button>
     <button class="tab-btn" data-tab="inventory">Inventory</button>
+    <button class="tab-btn" data-tab="equipment">Equipment</button>
     <button class="tab-btn" data-tab="spells">Spells</button>
     <button class="tab-btn" data-tab="features">Features &amp; Traits</button>
     <button class="tab-btn" data-tab="actions">Actions</button>
+    <button class="tab-btn" data-tab="notes">Notes</button>
     <button class="tab-btn" data-tab="settings">Settings</button>
+    <button class="tab-btn" data-tab="library">Library</button>
   </nav>
 
   <!-- TAB: Character sheet -->
@@ -589,6 +730,7 @@ textarea.trait{
           <tbody id="attacksBody"></tbody>
         </table>
         <button class="add-btn" id="addAttack">+ Add Attack</button>
+        <div id="equipAttackList"></div>
       </div>
 
     </div>
@@ -614,6 +756,16 @@ textarea.trait{
         <div id="inventoryList"></div>
         <button class="add-btn" id="addItem">+ Add Item</button>
       </div>
+    </div>
+  </div>
+
+  <!-- TAB: Equipment (worn/wielded gear with mechanical effects) -->
+  <div class="tab-pane" id="tab-equipment">
+    <div class="panel">
+      <h2><span>Equipment</span><span class="rune">⚙</span></h2>
+      <div class="picker-hint">Gear you're wearing or wielding. <span class="hl">Equipped</span> items feed your attacks, spellcasting, ability scores, and skill bonuses on the other tabs. Ability fields accept <span class="hl">+2</span> (bonus) or <span class="hl">=19</span> (set score).</div>
+      <div id="equipmentList"></div>
+      <button class="add-btn" id="addEquip">+ Add Equipment</button>
     </div>
   </div>
 
@@ -655,8 +807,12 @@ textarea.trait{
           <div id="classFeaturesList"></div>
         </div>
         <div class="panel">
+          <h2><span>Species Traits</span><span class="rune">✦</span></h2>
+          <div id="speciesTraitsList"></div>
+        </div>
+        <div class="panel">
           <h2><span>Other Features &amp; Traits</span><span class="rune">✦</span></h2>
-          <textarea class="trait" id="featuresText" style="min-height:160px;" placeholder="Racial traits, feats, boons..."></textarea>
+          <textarea class="trait" id="featuresText" style="min-height:160px;" placeholder="Feats, boons, custom traits..."></textarea>
         </div>
       </div>
 
@@ -704,6 +860,20 @@ textarea.trait{
     </div>
   </div>
 
+  <!-- TAB: Notes (rules reference) -->
+  <div class="tab-pane" id="tab-notes">
+    <div class="panel">
+      <h2><span>Alignment</span><span class="rune">◈</span></h2>
+      <p class="note-p">A typical creature in the worlds of D&amp;D has an <span class="note-hl">alignment</span>, which broadly describes its moral and personal attitudes. Alignment is a combination of two factors: one identifies morality (<span class="note-hl">good</span>, <span class="note-hl">evil</span>, or <span class="note-hl">neutral</span>), and the other describes attitudes toward society and order (<span class="note-hl">lawful</span>, <span class="note-hl">chaotic</span>, or <span class="note-hl">neutral</span>). Together, the two axes produce nine distinct combinations.</p>
+      <p class="note-p">Your character's alignment is a tool for roleplaying, not a straitjacket. Think of it as a compass for how your character tends to act — a good starting point that can shift as the story unfolds.</p>
+      <div class="align-grid" id="alignGrid"></div>
+      <h3 class="note-sub">Alignment in the Multiverse</h3>
+      <p class="note-p">For many intelligent creatures, alignment is a moral choice made freely. Others are pushed strongly toward a particular alignment by their nature or upbringing. For some outsiders — celestials and fiends among them — alignment is a fundamental part of their being rather than a decision they make.</p>
+      <p class="note-p">Most creatures that lack the capacity for rational thought are <span class="note-hl">unaligned</span>. Such a creature is incapable of making a moral judgment and simply acts according to its nature; a shark is a savage predator, for instance, but it is not evil — it has no alignment at all.</p>
+      <p class="note-cite">Descriptions adapt the SRD 5.1 alignment entries (Open Game Content); framing paraphrased from the 5e rules on alignment.</p>
+    </div>
+  </div>
+
   <!-- TAB: Settings (identity, class & proficiencies) -->
   <div class="tab-pane" id="tab-settings">
     <div class="grid grid-half">
@@ -711,14 +881,16 @@ textarea.trait{
         <div class="panel">
           <h2><span>Identity</span><span class="rune">◈</span></h2>
           <div class="set-field"><label>Character Name</label><input id="charName" placeholder="Character Name"></div>
-          <div class="set-field"><label>Race / Lineage</label><input id="charRace" placeholder="e.g. Wood Elf"></div>
+          <div class="set-field"><label>Species / Lineage</label><select id="charRace"></select></div>
+          <div class="class-info" id="speciesInfo"></div>
           <div class="set-field"><label>Background</label><input id="charBackground" placeholder="e.g. Outlander"></div>
-          <div class="set-field"><label>Alignment</label><input id="charAlignment" placeholder="e.g. Chaotic Good"></div>
+          <div class="set-field"><label>Alignment</label><select id="charAlignment"></select></div>
           <div class="set-field"><label>Experience</label><input id="charXP" type="number" min="0" value="0"></div>
         </div>
         <div class="panel">
           <h2><span>Classes &amp; Levels</span><span class="rune">◈</span></h2>
           <div class="picker-hint">Add more classes to multiclass. The <span class="hl">first entry is your primary class</span> and provides saving-throw proficiencies; proficiency bonus is based on your <span class="hl">total level</span>.</div>
+          <div class="filter-bar" id="classFilterBar"><span class="filter-label">Filter</span></div>
           <div id="classList"></div>
           <button class="add-btn" id="addClassBtn">+ Add Class</button>
           <div class="mini-row" style="margin-top:12px;"><label>Total Level</label><span class="val" id="totalLevelDisplay">1</span></div>
@@ -730,6 +902,115 @@ textarea.trait{
           <h2><span>Skill Proficiencies</span><span class="rune">◈</span></h2>
           <div class="picker-hint" id="skillHint"></div>
           <div class="skill-chips" id="skillPicker"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Library (import & manage homebrew / official classes and species) -->
+  <div class="tab-pane" id="tab-library">
+    <div class="grid grid-half">
+      <div>
+        <div class="panel">
+          <h2><span>Import Class</span><span class="rune">◈</span></h2>
+          <div class="picker-hint">Add a homebrew or official class, using the same fields the built-in <span class="hl">Jaeger</span> class uses. Imported classes are saved to the database and shared across every character, then appear in the class picker on the Settings tab.</div>
+          <div class="import-grid">
+            <div class="set-field full"><label>Class Name</label><input id="impName" placeholder="e.g. Artificer"></div>
+            <div class="set-field"><label>Source</label>
+              <select id="impSource">
+                <option value="Homebrew">Homebrew</option>
+                <option value="5E">Official — 5E</option>
+                <option value="5.5E">Official — 5.5E</option>
+              </select>
+            </div>
+            <div class="set-field"><label>Hit Die</label>
+              <select id="impHitDie"><option>6</option><option selected>8</option><option>10</option><option>12</option></select>
+            </div>
+            <div class="set-field full"><label>Saving Throw Proficiencies</label>
+              <div class="ability-toggles" id="impSaves"></div>
+            </div>
+            <div class="set-field"><label>Skill Choices</label><input id="impChoose" type="number" min="0" max="18" value="2"></div>
+            <div class="set-field"><label>Subclass Level</label><input id="impSubLevel" type="number" min="1" max="20" value="3"></div>
+            <div class="set-field full"><label>Skill List</label>
+              <input id="impSkills" placeholder="Athletics, Perception, Stealth …  (or leave blank for &quot;any&quot;)">
+              <div class="import-note">Comma-separated skill names the class can choose from. Blank = any skill.</div>
+            </div>
+            <div class="set-field full"><label>Subclasses</label>
+              <input id="impSubclasses" placeholder="Alchemist, Artillerist, Battle Smith">
+              <div class="import-note">Comma-separated. Chosen at the Subclass Level above.</div>
+            </div>
+            <div class="set-field"><label>Spellcasting</label>
+              <select id="impCasting"><option value="none">None</option><option value="full">Full caster</option><option value="half">Half caster</option><option value="pact">Pact magic</option></select>
+            </div>
+            <div class="set-field"><label>Casting Ability</label>
+              <select id="impCastAbility"><option value="">—</option><option value="int">INT</option><option value="wis">WIS</option><option value="cha">CHA</option></select>
+            </div>
+            <div class="set-field full"><label>Description</label>
+              <textarea id="impDesc" class="import-ta" style="min-height:60px;" placeholder="One-paragraph class summary."></textarea>
+            </div>
+            <div class="set-field full"><label>Features (one per line)</label>
+              <textarea id="impFeatures" class="import-ta" placeholder="level | name | description | use | cost&#10;1 | Flexible Combatant | Draw or stow two weapons at once. | passive&#10;3 | Piercing Gaze | Gain darkvision for 1 hour. | free | 1/long rest"></textarea>
+              <div class="import-note">Format: <span class="hl">level | name | description | use | cost</span>. Only level and name are required. <span class="hl">use</span> (reaction / bonus action / free / special) and <span class="hl">cost</span> surface the feature on the Actions tab.</div>
+            </div>
+            <div class="full">
+              <button class="add-btn" id="impSubmit">+ Import Class</button>
+              <button class="pbtn" id="impJsonToggle" style="margin-left:8px;">Paste JSON…</button>
+            </div>
+            <div class="set-field full" id="impJsonWrap" style="display:none;">
+              <label>Advanced — Class JSON</label>
+              <textarea id="impJson" class="import-ta" placeholder='{ "name":"Artificer", "source":"5E", "hitDie":8, "saves":["con","int"], "choose":2, "skills":["Arcana","History"], "subclassLevel":3, "subclasses":["Alchemist"], "casting":{"type":"half","ability":"int"}, "features":[{"lv":1,"name":"Magical Tinkering"}] }'></textarea>
+              <div class="import-note">Paste a full class definition to import it directly. Overrides the form fields above.</div>
+            </div>
+          </div>
+          <div class="import-msg" id="impMsg"></div>
+          <div id="importedList" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2><span>Import Species</span><span class="rune">◈</span></h2>
+          <div class="picker-hint">Add a playable species / lineage. Imported species are saved to the database and appear in the <span class="hl">Species</span> picker on the Settings tab; their traits show on the Features &amp; Traits tab.</div>
+          <div class="import-grid">
+            <div class="set-field full"><label>Species Name</label><input id="spName" placeholder="e.g. Aarakocra"></div>
+            <div class="set-field"><label>Source</label>
+              <select id="spSource">
+                <option value="Homebrew">Homebrew</option>
+                <option value="5E">Official — 5E</option>
+                <option value="5.5E">Official — 5.5E</option>
+              </select>
+            </div>
+            <div class="set-field"><label>Size</label>
+              <select id="spSize"><option>Small</option><option selected>Medium</option><option>Large</option></select>
+            </div>
+            <div class="set-field"><label>Walk Speed</label><input id="spSpeed" type="number" min="0" max="120" value="30"></div>
+            <div class="set-field"><label>Darkvision (ft)</label><input id="spDarkvision" type="number" min="0" max="120" value="0"></div>
+            <div class="set-field full"><label>Ability Score Increase</label>
+              <input id="spAsi" placeholder="e.g. +2 DEX, +1 WIS  (or leave blank)">
+              <div class="import-note">Free-text summary; not auto-applied to ability scores.</div>
+            </div>
+            <div class="set-field full"><label>Languages</label>
+              <input id="spLanguages" placeholder="Common, Elvish">
+            </div>
+            <div class="set-field full"><label>Description</label>
+              <textarea id="spDesc" class="import-ta" style="min-height:60px;" placeholder="One-paragraph species summary."></textarea>
+            </div>
+            <div class="set-field full"><label>Traits (one per line)</label>
+              <textarea id="spTraits" class="import-ta" placeholder="name | description&#10;Flight | You have a flying speed of 50 ft while not wearing heavy armor.&#10;Talons | Your unarmed strikes deal 1d4 slashing damage."></textarea>
+              <div class="import-note">Format: <span class="hl">name | description</span>, one trait per line.</div>
+            </div>
+            <div class="full">
+              <button class="add-btn" id="spSubmit">+ Import Species</button>
+              <button class="pbtn" id="spJsonToggle" style="margin-left:8px;">Paste JSON…</button>
+            </div>
+            <div class="set-field full" id="spJsonWrap" style="display:none;">
+              <label>Advanced — Species JSON</label>
+              <textarea id="spJson" class="import-ta" placeholder='{ "name":"Aarakocra", "source":"5E", "size":"Medium", "speed":25, "asi":"+2 DEX, +1 WIS", "languages":"Common, Aarakocra, Auran", "traits":[{"name":"Flight","desc":"Flying speed 50 ft."}] }'></textarea>
+              <div class="import-note">Paste a full species definition to import it directly. Overrides the form fields above.</div>
+            </div>
+          </div>
+          <div class="import-msg" id="spMsg"></div>
+          <div id="speciesImportedList" style="margin-top:10px;"></div>
         </div>
       </div>
     </div>
@@ -823,6 +1104,22 @@ const STANDARD_ACTIONS = [
 
 // Keywords that mark an inventory item as "usable" on the Actions tab.
 const USABLE_ITEM_WORDS = ['potion','scroll','elixir','oil','bomb','kit','antitoxin','torch','caltrops','ration','holy water','acid','poison','wand','rope','net'];
+
+// Nine alignments plus "unaligned". Descriptions follow the SRD 5.1 (Open Game
+// Content); examples are the commonly listed creature types. Used by both the
+// Settings dropdown and the Notes reference tab.
+const ALIGNMENTS = [
+  {abbr:'LG', name:'Lawful Good',    desc:'Can be counted on to do the right thing as expected by society.',            eg:'Gold dragons, paladins, most dwarves'},
+  {abbr:'NG', name:'Neutral Good',   desc:'Do the best they can to help others according to their needs.',              eg:'Many celestials, some cloud giants, gnomes'},
+  {abbr:'CG', name:'Chaotic Good',   desc:'Act as their conscience directs, with little regard for what others expect.', eg:'Copper dragons, many elves, unicorns'},
+  {abbr:'LN', name:'Lawful Neutral', desc:'Act in accordance with law, tradition, or a personal code.',                 eg:'Many monks and some wizards, modrons'},
+  {abbr:'N',  name:'Neutral',        desc:'Prefer to steer clear of moral questions, doing what seems best at the time.', eg:'Lizardfolk, most druids, many humans'},
+  {abbr:'CN', name:'Chaotic Neutral',desc:'Follow their whims, holding their personal freedom above all else.',         eg:'Many barbarians and rogues, some bards'},
+  {abbr:'LE', name:'Lawful Evil',    desc:'Methodically take what they want, within the limits of a code of tradition.', eg:'Devils, blue dragons, hobgoblins'},
+  {abbr:'NE', name:'Neutral Evil',   desc:'Do whatever they can get away with, without compassion or qualms.',          eg:'Many drow, some cloud giants, goblins'},
+  {abbr:'CE', name:'Chaotic Evil',   desc:'Act with arbitrary violence, spurred by greed, hatred, or bloodlust.',       eg:'Demons, red dragons, orcs'},
+  {abbr:'—',  name:'Unaligned',      desc:'Lacks the capacity for moral judgment and simply acts by its nature.',       eg:'Most beasts and mindless creatures'},
+];
 
 const ABILITIES = [
   {key:'str', name:'Strength'},
@@ -938,6 +1235,98 @@ const CLASS_DATA = {
     features:P([[1,'Spellcasting','Arcane Recovery'],[2,'Arcane Tradition'],[4,'Ability Score Improvement'],[6,'Tradition feature'],[8,'Ability Score Improvement'],[10,'Tradition feature'],[12,'Ability Score Improvement'],[14,'Tradition feature'],[16,'Ability Score Improvement'],[18,'Spell Mastery'],[19,'Ability Score Improvement'],[20,'Signature Spells']]) },
 };
 
+// Tag every built-in class with a source for filtering. The SRD roster is
+// official 5E; Jaeger is the World Anvil homebrew. `homebrew`/`builtin` flags
+// are kept in sync so older code paths and re-imports behave consistently.
+const CLASS_SOURCES = ['5E', '5.5E', 'Homebrew'];
+Object.values(CLASS_DATA).forEach(cd=>{
+  if(!cd.source) cd.source = cd.homebrew ? 'Homebrew' : '5E';
+  cd.homebrew = cd.source === 'Homebrew';
+  cd.builtin = true;
+});
+
+// ---------- Playable species (races / lineages) ----------
+// Same source-tagging model as classes; imported species merge in at startup.
+const CLASS_LIKE_SOURCES = CLASS_SOURCES; // shared list, reused by species
+const SPECIES_DATA = {
+  Human:{ source:'5E', size:'Medium', speed:30, darkvision:0, asi:'+1 to all abilities', languages:'Common + one', desc:'Ambitious and adaptable, humans are the most widespread of the common peoples.',
+    traits:[{name:'Versatile', desc:'A +1 bonus to every ability score (or extra skill/feat in variant rules).'}] },
+  Elf:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX', languages:'Common, Elvish', desc:'Graceful, long-lived folk with a keen mind and an affinity for magic.',
+    traits:[{name:'Darkvision', desc:'See in dim light within 60 ft as if bright, and darkness as dim.'},{name:'Keen Senses', desc:'Proficiency in the Perception skill.'},{name:'Fey Ancestry', desc:'Advantage on saves against being charmed; magic can\'t put you to sleep.'},{name:'Trance', desc:'Meditate 4 hours instead of sleeping 8 for a long rest.'}] },
+  Dwarf:{ source:'5E', size:'Medium', speed:25, darkvision:60, asi:'+2 CON', languages:'Common, Dwarvish', desc:'Stout and hardy, dwarves are skilled warriors, miners, and workers of stone and metal.',
+    traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Dwarven Resilience', desc:'Advantage on saves vs poison and resistance to poison damage.'},{name:'Stonecunning', desc:'Add double proficiency on History checks about stonework.'}] },
+  Halfling:{ source:'5E', size:'Small', speed:25, darkvision:0, asi:'+2 DEX', languages:'Common, Halfling', desc:'Cheerful and practical, halflings value the comforts of home.',
+    traits:[{name:'Lucky', desc:'Reroll a 1 on an attack, check, or save; use the new roll.'},{name:'Brave', desc:'Advantage on saves against being frightened.'},{name:'Halfling Nimbleness', desc:'Move through the space of any creature a size larger.'}] },
+  Dragonborn:{ source:'5E', size:'Medium', speed:30, darkvision:0, asi:'+2 STR, +1 CHA', languages:'Common, Draconic', desc:'Proud dragon-blooded warriors who breathe elemental power.',
+    traits:[{name:'Draconic Ancestry', desc:'Choose a dragon type; sets your breath weapon and resistance.'},{name:'Breath Weapon', desc:'Exhale destructive energy in a line or cone (DEX/CON save for half).'},{name:'Damage Resistance', desc:'Resistance to the damage type of your ancestry.'}] },
+  Gnome:{ source:'5E', size:'Small', speed:25, darkvision:60, asi:'+2 INT', languages:'Common, Gnomish', desc:'Curious and inventive tinkerers with boundless enthusiasm.',
+    traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Gnome Cunning', desc:'Advantage on INT, WIS, and CHA saves against magic.'}] },
+  'Half-Orc':{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 STR, +1 CON', languages:'Common, Orc', desc:'Fierce and enduring, half-orcs are shaped by strength and survival.',
+    traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Relentless Endurance', desc:'Once per long rest, drop to 1 HP instead of 0.'},{name:'Savage Attacks', desc:'Roll one extra weapon damage die on a melee critical hit.'}] },
+  Tiefling:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 CHA, +1 INT', languages:'Common, Infernal', desc:'Bearers of an infernal bloodline, marked by horns and a fiendish legacy.',
+    traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Hellish Resistance', desc:'Resistance to fire damage.'},{name:'Infernal Legacy', desc:'Know Thaumaturgy; gain Hellish Rebuke and Darkness at higher levels.'}] },
+};
+Object.values(SPECIES_DATA).forEach(sd=>{ if(!sd.source) sd.source='5E'; sd.builtin=true; });
+
+// ---------- Spell slot tables (PHB) ----------
+// Full-caster slots by caster level (also used as the multiclass table).
+const FULL_SLOTS = {
+  1:[2],2:[3],3:[4,2],4:[4,3],5:[4,3,2],6:[4,3,3],7:[4,3,3,1],8:[4,3,3,2],
+  9:[4,3,3,3,1],10:[4,3,3,3,2],11:[4,3,3,3,2,1],12:[4,3,3,3,2,1],
+  13:[4,3,3,3,2,1,1],14:[4,3,3,3,2,1,1],15:[4,3,3,3,2,1,1,1],16:[4,3,3,3,2,1,1,1],
+  17:[4,3,3,3,2,1,1,1,1],18:[4,3,3,3,3,1,1,1,1],19:[4,3,3,3,3,2,1,1,1],20:[4,3,3,3,3,2,2,1,1]
+};
+// Half-caster (Paladin/Ranger) slots by class level.
+const HALF_SLOTS = {
+  1:[],2:[2],3:[3],4:[3],5:[4,2],6:[4,2],7:[4,3],8:[4,3],9:[4,3,2],10:[4,3,2],
+  11:[4,3,3],12:[4,3,3],13:[4,3,3,1],14:[4,3,3,1],15:[4,3,3,2],16:[4,3,3,2],
+  17:[4,3,3,3,1],18:[4,3,3,3,1],19:[4,3,3,3,2],20:[4,3,3,3,2]
+};
+// Warlock Pact Magic: {n: slots, l: slot level} by warlock level.
+const PACT_SLOTS = {
+  1:{n:1,l:1},2:{n:2,l:1},3:{n:2,l:2},4:{n:2,l:2},5:{n:2,l:3},6:{n:2,l:3},
+  7:{n:2,l:4},8:{n:2,l:4},9:{n:2,l:5},10:{n:2,l:5},11:{n:3,l:5},12:{n:3,l:5},
+  13:{n:3,l:5},14:{n:3,l:5},15:{n:3,l:5},16:{n:3,l:5},17:{n:4,l:5},18:{n:4,l:5},19:{n:4,l:5},20:{n:4,l:5}
+};
+
+// Action/reaction metadata for the SRD classes (whose features are stored
+// name-only). Attaching this lets the Actions tab and Features tab surface the
+// same use/cost/desc detail the homebrew Jaeger already carries. Keyed by the
+// feature's base name (parentheticals stripped).
+const FEATURE_META = {
+  'Rage':{use:'bonus action', cost:'uses/rest', desc:'Advantage on STR checks & saves, bonus melee damage, and resistance to bludgeoning/piercing/slashing.'},
+  'Second Wind':{use:'bonus action', cost:'1/rest', desc:'Regain 1d10 + fighter level hit points.'},
+  'Action Surge':{use:'special', cost:'1/rest', desc:'Take one additional action on your turn.'},
+  'Reckless Attack':{use:'special', desc:'Attack with advantage on STR melee attacks this turn; attacks against you have advantage until your next turn.'},
+  'Bardic Inspiration':{use:'bonus action', cost:'CHA mod/rest', desc:'Give a creature a Bardic Inspiration die to add to one check, attack, or save.'},
+  'Channel Divinity':{use:'action', cost:'uses/rest', desc:'Invoke a divine effect (Turn Undead plus a domain option).'},
+  'Wild Shape':{use:'action', cost:'2/rest', desc:'Transform into a beast you have seen.'},
+  'Cunning Action':{use:'bonus action', desc:'Dash, Disengage, or Hide as a bonus action.'},
+  'Sneak Attack':{use:'special', cost:'1/turn', desc:'Extra damage once per turn when you have advantage or an ally is adjacent to the target.'},
+  'Lay on Hands':{use:'action', desc:'Spend from a pool of healing equal to 5 × paladin level to restore HP or cure disease/poison.'},
+  'Divine Sense':{use:'action', cost:'1+CHA/long rest', desc:'Detect celestials, fiends, and undead within 60 ft until your next turn.'},
+  'Divine Smite':{use:'special', desc:'On a melee hit, expend a spell slot to deal 2d8 radiant (+1d8 per slot level above 1st).'},
+  'Metamagic':{use:'special', desc:'Spend sorcery points to alter a spell (Twin, Quicken, Careful, etc.).'},
+  'Font of Magic':{use:'bonus action', desc:'Convert sorcery points to spell slots (or slots to points).'},
+  'Mystic Arcanum':{use:'special', cost:'1/long rest', desc:'Cast one high-level warlock spell without a slot.'},
+  'Ki':{use:'special', desc:'Spend Ki on Flurry of Blows, Patient Defense, or Step of the Wind (bonus action).'},
+  'Deflect Missiles':{use:'reaction', desc:'Reduce ranged weapon damage by 1d10 + DEX + monk level; may throw it back.'},
+  'Stunning Strike':{use:'special', cost:'1 ki', desc:'On a melee hit, force a CON save or stun the target until your next turn.'},
+  'Arcane Recovery':{use:'special', cost:'1/day', desc:'On a short rest, recover spell slots totaling up to half your wizard level.'},
+  "Hunter's Pursuit":{use:'special', cost:'1 FP'}
+};
+Object.values(CLASS_DATA).forEach(cd=>{
+  (cd.features||[]).forEach(f=>{
+    const base = f.name.replace(/\s*\(.*\)\s*$/,'').trim();
+    const meta = FEATURE_META[f.name] || FEATURE_META[base];
+    if(meta){
+      if(meta.use && !f.use) f.use = meta.use;
+      if(meta.cost && !f.cost) f.cost = meta.cost;
+      if(meta.desc && !f.desc) f.desc = meta.desc;
+    }
+  });
+});
+
 // PHB multiclassing prerequisites: an array of alternatives, each an ability-minimum set.
 // (Jaeger has no published prereq — DEX or INT 13 mirrors its primary abilities.)
 const MC_REQS = {
@@ -962,8 +1351,15 @@ function defaultCharacter(){
     currency:{cp:0,sp:0,ep:0,gp:0,pp:0},
     inventory:[{name:'',qty:1}],
     spellSlots: [1,2,3,4,5,6,7,8,9].map(()=>({total:0, used:0})),
+    pactSlots: {total:0, used:0, level:1}, // Warlock pact magic (tracked separately)
+    autoSlots: true, // auto-fill slots from class levels (PHB multiclass rules)
     spellClass: 'Wizard',
-    knownSpells: [] // {name, level, custom:bool}
+    knownSpells: [], // {name, level, custom:bool}
+    // Worn/wielded gear with mechanical effects. Each item:
+    // {name, description, equipped, attack:{bonus,dmg},
+    //  abilities:{str,dex,con,int,wis,cha} (string "+2" or "=19"),
+    //  skills:[{name,bonus}], spells:[{name,level}]}
+    equipment: []
   };
 }
 
@@ -984,6 +1380,71 @@ function el(tag, cls, html){
   if(cls) e.className = cls;
   if(html!==undefined) e.innerHTML = html;
   return e;
+}
+
+// Escape user text before interpolating into innerHTML (names, descriptions).
+function esc(s){
+  return (s==null?'':String(s))
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---------- Equipment helpers ----------
+function equipList(){
+  if(!Array.isArray(state.equipment)) state.equipment = [];
+  return state.equipment;
+}
+function newEquipItem(){
+  return { name:'', description:'', equipped:true,
+    attack:{bonus:'',dmg:''},
+    abilities:{str:'',dex:'',con:'',int:'',wis:'',cha:''},
+    skills:[], spells:[] };
+}
+function equippedEquip(){ return equipList().filter(it=>it.equipped); }
+
+// Parse an ability-effect string: "+2"/"-1" → additive, "=19" → set score.
+function parseAbilityEffect(v){
+  const s = (v==null?'':String(v)).trim();
+  if(!s) return null;
+  if(s[0]==='='){ const n=parseInt(s.slice(1),10); return isNaN(n)?null:{mode:'set',value:n}; }
+  const n = parseInt(s,10);
+  return isNaN(n)?null:{mode:'add',value:n};
+}
+
+// Base ability scores modified by equipped gear (adds stack; sets take the max,
+// then adds apply on top). Used everywhere derived stats are computed.
+function effectiveAbilities(){
+  const eff={}, adds={}, sets={};
+  ABILITIES.forEach(a=> eff[a.key]=state.abilities[a.key]||0);
+  equippedEquip().forEach(it=>{
+    const ab = it.abilities||{};
+    ABILITIES.forEach(a=>{
+      const e = parseAbilityEffect(ab[a.key]);
+      if(!e) return;
+      if(e.mode==='add') adds[a.key]=(adds[a.key]||0)+e.value;
+      else sets[a.key]=Math.max(a.key in sets ? sets[a.key] : -Infinity, e.value);
+    });
+  });
+  ABILITIES.forEach(a=>{
+    let v = eff[a.key];
+    if(a.key in sets) v = Math.max(v, sets[a.key]);
+    eff[a.key] = v + (adds[a.key]||0);
+  });
+  return eff;
+}
+function equipSkillBonus(skillName){
+  let n=0;
+  equippedEquip().forEach(it=> (it.skills||[]).forEach(s=>{ if(s.name===skillName) n += Number(s.bonus)||0; }));
+  return n;
+}
+function equipmentAttacks(){
+  return equippedEquip()
+    .filter(it=> it.attack && (it.attack.dmg || it.attack.bonus))
+    .map(it=>({ name: it.name||'Unnamed weapon', bonus: it.attack.bonus||'', dmg: it.attack.dmg||'' }));
+}
+function equipmentGrantedSpells(){
+  return equippedEquip().flatMap(it=>
+    (it.spells||[]).map(sp=>({ name: sp.name, level: Number(sp.level)||0, from: it.name||'item' })));
 }
 
 // ---------- Build Abilities Panel ----------
@@ -1086,36 +1547,84 @@ function buildInventory(){
   }));
 }
 
+// Compute leveled + pact slots from the class list using the PHB tables.
+function computeSpellSlots(picked){
+  const totals=[0,0,0,0,0,0,0,0,0];
+  const leveled = picked.filter(c=>{ const t=CLASS_DATA[c.name]&&CLASS_DATA[c.name].casting; return t&&(t.type==='full'||t.type==='half'); });
+  const warlocks = picked.filter(c=>{ const t=CLASS_DATA[c.name]&&CLASS_DATA[c.name].casting; return t&&t.type==='pact'; });
+  let table=null, lvl=0;
+  if(leveled.length===1){
+    const c=leveled[0]; lvl=c.level||1;
+    table = CLASS_DATA[c.name].casting.type==='full' ? FULL_SLOTS : HALF_SLOTS;
+  } else if(leveled.length>1){
+    // Multiclass: full levels + half of half-caster levels, read off the full table.
+    lvl = leveled.reduce((s,c)=> s + (CLASS_DATA[c.name].casting.type==='full' ? (c.level||1) : Math.floor((c.level||1)/2)), 0);
+    table = FULL_SLOTS;
+  }
+  if(table && lvl>0){ (table[Math.min(20,Math.max(1,lvl))]||[]).forEach((n,i)=>totals[i]+=n); }
+  const wl = warlocks.reduce((s,c)=>s+(c.level||1),0);
+  const pact = wl>0 ? PACT_SLOTS[Math.min(20,wl)] : null;
+  return { totals, pact, hasCaster: leveled.length>0 || wl>0 };
+}
+
+// Overwrite slot totals from the class list when auto mode is on, preserving
+// how many are already spent. Non-casters are left alone so manual values survive.
+function refreshAutoSlots(){
+  if(!state.autoSlots) return;
+  const { totals, pact, hasCaster } = computeSpellSlots(pickedClasses());
+  if(!hasCaster) return;
+  state.spellSlots.forEach((s,i)=>{ s.total = totals[i]; if(s.used>s.total) s.used=s.total; });
+  if(!state.pactSlots) state.pactSlots={total:0,used:0,level:1};
+  if(pact){ state.pactSlots.total=pact.n; state.pactSlots.level=pact.l; if(state.pactSlots.used>pact.n) state.pactSlots.used=pact.n; }
+  else { state.pactSlots.total=0; state.pactSlots.used=0; }
+}
+
+function slotRow(label, slot, key, extraClass){
+  let pips='';
+  for(let p=0;p<slot.total;p++) pips += `<span class="slot-pip ${p<slot.used?'filled':''}" data-lvl="${key}" data-p="${p}"></span>`;
+  const disabled = state.autoSlots ? 'disabled' : '';
+  const totalCell = key==='pact'
+    ? `<span class="total pact-total">${slot.total}</span>`
+    : `<input class="total" type="number" min="0" max="9" value="${slot.total}" data-lvl="${key}" ${disabled}>`;
+  return `<div class="slot-level ${extraClass||''}"><div class="lv">${label}</div>${totalCell}<div class="slot-pips">${pips}</div></div>`;
+}
+
 function buildSpellSlots(){
   const panel = document.getElementById('spellSlots');
-  panel.innerHTML='';
-  state.spellSlots.forEach((slot,idx)=>{
-    const row = el('div','slot-level');
-    let pips='';
-    for(let p=0;p<slot.total;p++){
-      pips += `<span class="slot-pip ${p<slot.used?'filled':''}" data-lvl="${idx}" data-p="${p}"></span>`;
-    }
-    row.innerHTML = `
-      <div class="lv">Level ${idx+1}</div>
-      <input class="total" type="number" min="0" max="9" value="${slot.total}" data-lvl="${idx}">
-      <div class="slot-pips">${pips}</div>
-    `;
-    panel.appendChild(row);
+  if(state.autoSlots) refreshAutoSlots();
+  const auto = state.autoSlots;
+  let html = `<div class="slot-mode">
+    <span class="slot-mode-label">${auto?'⚙ Auto-filled from class levels':'✎ Manual entry'}</span>
+    <button class="pbtn slot-mode-btn" id="slotModeBtn">${auto?'Switch to manual':'Switch to auto'}</button>
+  </div>`;
+  html += state.spellSlots.map((slot,idx)=> slotRow('Level '+(idx+1), slot, String(idx))).join('');
+  if(state.pactSlots && state.pactSlots.total>0){
+    html += slotRow(`Pact · Lv ${state.pactSlots.level}`, state.pactSlots, 'pact', 'pact-row');
+    html += `<div class="import-note">Pact slots cast at level ${state.pactSlots.level} and recharge on a short rest.</div>`;
+  }
+  panel.innerHTML = html;
+
+  document.getElementById('slotModeBtn').addEventListener('click', ()=>{
+    state.autoSlots = !state.autoSlots;
+    if(state.autoSlots) refreshAutoSlots();
+    buildSpellSlots(); buildActions(); save();
   });
-  panel.querySelectorAll('input.total').forEach(inp=>{
-    inp.addEventListener('input', e=>{
-      const lvl = e.target.dataset.lvl;
-      state.spellSlots[lvl].total = Math.max(0, parseInt(e.target.value)||0);
-      if(state.spellSlots[lvl].used > state.spellSlots[lvl].total) state.spellSlots[lvl].used = state.spellSlots[lvl].total;
-      buildSpellSlots(); save();
+  if(!auto){
+    panel.querySelectorAll('input.total').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const lvl = e.target.dataset.lvl;
+        state.spellSlots[lvl].total = Math.max(0, parseInt(e.target.value)||0);
+        if(state.spellSlots[lvl].used > state.spellSlots[lvl].total) state.spellSlots[lvl].used = state.spellSlots[lvl].total;
+        buildSpellSlots(); buildActions(); save();
+      });
     });
-  });
+  }
   panel.querySelectorAll('.slot-pip').forEach(p=>{
     p.addEventListener('click', e=>{
-      const lvl = e.target.dataset.lvl, idx = parseInt(e.target.dataset.p);
-      const slot = state.spellSlots[lvl];
+      const key = e.target.dataset.lvl, idx = parseInt(e.target.dataset.p);
+      const slot = key==='pact' ? state.pactSlots : state.spellSlots[key];
       slot.used = (idx < slot.used) ? idx : idx+1;
-      buildSpellSlots(); save();
+      buildSpellSlots(); buildActions(); save();
     });
   });
 }
@@ -1171,7 +1680,8 @@ function buildSpellLibrary(){
 
 function buildKnownSpells(){
   const container = document.getElementById('knownSpellsList');
-  if(state.knownSpells.length===0){
+  const granted = equipmentGrantedSpells();
+  if(state.knownSpells.length===0 && granted.length===0){
     container.innerHTML = '<div class="spell-lib-empty">No spells added yet — pick from the library above.</div>';
     return;
   }
@@ -1188,6 +1698,14 @@ function buildKnownSpells(){
       </div>`;
     });
   });
+  if(granted.length){
+    html += `<div class="known-spell-group-label">From Equipment</div>`;
+    granted.sort((a,b)=>a.level-b.level || a.name.localeCompare(b.name)).forEach(s=>{
+      html += `<div class="known-spell-item">
+        <span>${esc(s.name)} <span class="custom-tag">${levelLabel(s.level)} · ${esc(s.from)}</span></span>
+      </div>`;
+    });
+  }
   container.innerHTML = html;
   container.querySelectorAll('.spell-remove').forEach(btn=>{
     btn.addEventListener('click', e=>{
@@ -1229,6 +1747,7 @@ function applyClassesToState(){
     const caster = picked.find(c=> SPELL_DATA[c.name]);
     if(caster) state.spellClass = caster.name;
   }
+  refreshAutoSlots();
 }
 
 function updateHero(){
@@ -1255,22 +1774,48 @@ function afterClassChange(){
   buildClassFeatures();
   buildSpellClassSelect();
   buildSpellLibrary();
+  buildSpellSlots();
+  buildActions();
   recalc(); save();
+}
+
+// ---------- Class source tags & filtering ----------
+function sourceKey(src){ return src==='5E' ? '5e' : src==='5.5E' ? '55e' : 'homebrew'; }
+function sourceTag(src){ return `<span class="src-tag src-${sourceKey(src)}">${src}</span>`; }
+
+let classFilter = 'all';
+// Class names matching the active source filter; the currently-selected class
+// is always included so a filtered-out selection stays visible in its dropdown.
+function classNamesForFilter(alwaysInclude){
+  return Object.keys(CLASS_DATA).filter(n=>
+    classFilter==='all' || CLASS_DATA[n].source===classFilter || n===alwaysInclude);
+}
+
+function buildClassFilterBar(){
+  const bar = document.getElementById('classFilterBar');
+  const opts = ['all', ...CLASS_SOURCES];
+  bar.innerHTML = '<span class="filter-label">Filter</span>' + opts.map(o=>
+    `<span class="filter-chip ${classFilter===o?'on':''}" data-f="${o}">${o==='all'?'All':o}</span>`).join('');
+  bar.querySelectorAll('.filter-chip').forEach(chip=>chip.addEventListener('click',()=>{
+    classFilter = chip.dataset.f;
+    buildClassFilterBar();
+    buildClassList();
+  }));
 }
 
 function buildClassList(){
   ensureClasses();
   const wrap = document.getElementById('classList');
-  const names = Object.keys(CLASS_DATA);
   wrap.innerHTML='';
   state.classes.forEach((entry,i)=>{
     const taken = state.classes.filter((c,j)=>j!==i).map(c=>c.name);
+    const names = classNamesForFilter(entry.name);
     const row = el('div','class-row');
     row.innerHTML = `
       <select class="mc-class" data-i="${i}">
         <option value="">— pick a class —</option>
         ${names.filter(n=>!taken.includes(n)).map(n=>
-          `<option value="${n}" ${entry.name===n?'selected':''}>${n}${CLASS_DATA[n].homebrew?' [homebrew]':''}</option>`).join('')}
+          `<option value="${n}" ${entry.name===n?'selected':''}>${n} · ${CLASS_DATA[n].source}</option>`).join('')}
       </select>
       <input class="mc-level" type="number" min="1" max="20" value="${entry.level||1}" data-i="${i}">
       ${i===0?'<span class="primary-tag">primary</span>':''}
@@ -1293,6 +1838,8 @@ function buildClassList(){
     applyClassesToState();
     renderClassInfoStack();
     buildClassFeatures();
+    buildSpellSlots();
+    buildActions();
     recalc(); save();
   }));
   wrap.querySelectorAll('.mc-del').forEach(btn=>btn.addEventListener('click', e=>{
@@ -1350,14 +1897,14 @@ function classInfoCard(entry, showReq){
   ).join('');
 
   return `<div class="class-info">
-    <div class="ci-title">${entry.name} — Lv ${lvl}${cd.homebrew?'<span class="homebrew-tag">Homebrew</span>':''}</div>
+    <div class="ci-title">${entry.name} — Lv ${lvl}${sourceTag(cd.source)}</div>
     <div class="ci-row"><span class="ci-key">hit_die</span><span>d${cd.hitDie} → ${lvl}d${cd.hitDie} from this class</span></div>
     <div class="ci-row"><span class="ci-key">save_prof</span><span>${saveNames}</span></div>
     <div class="ci-row"><span class="ci-key">skills</span><span>${skills}</span></div>
     ${cd.subclasses?`<div class="ci-row"><span class="ci-key">subclasses</span><span>choose at Lv ${cd.subclassLevel}: ${cd.subclasses.join(' · ')}</span></div>`:''}
     ${spells?`<div class="ci-row"><span class="ci-key">spellcasting</span><span>${spells}</span></div>`:''}
     ${req?`<div class="ci-row"><span class="ci-key">mc_req</span><span class="${req.met?'req-ok':'req-bad'}">${req.text} — ${req.met?'✓ met':'✗ not met'}</span></div>`:''}
-    ${cd.homebrew?`<div class="ci-row"><span class="ci-key">source</span><span>World Anvil</span></div>`:''}
+    <div class="ci-row"><span class="ci-key">source</span><span>${cd.custom ? 'Imported · '+cd.source : cd.homebrew ? 'World Anvil · Homebrew' : 'Official · '+cd.source}</span></div>
     ${progRows?`<div class="ci-prog-label">// ability progression — highlighted rows are unlocked at this class's level</div><div class="ci-prog">${progRows}</div>`:''}
     ${cd.desc?`<div class="ci-desc">${cd.desc}</div>`:''}
   </div>`;
@@ -1449,29 +1996,155 @@ function buildClassFeatures(){
 function slotsRemainingAtOrAbove(level){
   let n=0;
   for(let i=level-1;i<9;i++) n += Math.max(0, state.spellSlots[i].total - state.spellSlots[i].used);
+  const pact = state.pactSlots;
+  if(pact && pact.level>=level) n += Math.max(0, pact.total - pact.used);
   return n;
+}
+
+function buildEquipment(){
+  const wrap = document.getElementById('equipmentList');
+  if(!wrap) return;
+  const list = equipList();
+  if(list.length===0){
+    wrap.innerHTML = '<div class="action-empty">No equipment yet — add a weapon, armor, or magic item below.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((it,i)=>{
+    const ab = it.abilities||{}, atk = it.attack||{};
+    return `<div class="equip-card ${it.equipped?'equipped':''}">
+      <div class="equip-head">
+        <label class="equip-toggle"><input type="checkbox" class="eq-equipped" data-i="${i}" ${it.equipped?'checked':''}><span>Equipped</span></label>
+        <input class="eq-name" data-i="${i}" value="${esc(it.name)}" placeholder="Item name (e.g. Longsword +1)">
+        <span class="row-del eq-del" data-i="${i}">✕</span>
+      </div>
+      <textarea class="eq-desc" data-i="${i}" placeholder="Description…">${esc(it.description)}</textarea>
+      <div class="eq-effects">
+        <div class="eq-field-group">
+          <span class="eq-lbl">Attack</span>
+          <input class="eq-atk-bonus" data-i="${i}" value="${esc(atk.bonus)}" placeholder="+6 hit">
+          <input class="eq-atk-dmg" data-i="${i}" value="${esc(atk.dmg)}" placeholder="1d8+4 slashing">
+        </div>
+        <div class="eq-field-group">
+          <span class="eq-lbl">Ability</span>
+          ${ABILITIES.map(a=>`<label class="eq-ab"><span>${a.key.toUpperCase()}</span><input class="eq-abil" data-i="${i}" data-k="${a.key}" value="${esc(ab[a.key])}" placeholder="—"></label>`).join('')}
+        </div>
+        <div class="eq-field-group">
+          <span class="eq-lbl">Skills</span>
+          <div class="eq-skill-list">${(it.skills||[]).map((s,si)=>`<span class="eq-chip">${esc(s.name)} ${fmt(Number(s.bonus)||0)}<span class="eq-skill-del" data-i="${i}" data-si="${si}">✕</span></span>`).join('')}</div>
+          <select class="eq-skill-pick" data-i="${i}"><option value="">skill…</option>${SKILLS.map(s=>`<option>${s.name}</option>`).join('')}</select>
+          <input class="eq-skill-bonus" data-i="${i}" type="number" placeholder="±" style="width:56px;">
+          <button class="add-btn eq-skill-add" data-i="${i}">Add</button>
+        </div>
+        <div class="eq-field-group">
+          <span class="eq-lbl">Spells</span>
+          <div class="eq-spell-list">${(it.spells||[]).map((sp,si)=>`<span class="eq-chip">${esc(sp.name)} <em>${sp.level==0?'C':'L'+sp.level}</em><span class="eq-spell-del" data-i="${i}" data-si="${si}">✕</span></span>`).join('')}</div>
+          <input class="eq-spell-name" data-i="${i}" placeholder="Granted spell">
+          <input class="eq-spell-lvl" data-i="${i}" type="number" min="0" max="9" placeholder="Lv" style="width:56px;">
+          <button class="add-btn eq-spell-add" data-i="${i}">Add</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  bindEquipList(wrap);
+}
+
+function bindEquipList(wrap){
+  const list = equipList();
+  const refreshEffects = ()=>{ recalc(); buildActions(); buildKnownSpells(); buildEquipAttackList(); };
+  // In-place text edits: update state without rebuilding (preserve focus).
+  wrap.querySelectorAll('.eq-name').forEach(inp=>inp.addEventListener('input', e=>{
+    list[e.target.dataset.i].name = e.target.value; buildActions(); buildEquipAttackList(); save();
+  }));
+  wrap.querySelectorAll('.eq-desc').forEach(inp=>inp.addEventListener('input', e=>{
+    list[e.target.dataset.i].description = e.target.value; save();
+  }));
+  wrap.querySelectorAll('.eq-atk-bonus').forEach(inp=>inp.addEventListener('input', e=>{
+    const it=list[e.target.dataset.i]; it.attack=it.attack||{}; it.attack.bonus=e.target.value;
+    buildActions(); buildEquipAttackList(); save();
+  }));
+  wrap.querySelectorAll('.eq-atk-dmg').forEach(inp=>inp.addEventListener('input', e=>{
+    const it=list[e.target.dataset.i]; it.attack=it.attack||{}; it.attack.dmg=e.target.value;
+    buildActions(); buildEquipAttackList(); save();
+  }));
+  wrap.querySelectorAll('.eq-abil').forEach(inp=>inp.addEventListener('input', e=>{
+    const it=list[e.target.dataset.i]; it.abilities=it.abilities||{}; it.abilities[e.target.dataset.k]=e.target.value;
+    recalc(); save();
+  }));
+  // Structural edits: rebuild the list.
+  wrap.querySelectorAll('.eq-equipped').forEach(inp=>inp.addEventListener('change', e=>{
+    list[e.target.dataset.i].equipped = e.target.checked; buildEquipment(); refreshEffects(); save();
+  }));
+  wrap.querySelectorAll('.eq-del').forEach(btn=>btn.addEventListener('click', e=>{
+    list.splice(e.target.dataset.i,1); buildEquipment(); refreshEffects(); save();
+  }));
+  wrap.querySelectorAll('.eq-skill-add').forEach(btn=>btn.addEventListener('click', e=>{
+    const card=e.target.closest('.equip-card');
+    const name=card.querySelector('.eq-skill-pick').value;
+    const bonus=parseInt(card.querySelector('.eq-skill-bonus').value,10);
+    if(!name || isNaN(bonus)) return;
+    const it=list[e.target.dataset.i]; it.skills=it.skills||[]; it.skills.push({name,bonus});
+    buildEquipment(); refreshEffects(); save();
+  }));
+  wrap.querySelectorAll('.eq-skill-del').forEach(x=>x.addEventListener('click', e=>{
+    list[e.target.dataset.i].skills.splice(e.target.dataset.si,1); buildEquipment(); refreshEffects(); save();
+  }));
+  wrap.querySelectorAll('.eq-spell-add').forEach(btn=>btn.addEventListener('click', e=>{
+    const card=e.target.closest('.equip-card');
+    const name=card.querySelector('.eq-spell-name').value.trim();
+    if(!name) return;
+    const level=Math.max(0,Math.min(9,parseInt(card.querySelector('.eq-spell-lvl').value,10)||0));
+    const it=list[e.target.dataset.i]; it.spells=it.spells||[]; it.spells.push({name,level});
+    buildEquipment(); buildActions(); buildKnownSpells(); save();
+  }));
+  wrap.querySelectorAll('.eq-spell-del').forEach(x=>x.addEventListener('click', e=>{
+    list[e.target.dataset.i].spells.splice(e.target.dataset.si,1);
+    buildEquipment(); buildActions(); buildKnownSpells(); save();
+  }));
+}
+
+// Read-only mirror of equipped weapons under the Character-tab attacks table.
+function buildEquipAttackList(){
+  const box = document.getElementById('equipAttackList');
+  if(!box) return;
+  const atks = equipmentAttacks();
+  box.innerHTML = atks.length
+    ? '<div class="equip-atk-head">From equipped gear</div>' + atks.map(a=>
+        `<div class="equip-atk-row"><span>${esc(a.name)}</span><span>${a.bonus?esc(a.bonus)+' hit':''}${a.bonus&&a.dmg?' · ':''}${esc(a.dmg||'')}</span></div>`).join('')
+    : '';
 }
 
 function buildActions(){
   const attacksEl = document.getElementById('actAttacks');
-  const attacks = state.attacks.filter(a=>a.name && a.name.trim());
-  attacksEl.innerHTML = attacks.length ? attacks.map(a=>`
+  const manual = state.attacks.filter(a=>a.name && a.name.trim()).map(a=>({name:a.name, bonus:a.bonus, dmg:a.dmg, src:'Attack'}));
+  const gearAtk = equipmentAttacks().map(a=>({...a, src:'Equipped'}));
+  const allAtk = [...manual, ...gearAtk];
+  attacksEl.innerHTML = allAtk.length ? allAtk.map(a=>`
     <div class="action-row">
-      <span class="a-name">${a.name}</span>
-      <span class="a-detail">${a.bonus ? a.bonus+' to hit' : ''}${a.bonus && a.dmg ? ' — ' : ''}${a.dmg || ''}</span>
-      <span class="action-badge">Attack</span>
+      <span class="a-name">${esc(a.name)}</span>
+      <span class="a-detail">${a.bonus ? esc(a.bonus)+' to hit' : ''}${a.bonus && a.dmg ? ' — ' : ''}${esc(a.dmg||'')}</span>
+      <span class="action-badge">${a.src}</span>
     </div>`).join('')
-    : '<div class="action-empty">No attacks yet — add them on the Character tab.</div>';
+    : '<div class="action-empty">No attacks yet — add them on the Character tab or equip a weapon.</div>';
 
   const spellsEl = document.getElementById('actSpells');
-  if(state.knownSpells.length===0){
-    spellsEl.innerHTML = '<div class="action-empty">No known spells — add some on the Spells tab.</div>';
+  const known = state.knownSpells.map(s=>({name:s.name, level:s.level, from:null}));
+  const combined = [...known, ...equipmentGrantedSpells()];
+  if(combined.length===0){
+    spellsEl.innerHTML = '<div class="action-empty">No known spells — add some on the Spells tab or equip an item that grants spells.</div>';
   } else {
-    const sorted = [...state.knownSpells].sort((a,b)=> a.level-b.level || a.name.localeCompare(b.name));
+    const sorted = combined.sort((a,b)=> a.level-b.level || a.name.localeCompare(b.name));
     spellsEl.innerHTML = sorted.map(s=>{
+      const src = s.from ? ` <span class="chip-abbr">${esc(s.from)}</span>` : '';
+      if(s.from){
+        return `<div class="action-row">
+          <span class="a-name">${esc(s.name)}${src}</span>
+          <span class="a-detail">${s.level===0?'Cantrip':levelLabel(s.level)}</span>
+          <span class="action-badge">Item</span>
+        </div>`;
+      }
       if(s.level===0){
         return `<div class="action-row">
-          <span class="a-name">${s.name}</span>
+          <span class="a-name">${esc(s.name)}</span>
           <span class="a-detail">Cantrip</span>
           <span class="action-badge">At will</span>
         </div>`;
@@ -1479,7 +2152,7 @@ function buildActions(){
       const remaining = slotsRemainingAtOrAbove(s.level);
       const ok = remaining>0;
       return `<div class="action-row">
-        <span class="a-name">${s.name}</span>
+        <span class="a-name">${esc(s.name)}</span>
         <span class="a-detail">${levelLabel(s.level)}${ok ? ` — ${remaining} slot${remaining===1?'':'s'} usable` : ''}</span>
         <span class="action-badge ${ok?'':'dim'}">${ok?'Castable':'No slots'}</span>
       </div>`;
@@ -1523,6 +2196,7 @@ function bindTabs(){
       document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
       // Rebuild on entry so the list reflects edits made on the other tabs.
       if(btn.dataset.tab==='actions') buildActions();
+      if(btn.dataset.tab==='notes') buildNotes();
     });
   });
 }
@@ -1532,22 +2206,30 @@ function recalc(){
   document.getElementById('profBonusDisplay').textContent = fmt(pb);
   document.getElementById('sealLevel').textContent = state.level;
 
+  // Effective scores fold in bonuses/overrides from equipped gear.
+  const eff = effectiveAbilities();
   ABILITIES.forEach(a=>{
-    const m = mod(state.abilities[a.key]);
-    document.getElementById('modBadge_'+a.key).textContent = fmt(m);
+    const base = state.abilities[a.key]||0;
+    const m = mod(eff[a.key]);
+    const badge = document.getElementById('modBadge_'+a.key);
+    badge.textContent = fmt(m);
+    const diff = eff[a.key] - base;
+    badge.classList.toggle('buffed', diff>0);
+    badge.classList.toggle('nerfed', diff<0);
+    badge.title = diff ? `${a.key.toUpperCase()} ${eff[a.key]} (base ${base}, gear ${fmt(diff)})` : '';
     const saveBonus = m + (state.saveProf[a.key] ? pb : 0);
     document.getElementById('saveBonus_'+a.key).textContent = fmt(saveBonus);
   });
 
   SKILLS.forEach((s,i)=>{
     const key = 'sk'+i;
-    const m = mod(state.abilities[s.ability]);
-    const bonus = m + (state.skillProf[key] ? pb : 0);
+    const m = mod(eff[s.ability]);
+    const bonus = m + (state.skillProf[key] ? pb : 0) + equipSkillBonus(s.name);
     const elBonus = document.getElementById('skillBonus_'+key);
     if(elBonus) elBonus.textContent = fmt(bonus);
   });
 
-  document.getElementById('statInit').textContent = fmt(mod(state.abilities.dex));
+  document.getElementById('statInit').textContent = fmt(mod(eff.dex));
 
   state.deathSuccess.forEach((v,i)=>{
     const p = document.querySelector(`.pip.success[data-idx="${i}"]`);
@@ -1570,7 +2252,7 @@ function bindStaticInputs(){
     });
   };
   bind('charName','name');
-  bind('charRace','race'); bind('charBackground','background'); bind('charAlignment','alignment');
+  bind('charBackground','background'); bind('charAlignment','alignment'); // charRace handled by buildSpeciesSelect
   bind('charXP','xp',true);
   document.getElementById('addClassBtn').addEventListener('click', ()=>{
     ensureClasses();
@@ -1622,6 +2304,10 @@ function bindStaticInputs(){
   document.getElementById('addItem').addEventListener('click', ()=>{
     state.inventory.push({name:'',qty:1});
     buildInventory(); save();
+  });
+  document.getElementById('addEquip').addEventListener('click', ()=>{
+    equipList().push(newEquipItem());
+    buildEquipment(); save();
   });
 }
 
@@ -1680,6 +2366,321 @@ async function apiDeleteCharacter(id){
   const r = await fetch('/api/characters/'+id, { method:'DELETE' });
   return r.json();
 }
+async function apiListClasses(){
+  const r = await fetch('/api/classes');
+  return r.json();
+}
+async function apiImportClass(payload){
+  const r = await fetch('/api/classes', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error||('HTTP '+r.status)); }
+  return r.json();
+}
+async function apiDeleteClass(id){
+  const r = await fetch('/api/classes/'+id, { method:'DELETE' });
+  return r.json();
+}
+async function apiListSpecies(){
+  const r = await fetch('/api/species');
+  return r.json();
+}
+async function apiImportSpecies(payload){
+  const r = await fetch('/api/species', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error||('HTTP '+r.status)); }
+  return r.json();
+}
+async function apiDeleteSpecies(id){
+  const r = await fetch('/api/species/'+id, { method:'DELETE' });
+  return r.json();
+}
+
+// ---------- Custom class import ----------
+// Merge server-stored custom classes into CLASS_DATA. Called at startup and
+// after any import/delete so the dropdowns and cards stay in sync.
+async function loadCustomClasses(){
+  let list = [];
+  try { list = await apiListClasses(); } catch(e){ return; }
+  Object.keys(CLASS_DATA).forEach(n=>{ if(CLASS_DATA[n].custom) delete CLASS_DATA[n]; });
+  list.forEach(rec=>{
+    CLASS_DATA[rec.name] = Object.assign({}, rec.data, {
+      source: rec.source,
+      homebrew: rec.source==='Homebrew',
+      custom: true, customId: rec.id, builtin: false
+    });
+  });
+}
+
+function parseFeatureLines(text){
+  return (text||'').split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const [lvRaw, name, desc, use, cost] = line.split('|').map(s=>(s||'').trim());
+    const f = { lv: Math.max(1, Math.min(20, parseInt(lvRaw)||1)), name };
+    if(desc) f.desc = desc;
+    if(use) f.use = use;
+    if(cost) f.cost = cost;
+    return f;
+  }).filter(f=>f.name);
+}
+
+function buildClassFromForm(){
+  const name = document.getElementById('impName').value.trim();
+  if(!name) throw new Error('Class name is required.');
+  const source = document.getElementById('impSource').value;
+  const saves = [...document.querySelectorAll('#impSaves .mini-toggle.on')].map(t=>t.dataset.k);
+  const skillsRaw = document.getElementById('impSkills').value.trim();
+  const skills = skillsRaw ? skillsRaw.split(',').map(s=>s.trim()).filter(Boolean) : 'any';
+  const subsRaw = document.getElementById('impSubclasses').value.trim();
+  const castingType = document.getElementById('impCasting').value;
+  const castAbility = document.getElementById('impCastAbility').value;
+  const casting = { type: castingType };
+  if(castAbility) casting.ability = castAbility;
+  const data = {
+    hitDie: parseInt(document.getElementById('impHitDie').value)||8,
+    saves,
+    choose: parseInt(document.getElementById('impChoose').value)||0,
+    skills,
+    subclassLevel: Math.max(1, Math.min(20, parseInt(document.getElementById('impSubLevel').value)||3)),
+    casting,
+    features: parseFeatureLines(document.getElementById('impFeatures').value)
+  };
+  if(subsRaw) data.subclasses = subsRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const desc = document.getElementById('impDesc').value.trim();
+  if(desc) data.desc = desc;
+  return { name, source, data };
+}
+
+async function submitImport(payload){
+  const msg = document.getElementById('impMsg');
+  try{
+    if(!payload) payload = buildClassFromForm();
+    if(!payload.name) throw new Error('Class name is required.');
+    if(!payload.data || typeof payload.data!=='object') throw new Error('Class data is required.');
+    const source = CLASS_SOURCES.includes(payload.source) ? payload.source : 'Homebrew';
+    const res = await apiImportClass({ name: payload.name, source, data: payload.data });
+    CLASS_DATA[payload.name] = Object.assign({}, payload.data, {
+      source, homebrew: source==='Homebrew', custom:true, customId: res.id, builtin:false
+    });
+    msg.className = 'import-msg ok';
+    msg.textContent = `Imported "${payload.name}" (${source}) — now available in the class dropdown.`;
+    buildClassFilterBar(); buildClassList(); renderImportedList();
+  }catch(err){
+    msg.className = 'import-msg err';
+    msg.textContent = 'Import failed: ' + err.message;
+  }
+}
+
+function renderImportedList(){
+  const box = document.getElementById('importedList');
+  if(!box) return;
+  const customs = Object.entries(CLASS_DATA).filter(([n,cd])=>cd.custom);
+  if(!customs.length){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="picker-hint" style="margin-bottom:6px;">Imported classes</div>' + customs.map(([n,cd])=>`
+    <div class="imported-item">
+      <span class="ii-name">${n}</span>
+      ${sourceTag(cd.source)}
+      <span class="row-del" data-id="${cd.customId}" data-name="${n}">✕</span>
+    </div>`).join('');
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
+    const id = e.target.dataset.id, name = e.target.dataset.name;
+    if(!confirm(`Remove imported class "${name}"? Characters using it will lose it.`)) return;
+    await apiDeleteClass(id);
+    delete CLASS_DATA[name];
+    state.classes = (state.classes||[]).filter(c=>c.name!==name);
+    afterClassChange();
+    renderImportedList();
+  }));
+}
+
+function bindClassImport(){
+  const saves = document.getElementById('impSaves');
+  saves.innerHTML = ABILITIES.map(a=>`<span class="mini-toggle" data-k="${a.key}">${a.key}</span>`).join('');
+  saves.querySelectorAll('.mini-toggle').forEach(t=>t.addEventListener('click', ()=>t.classList.toggle('on')));
+
+  document.getElementById('impJsonToggle').addEventListener('click', ()=>{
+    const w = document.getElementById('impJsonWrap');
+    w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+
+  document.getElementById('impSubmit').addEventListener('click', ()=>{
+    const jsonWrap = document.getElementById('impJsonWrap');
+    const jsonText = document.getElementById('impJson').value.trim();
+    if(jsonWrap.style.display!=='none' && jsonText){
+      let obj;
+      try { obj = JSON.parse(jsonText); }
+      catch(e){
+        const m = document.getElementById('impMsg');
+        m.className = 'import-msg err'; m.textContent = 'Invalid JSON: ' + e.message;
+        return;
+      }
+      const { name, source, data, ...rest } = obj;
+      submitImport({ name, source, data: data || rest });
+    } else {
+      submitImport();
+    }
+  });
+}
+
+// ---------- Species (character selection + Features tab) ----------
+async function loadCustomSpecies(){
+  let list = [];
+  try { list = await apiListSpecies(); } catch(e){ return; }
+  Object.keys(SPECIES_DATA).forEach(n=>{ if(SPECIES_DATA[n].custom) delete SPECIES_DATA[n]; });
+  list.forEach(rec=>{
+    SPECIES_DATA[rec.name] = Object.assign({}, rec.data, {
+      source: rec.source, custom:true, customId: rec.id, builtin:false
+    });
+  });
+}
+
+function buildSpeciesSelect(){
+  const sel = document.getElementById('charRace');
+  const names = Object.keys(SPECIES_DATA).sort();
+  sel.innerHTML = '<option value="">— none —</option>' + names.map(n=>
+    `<option value="${n}" ${state.race===n?'selected':''}>${n} · ${SPECIES_DATA[n].source}</option>`).join('');
+  // Preserve a pre-existing freeform species that isn't in the library.
+  if(state.race && !SPECIES_DATA[state.race]){
+    sel.insertAdjacentHTML('beforeend', `<option value="${state.race}" selected>${state.race} (custom)</option>`);
+  }
+  sel.onchange = ()=>{
+    state.race = sel.value;
+    const sd = SPECIES_DATA[state.race];
+    if(sd && sd.speed){ state.speed = sd.speed; const sp = document.getElementById('statSpeed'); if(sp) sp.value = sd.speed; }
+    renderSpeciesInfo();
+    buildSpeciesTraits();
+    updateHero(); recalc(); save();
+  };
+}
+
+function renderSpeciesInfo(){
+  const box = document.getElementById('speciesInfo');
+  if(!box) return;
+  const sd = SPECIES_DATA[state.race];
+  if(!sd){
+    box.innerHTML = state.race
+      ? '<div class="ci-desc">// custom species — add it on the Library tab to attach traits, size & speed</div>'
+      : '<div class="ci-desc">// no species selected</div>';
+    return;
+  }
+  box.innerHTML = `
+    <div class="ci-title">${state.race}${sourceTag(sd.source)}</div>
+    <div class="ci-row"><span class="ci-key">size</span><span>${sd.size||'—'}</span></div>
+    <div class="ci-row"><span class="ci-key">speed</span><span>${sd.speed||0} ft${sd.darkvision?` · darkvision ${sd.darkvision} ft`:''}</span></div>
+    ${sd.asi?`<div class="ci-row"><span class="ci-key">asi</span><span>${sd.asi}</span></div>`:''}
+    ${sd.languages?`<div class="ci-row"><span class="ci-key">languages</span><span>${sd.languages}</span></div>`:''}
+    <div class="ci-row"><span class="ci-key">source</span><span>${sd.custom?'Imported · '+sd.source:'Official · '+sd.source}</span></div>
+    ${sd.desc?`<div class="ci-desc">${sd.desc}</div>`:''}`;
+}
+
+function buildSpeciesTraits(){
+  const box = document.getElementById('speciesTraitsList');
+  if(!box) return;
+  const sd = SPECIES_DATA[state.race];
+  const traits = (sd && sd.traits) || [];
+  if(!sd){
+    box.innerHTML = `<div class="action-empty">${state.race ? 'Custom species — import "'+state.race+'" on the Library tab to list its traits here.' : 'Pick a species in Settings to see its traits here.'}</div>`;
+    return;
+  }
+  box.innerHTML = traits.length ? traits.map(t=>`
+    <div class="feat-item">
+      <div class="feat-head"><span class="f-name">${t.name}</span></div>
+      ${t.desc?`<div class="feat-desc">${t.desc}</div>`:''}
+    </div>`).join('') : '<div class="action-empty">No traits listed for this species.</div>';
+}
+
+// ---------- Species import (Library tab) ----------
+function parseTraitLines(text){
+  return (text||'').split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const [name, desc] = line.split('|').map(s=>(s||'').trim());
+    const t = { name };
+    if(desc) t.desc = desc;
+    return t;
+  }).filter(t=>t.name);
+}
+
+function buildSpeciesFromForm(){
+  const name = document.getElementById('spName').value.trim();
+  if(!name) throw new Error('Species name is required.');
+  const source = document.getElementById('spSource').value;
+  const data = {
+    size: document.getElementById('spSize').value,
+    speed: parseInt(document.getElementById('spSpeed').value)||30,
+    darkvision: parseInt(document.getElementById('spDarkvision').value)||0,
+    traits: parseTraitLines(document.getElementById('spTraits').value)
+  };
+  const asi = document.getElementById('spAsi').value.trim();
+  const langs = document.getElementById('spLanguages').value.trim();
+  const desc = document.getElementById('spDesc').value.trim();
+  if(asi) data.asi = asi;
+  if(langs) data.languages = langs;
+  if(desc) data.desc = desc;
+  return { name, source, data };
+}
+
+async function submitSpeciesImport(payload){
+  const msg = document.getElementById('spMsg');
+  try{
+    if(!payload) payload = buildSpeciesFromForm();
+    if(!payload.name) throw new Error('Species name is required.');
+    if(!payload.data || typeof payload.data!=='object') throw new Error('Species data is required.');
+    const source = CLASS_SOURCES.includes(payload.source) ? payload.source : 'Homebrew';
+    const res = await apiImportSpecies({ name: payload.name, source, data: payload.data });
+    SPECIES_DATA[payload.name] = Object.assign({}, payload.data, { source, custom:true, customId: res.id, builtin:false });
+    msg.className = 'import-msg ok';
+    msg.textContent = `Imported "${payload.name}" (${source}) — now available in the Species picker on the Settings tab.`;
+    buildSpeciesSelect(); renderSpeciesInfo(); renderSpeciesImportedList();
+  }catch(err){
+    msg.className = 'import-msg err';
+    msg.textContent = 'Import failed: ' + err.message;
+  }
+}
+
+function renderSpeciesImportedList(){
+  const box = document.getElementById('speciesImportedList');
+  if(!box) return;
+  const customs = Object.entries(SPECIES_DATA).filter(([n,sd])=>sd.custom);
+  if(!customs.length){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="picker-hint" style="margin-bottom:6px;">Imported species</div>' + customs.map(([n,sd])=>`
+    <div class="imported-item">
+      <span class="ii-name">${n}</span>
+      ${sourceTag(sd.source)}
+      <span class="row-del" data-id="${sd.customId}" data-name="${n}">✕</span>
+    </div>`).join('');
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
+    const id = e.target.dataset.id, name = e.target.dataset.name;
+    if(!confirm(`Remove imported species "${name}"?`)) return;
+    await apiDeleteSpecies(id);
+    delete SPECIES_DATA[name];
+    buildSpeciesSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSpeciesImportedList();
+  }));
+}
+
+function bindSpeciesImport(){
+  document.getElementById('spJsonToggle').addEventListener('click', ()=>{
+    const w = document.getElementById('spJsonWrap');
+    w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+  document.getElementById('spSubmit').addEventListener('click', ()=>{
+    const jsonWrap = document.getElementById('spJsonWrap');
+    const jsonText = document.getElementById('spJson').value.trim();
+    if(jsonWrap.style.display!=='none' && jsonText){
+      let obj;
+      try { obj = JSON.parse(jsonText); }
+      catch(e){
+        const m = document.getElementById('spMsg');
+        m.className = 'import-msg err'; m.textContent = 'Invalid JSON: ' + e.message;
+        return;
+      }
+      const { name, source, data, ...rest } = obj;
+      submitSpeciesImport({ name, source, data: data || rest });
+    } else {
+      submitSpeciesImport();
+    }
+  });
+}
 
 // ---------- Save status indicator ----------
 function setSaveStatus(status){
@@ -1725,14 +2726,44 @@ async function refreshProfileList(selectedId){
   ).join('');
 }
 
+function buildAlignmentSelect(){
+  const sel = document.getElementById('charAlignment');
+  const names = ALIGNMENTS.map(a=>a.name);
+  sel.innerHTML = '<option value="">— unset —</option>'
+    + ALIGNMENTS.map(a=>`<option value="${a.name}" ${state.alignment===a.name?'selected':''}>${a.abbr==='—'?'':a.abbr+' · '}${a.name}</option>`).join('');
+  // Preserve any pre-existing free-text alignment that isn't in the list.
+  if(state.alignment && !names.includes(state.alignment)){
+    sel.insertAdjacentHTML('beforeend', `<option value="${state.alignment}" selected>${state.alignment} (custom)</option>`);
+  }
+}
+
+// Static rules reference — built once; content doesn't change per character.
+function buildNotes(){
+  const grid = document.getElementById('alignGrid');
+  if(!grid || grid.dataset.built) return;
+  grid.innerHTML = ALIGNMENTS.map(a=>`
+    <div class="align-card">
+      <div><span class="a-abbr">${a.abbr}</span><span class="a-name">${a.name}</span></div>
+      <div class="a-desc">${a.desc}</div>
+      <div class="a-eg"><b>e.g.</b> ${a.eg}</div>
+    </div>`).join('');
+  grid.dataset.built = '1';
+}
+
 function renderCharacter(){
   ensureClasses();
   applyClassesToState();
+  buildAlignmentSelect();
+  buildSpeciesSelect();
+  renderSpeciesInfo();
+  buildSpeciesTraits();
   buildAbilities();
   buildSaves();
   buildSkills();
   buildAttacks();
   buildInventory();
+  buildEquipment();
+  buildEquipAttackList();
   buildSpellSlots();
   buildSpellClassSelect();
   buildSpellLibrary();
@@ -1790,6 +2821,8 @@ function bindProfileBar(){
 }
 
 async function init(){
+  await loadCustomClasses(); // merge imported classes before any character renders
+  await loadCustomSpecies(); // merge imported species too
   const list = await apiListCharacters();
   if(list.length>0){
     await loadCharacter(list[0].id);
@@ -1802,6 +2835,11 @@ async function init(){
   bindStaticInputs();
   bindProfileBar();
   bindTabs();
+  buildClassFilterBar();
+  bindClassImport();
+  renderImportedList();
+  bindSpeciesImport();
+  renderSpeciesImportedList();
   setSaveStatus('saved');
 }
 

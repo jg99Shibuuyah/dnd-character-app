@@ -42,10 +42,25 @@ copy it elsewhere if you want to keep a snapshot of your characters.
 - Multiclassing: add any number of classes in Settings, each with its own
   level. Total level drives the proficiency bonus, hit dice are pooled per
   die size (e.g. `5d8 + 2d6`), saving throws come from the primary (first)
-  class per the PHB, ability-score prerequisites are checked per class,
-  and a combined multiclass caster level is computed for the PHB slot
-  table. The Features and Actions tabs show each class's features gated
-  by that class's own level.
+  class per the PHB, and ability-score prerequisites are checked per class.
+  Three things auto-fill from the class list:
+  - **Spell slots** — the Spells tab fills leveled slots from the PHB tables
+    (full/half single-class, or the combined multiclass caster level when you
+    mix casters), with Warlock **Pact Magic** slots tracked on their own row.
+    Spent slots are preserved when levels change; a toggle switches to manual
+    entry if you'd rather set them by hand.
+  - **Actions** — the Actions tab lists each class's active abilities
+    (reactions, bonus actions, limited-use features) across the whole
+    multiclass, with use/cost badges.
+  - **Class features** — the Features & Traits tab shows every class's
+    features gated by that class's own level.
+- Class import: Settings has an **Import Class** form (same fields as the
+  built-in Jaeger — hit die, saves, skills, subclasses, spellcasting, and
+  level-by-level features) plus an advanced "paste JSON" option. Each class
+  is tagged by source — **5E**, **5.5E**, or **Homebrew** — and the class
+  picker has a source filter. Imported classes are stored server-side (in a
+  `custom_classes` table) so they're shared across every character and
+  survive reloads.
 - Every edit (ability scores, HP, inventory, spells, everything) autosaves
   to the database about half a second after you stop typing. The "Saving…
   / Saved" indicator on the profile bar tells you the state.
@@ -59,9 +74,9 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   - `src/app.js` — Express app wiring (middleware, static files, routes)
   - `src/config.js` — port, database file path, and other settings
   - `src/db.js` — SQLite connection and schema setup
-  - `src/routes/characters.routes.js` — REST API route definitions
-  - `src/controllers/characters.controller.js` — request/response handling
-  - `src/models/character.model.js` — database queries
+  - `src/routes/characters.routes.js`, `src/routes/classes.routes.js` — route definitions
+  - `src/controllers/characters.controller.js`, `src/controllers/classes.controller.js` — request/response handling
+  - `src/models/character.model.js`, `src/models/customClass.model.js` — database queries
   - `src/middleware/error-handler.js` — JSON error responses
 - The REST API:
   - `GET /api/characters` — list all saved characters (summary only)
@@ -70,9 +85,13 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   - `PUT /api/characters/:id` — update an existing character
   - `POST /api/characters/:id/duplicate` — clone a character
   - `DELETE /api/characters/:id` — delete a character
+  - `GET /api/classes` — list imported (custom) classes
+  - `POST /api/classes` — import/update a class by name (upsert)
+  - `DELETE /api/classes/:id` — remove an imported class
 - `characters.db` — a SQLite database (via `better-sqlite3`), created
-  automatically on first run. One table, `characters`, storing an id,
-  name, and a JSON blob of the full character data.
+  automatically on first run. A `characters` table stores an id, name, and a
+  JSON blob of the full character data; a `custom_classes` table stores
+  imported classes (unique name, source tag, and a JSON class definition).
 - `public/index.html` — the character sheet itself. Pure HTML/CSS/JS,
   talks to the API above with `fetch()`.
 
