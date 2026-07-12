@@ -2,9 +2,9 @@
   "name": "dnd-character-sheet-server",
   "version": "1.0.0",
   "description": "Local server for the dynamic D&D character sheet, with SQLite-backed character profiles.",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.3.0",

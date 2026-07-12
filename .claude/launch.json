@@ -1,0 +1,22 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 3000
+    },
+    {
+      "name": "dev-scratch-db",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/e41bcfff-e131-484f-adbb-3a80f7fb1267/scratchpad/preview.db",
+        "PORT=4173",
+        "node",
+        "src/server.js"
+      ],
+      "port": 4173
+    }
+  ]
+}

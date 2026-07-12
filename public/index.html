@@ -20,6 +20,18 @@
   --border-glow: rgba(0,255,213,0.35);
   --glow-cyan: 0 0 8px rgba(0,255,213,0.45), 0 0 24px rgba(0,255,213,0.15);
   --glow-magenta: 0 0 8px rgba(255,42,109,0.45), 0 0 24px rgba(255,42,109,0.15);
+  /* Legacy names from the parchment theme, remapped onto the terminal palette
+     so every older rule resolves to something on-theme. */
+  --parchment:#12141d;
+  --parchment-2:#0d0f16;
+  --parchment-line: rgba(0,255,213,0.18);
+  --gold: var(--neon-cyan);
+  --gold-bright:#8ffff0;
+  --crimson: var(--neon-magenta);
+  --crimson-bright:#ff6296;
+  --ink-soft: rgba(200,200,212,0.6);
+  --green: var(--neon-green);
+  --shadow: 0 0 0 1px rgba(0,255,213,0.07), 0 0 18px rgba(0,255,213,0.05);
 }
 
 *{box-sizing:border-box;}
@@ -29,7 +41,7 @@ body{
     radial-gradient(ellipse at 20% 0%, rgba(0,255,213,0.04) 0%, transparent 60%),
     radial-gradient(ellipse at 80% 100%, rgba(255,42,109,0.04) 0%, transparent 55%),
     var(--void);
-  font-family:'Rajdhani', sans-serif;
+  font-family:'JetBrains Mono', monospace;
   color: var(--ink);
   padding: 28px 16px 60px;
   min-height:100vh;
@@ -42,6 +54,16 @@ body::before{
     repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(0,255,213,0.015) 49px, rgba(0,255,213,0.015) 50px),
     repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(0,255,213,0.015) 49px, rgba(0,255,213,0.015) 50px);
 }
+
+/* CRT scanlines over everything */
+body::after{
+  content:"";
+  position:fixed; inset:0; z-index:9999; pointer-events:none;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode: multiply;
+}
+
+input, select, textarea, button{ font-family:'JetBrains Mono', monospace; }
 
 .sheet{
   max-width: 1180px;
@@ -72,41 +94,40 @@ body::before{
 }
 .seal{
   width: 84px; height:84px; border-radius:50%;
-  background: radial-gradient(circle at 35% 30%, var(--crimson-bright), var(--crimson) 60%, #5e1520 100%);
+  background: radial-gradient(circle at 35% 30%, rgba(255,42,109,0.35), rgba(255,42,109,0.12) 60%, var(--void-2) 100%);
   display:flex; align-items:center; justify-content:center;
   flex-direction:column;
-  color: var(--parchment);
-  font-family:'Cinzel', serif;
-  box-shadow: inset 0 2px 6px rgba(255,255,255,0.25), inset 0 -4px 10px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.4);
-  border: 2px solid #3d0f16;
+  color: var(--neon-magenta);
+  text-shadow: 0 0 10px rgba(255,42,109,0.6);
+  font-family:'Orbitron', sans-serif;
+  box-shadow: var(--glow-magenta);
+  border: 2px solid var(--neon-magenta);
   flex-shrink:0;
 }
 .seal .lvl-num{ font-size:26px; font-weight:700; line-height:1;}
 .seal .lvl-label{ font-size:9px; letter-spacing:2px; text-transform:uppercase; opacity:0.85; margin-top:2px;}
 
 .hero-name{
-  font-family:'Cinzel Decorative', 'Cinzel', serif;
-  font-size: 34px;
+  font-family:'Orbitron', sans-serif;
+  font-size: 30px;
   font-weight:700;
   color: var(--ink);
-  background: transparent;
-  border:none;
-  border-bottom: 1px dashed var(--parchment-line);
-  width:100%;
+  text-shadow: 0 0 12px rgba(0,255,213,0.25);
   padding: 2px 0;
 }
-.hero-sub{
-  display:flex; flex-wrap:wrap; gap: 14px; margin-top:10px;
+.hero-name::after{ content:"_"; color: var(--neon-cyan); animation: blink 1.1s steps(1) infinite; }
+@keyframes blink{ 50%{ opacity:0; } }
+.hero-summary{
+  margin-top:8px; font-size:13px; color: var(--ink-soft); letter-spacing:0.5px;
 }
-.hero-sub .field{ display:flex; flex-direction:column; min-width:110px;}
-.hero-sub label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:2px;}
-.hero-sub input{
-  font-family:'EB Garamond', serif; font-size:16px; font-style:italic;
-  background:transparent; border:none; border-bottom:1px solid var(--parchment-line); color:var(--ink); padding:2px 0;
+.hero-summary .sep{ color: var(--neon-magenta); margin:0 8px; }
+.hero-hint{
+  margin-top:6px; font-size:11px; color: var(--ink-dim);
 }
+.hero-hint .cmd{ color: var(--neon-green); }
 .xp-block{ text-align:right; }
-.xp-block label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
-.xp-block input{ width:100px; text-align:right; font-family:'JetBrains Mono', monospace; font-size:18px; background:transparent; border:none; border-bottom:1px solid var(--parchment-line); color:var(--ink);}
+.xp-block label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
+.xp-block .xp-val{ font-family:'JetBrains Mono', monospace; font-size:20px; color: var(--neon-green); text-shadow: 0 0 8px rgba(5,255,161,0.4);}
 
 /* ---------- Layout ---------- */
 .grid{
@@ -129,17 +150,23 @@ body::before{
   position:relative;
 }
 .panel h2{
-  font-family:'Cinzel', serif;
+  font-family:'Orbitron', sans-serif;
   font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--crimson);
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px rgba(0,255,213,0.35);
   margin: 0 0 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--parchment-line);
   display:flex; align-items:center; justify-content:space-between;
 }
-.panel h2 .rune{ color:var(--gold); font-size:15px; }
+.panel h2 > span:first-child::before{
+  content:"> ";
+  color: var(--neon-magenta);
+  text-shadow: 0 0 8px rgba(255,42,109,0.5);
+}
+.panel h2 .rune{ color:var(--neon-magenta); font-size:15px; }
 
 /* ---------- Ability scores ---------- */
 .ability{
@@ -152,7 +179,7 @@ body::before{
 }
 .ability:last-child{ border-bottom:none; }
 .ability .abbr{
-  font-family:'Cinzel',serif; font-weight:700; font-size:13px; color:var(--ink-soft);
+  font-family:'Orbitron', sans-serif; font-weight:700; font-size:13px; color:var(--ink-soft);
 }
 .ability .mod-badge{
   width:46px;height:46px;border-radius:50%;
@@ -197,7 +224,7 @@ body::before{
   text-align:center; background: rgba(255,255,255,0.35);
   border:1px solid var(--parchment-line); border-radius:4px; padding:10px 4px;
 }
-.stat-box label{ font-family:'Cinzel',serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
+.stat-box label{ font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
 .stat-box input{
   width:100%; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:600; font-size:22px;
   background:transparent; border:none; color:var(--ink);
@@ -206,7 +233,7 @@ body::before{
 
 .hp-row{ display:flex; gap:10px; align-items:center; margin-bottom:10px;}
 .hp-field{ flex:1; text-align:center; }
-.hp-field label{ font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:3px;}
+.hp-field label{ font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:3px;}
 .hp-field input{ width:100%; text-align:center; font-family:'JetBrains Mono',monospace; font-size:20px; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); padding:5px 0; color:var(--ink);}
 .hp-field.current input{ color:var(--crimson); font-weight:700; }
 
@@ -218,14 +245,14 @@ body::before{
 
 /* Attacks table */
 table.attacks{ width:100%; border-collapse:collapse; font-size:13px;}
-table.attacks th{ font-family:'Cinzel',serif; font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); text-align:left; padding:4px 4px; border-bottom:1px solid var(--parchment-line);}
+table.attacks th{ font-family:'Orbitron', sans-serif; font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); text-align:left; padding:4px 4px; border-bottom:1px solid var(--parchment-line);}
 table.attacks td{ padding:3px 4px; border-bottom: 1px dashed var(--parchment-line);}
-table.attacks input{ width:100%; background:transparent; border:none; font-family:'EB Garamond',serif; font-size:14px; color:var(--ink);}
+table.attacks input{ width:100%; background:transparent; border:none; font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--ink);}
 table.attacks input.narrow{ text-align:center; font-family:'JetBrains Mono',monospace;}
 .row-del{ cursor:pointer; color:var(--crimson); font-weight:700; }
 
 .add-btn{
-  font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase;
   background: var(--crimson); color: var(--parchment); border:none; border-radius:3px;
   padding:6px 12px; cursor:pointer; margin-top:8px;
 }
@@ -233,7 +260,7 @@ table.attacks input.narrow{ text-align:center; font-family:'JetBrains Mono',mono
 
 textarea.trait{
   width:100%; min-height:60px; resize:vertical;
-  font-family:'EB Garamond', serif; font-style:italic; font-size:14px;
+  font-family:'JetBrains Mono', monospace; font-style:italic; font-size:14px;
   background: rgba(255,255,255,0.35); border:1px solid var(--parchment-line); border-radius:3px;
   padding:8px; color:var(--ink);
 }
@@ -249,7 +276,7 @@ textarea.trait{
 
 /* Spell slots */
 .slot-level{ display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px;}
-.slot-level .lv{ font-family:'Cinzel',serif; width:52px; color:var(--ink-soft); font-size:11px; letter-spacing:1px;}
+.slot-level .lv{ font-family:'Orbitron', sans-serif; width:52px; color:var(--ink-soft); font-size:11px; letter-spacing:1px;}
 .slot-level input.total{ width:32px; text-align:center; font-family:'JetBrains Mono',monospace; border:1px solid var(--parchment-line); border-radius:3px; background:rgba(255,255,255,0.4); color:var(--ink);}
 .slot-pips{ display:flex; gap:4px; flex-wrap:wrap; }
 .slot-pip{ width:15px;height:15px;border-radius:50%; border:1.5px solid var(--gold); cursor:pointer; }
@@ -257,29 +284,29 @@ textarea.trait{
 
 .spell-lib-controls{ display:flex; gap:8px; margin-bottom:10px; }
 .spell-lib-controls select, .spell-lib-controls input{
-  font-family:'EB Garamond', serif; font-size:13px; padding:5px 6px;
+  font-family:'JetBrains Mono', monospace; font-size:13px; padding:5px 6px;
   border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); color:var(--ink);
 }
 .spell-lib-controls select{ flex:0 0 140px; }
 .spell-lib-controls input{ flex:1; }
 .spell-lib-list{ max-height: 260px; overflow-y:auto; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.25); padding:4px 6px; }
-.spell-lib-group-label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin:8px 0 3px; }
+.spell-lib-group-label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin:8px 0 3px; }
 .spell-lib-item{ display:flex; justify-content:space-between; align-items:center; padding:3px 2px; font-size:13px; border-bottom:1px dashed var(--parchment-line); }
-.spell-lib-item .spell-add-btn{ cursor:pointer; color:var(--crimson); font-weight:700; font-family:'Cinzel',serif; font-size:12px; padding:0 4px; }
+.spell-lib-item .spell-add-btn{ cursor:pointer; color:var(--crimson); font-weight:700; font-family:'Orbitron', sans-serif; font-size:12px; padding:0 4px; }
 .spell-lib-item .spell-add-btn.added{ color: var(--ink-soft); cursor:default; }
 .spell-lib-empty{ font-style:italic; color:var(--ink-soft); font-size:13px; padding:6px 2px; }
 .custom-spell-row{ display:flex; gap:6px; margin-top:10px; align-items:center; }
-.custom-spell-row input{ font-family:'EB Garamond',serif; font-size:13px; padding:5px 6px; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); color:var(--ink); }
+.custom-spell-row input{ font-family:'JetBrains Mono', monospace; font-size:13px; padding:5px 6px; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); color:var(--ink); }
 .custom-spell-row input:first-child{ flex:1; }
 .custom-spell-row input.lv-input{ width:44px; text-align:center; }
 .custom-spell-row .add-btn{ margin-top:0; white-space:nowrap; }
-.known-spell-group-label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--crimson); margin:8px 0 3px; }
+.known-spell-group-label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--crimson); margin:8px 0 3px; }
 .known-spell-item{ display:flex; justify-content:space-between; align-items:center; padding:3px 2px; font-size:13px; border-bottom:1px dashed var(--parchment-line); }
 .known-spell-item .spell-remove{ cursor:pointer; color:var(--ink-soft); font-weight:700; }
 .known-spell-item .custom-tag{ font-size:9px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-left:6px; }
 
 .footer-note{
-  text-align:center; color: var(--parchment-2); font-family:'EB Garamond',serif; font-style:italic;
+  text-align:center; color: var(--parchment-2); font-family:'JetBrains Mono', monospace; font-style:italic;
   font-size:12px; margin-top:6px; opacity:0.7;
 }
 
@@ -288,21 +315,178 @@ textarea.trait{
   background: var(--void-3); border:1px solid rgba(201,162,39,0.3); border-radius:4px;
   padding:10px 16px; margin-bottom:16px;
 }
-.profile-bar label{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); }
+.profile-bar label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); }
 .profile-bar select{
-  font-family:'EB Garamond',serif; font-size:14px; padding:5px 8px; border-radius:3px;
+  font-family:'JetBrains Mono', monospace; font-size:14px; padding:5px 8px; border-radius:3px;
   border:1px solid rgba(201,162,39,0.4); background: var(--void-2); color:var(--parchment); min-width:180px;
 }
 .pbtn{
-  font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase;
   background: transparent; color: var(--gold-bright); border:1px solid var(--gold); border-radius:3px;
   padding:6px 12px; cursor:pointer;
 }
 .pbtn:hover{ background: rgba(201,162,39,0.15); }
 .pbtn.danger{ color: var(--crimson-bright); border-color: var(--crimson); }
 .pbtn.danger:hover{ background: rgba(139,38,53,0.2); }
-.save-status{ margin-left:auto; font-family:'EB Garamond',serif; font-style:italic; font-size:13px; color: var(--parchment-2); opacity:0.75; }
-.save-status.saving{ color: var(--gold-bright); opacity:1; }
+.save-status{ margin-left:auto; font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; color: var(--neon-green); opacity:0.85; }
+.save-status::after{ content:"█"; margin-left:3px; animation: blink 1.1s steps(1) infinite; }
+.save-status.saving{ color: var(--neon-yellow); opacity:1; }
+
+/* ---------- Tabs ---------- */
+.tab-bar{
+  display:flex; gap:6px; flex-wrap:wrap;
+  margin-top:18px;
+  border-bottom:1px solid var(--border-glow);
+  padding:0 8px;
+}
+.tab-btn{
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+  background: var(--void-2); color: var(--ink-dim);
+  border:1px solid rgba(0,255,213,0.2); border-bottom:none;
+  border-radius:4px 4px 0 0;
+  padding:10px 18px; cursor:pointer;
+  position:relative; top:1px;
+}
+.tab-btn:hover{ color: var(--ink); }
+.tab-btn.active{
+  background: var(--void-3);
+  color: var(--neon-cyan);
+  border-color: var(--border-glow);
+  box-shadow: var(--glow-cyan);
+}
+.tab-pane{ display:none; }
+.tab-pane.active{ display:block; }
+
+.grid-sheet{ grid-template-columns: 250px 1fr; }
+.grid-two{ grid-template-columns: 340px 1fr; align-items:start; }
+.grid-half{ grid-template-columns: 1fr 1fr; align-items:start; }
+.grid-spells{ grid-template-columns: 320px 1fr 1fr; align-items:start; }
+@media (max-width: 980px){
+  .grid-sheet, .grid-two, .grid-half, .grid-spells{ grid-template-columns: 1fr; }
+}
+
+/* ---------- Actions tab ---------- */
+.action-row{
+  display:flex; align-items:baseline; gap:10px;
+  padding:6px 2px; font-size:14px;
+  border-bottom:1px dashed rgba(200,200,212,0.2);
+}
+.action-row:last-child{ border-bottom:none; }
+.action-row .a-name{ font-weight:600; white-space:nowrap; }
+.action-row .a-detail{ flex:1; color:var(--ink-dim); font-size:13px; }
+.action-badge{
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  text-transform:uppercase; letter-spacing:1px;
+  color:var(--neon-cyan); border:1px solid var(--border-glow);
+  border-radius:3px; padding:1px 6px; white-space:nowrap;
+}
+.action-badge.dim{ color:var(--ink-dim); border-color:rgba(200,200,212,0.25); }
+.action-empty{ font-style:italic; color:var(--ink-dim); font-size:13px; padding:6px 2px; }
+
+/* ---------- Proficiency markers (no checkboxes; bonus is precomputed) ---------- */
+.prof-dot{
+  width:9px; height:9px; border-radius:50%;
+  border:1.5px solid rgba(200,200,212,0.35);
+  flex-shrink:0;
+}
+.prof-dot.on{
+  background: var(--neon-green);
+  border-color: var(--neon-green);
+  box-shadow: 0 0 6px rgba(5,255,161,0.7);
+}
+
+/* ---------- Settings tab ---------- */
+.set-field{ display:flex; flex-direction:column; margin-bottom:12px; }
+.set-field label{
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:4px;
+}
+.set-field label::before{ content:"$ "; color: var(--neon-green); }
+.set-field input, .set-field select{
+  font-size:14px; padding:7px 9px;
+  background: var(--void-2); color: var(--ink);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+.set-field input:focus, .set-field select:focus{
+  outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);
+}
+.class-info{
+  margin-top:10px; padding:10px 12px; font-size:12.5px; line-height:1.55;
+  background: var(--void-2); border:1px solid var(--parchment-line); border-radius:2px;
+  color: var(--ink-soft);
+}
+.class-info .ci-row{ display:flex; gap:8px; padding:1px 0; }
+.class-info .ci-key{ color: var(--neon-cyan); min-width:110px; flex-shrink:0; }
+.class-info .ci-desc{ margin-top:8px; font-style:italic; }
+.class-info .ci-prog-label{ margin-top:10px; color: var(--ink-dim); font-size:11px; }
+.class-info .ci-prog{
+  max-height:230px; overflow-y:auto; margin-top:4px; padding:6px 8px;
+  border:1px dashed var(--parchment-line); border-radius:2px;
+  background: rgba(0,0,0,0.25);
+}
+.class-info .ci-prog .ci-key{ min-width:52px; }
+.class-info .ci-prog .ci-row{ opacity:0.55; }
+.class-info .ci-prog .ci-row.unlocked{ opacity:1; }
+.class-info .ci-prog .ci-row.unlocked .ci-key{ color: var(--neon-green); }
+.class-info .homebrew-tag{
+  color: var(--neon-yellow); border:1px solid rgba(249,245,37,0.4); border-radius:2px;
+  font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:1px 5px; margin-left:8px;
+}
+.skill-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+.skill-chip{
+  font-size:12px; padding:5px 10px; cursor:pointer; user-select:none;
+  background: var(--void-2); color: var(--ink-soft);
+  border:1px solid rgba(200,200,212,0.2); border-radius:2px;
+}
+.skill-chip:hover{ border-color: var(--border-glow); }
+.skill-chip.on{
+  color: var(--neon-green); border-color: var(--neon-green);
+  box-shadow: 0 0 8px rgba(5,255,161,0.25);
+}
+.skill-chip.classpick{ border-style:dashed; }
+.skill-chip .chip-abbr{ color: var(--ink-dim); font-size:9px; text-transform:uppercase; margin-left:5px; }
+.picker-hint{ font-size:11.5px; color: var(--ink-dim); margin-bottom:10px; line-height:1.5; }
+.picker-hint .hl{ color: var(--neon-cyan); }
+
+/* ---------- Multiclass list ---------- */
+.class-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.class-row select{
+  flex:1; font-size:14px; padding:7px 9px;
+  background: var(--void-2); color: var(--ink);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+.class-row input.mc-level{
+  width:64px; text-align:center; font-size:14px; padding:7px 4px;
+  background: var(--void-2); color: var(--ink);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+.class-row select:focus, .class-row input.mc-level:focus{
+  outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);
+}
+.primary-tag{
+  color: var(--neon-cyan); border:1px solid var(--border-glow); border-radius:2px;
+  font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:2px 6px; white-space:nowrap;
+}
+.class-row .row-del{ padding:0 4px; }
+.ci-title{
+  font-family:'Orbitron', sans-serif; font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+  color: var(--neon-cyan); margin-bottom:6px; display:flex; align-items:center; gap:8px;
+}
+.req-ok{ color: var(--neon-green); }
+.req-bad{ color: var(--neon-magenta); }
+.class-info + .class-info{ margin-top:10px; }
+#classInfoStack .class-info{ margin-top:10px; }
+
+/* ---------- Class features list ---------- */
+.feat-item{ padding:7px 2px; border-bottom:1px dashed rgba(200,200,212,0.15); font-size:13px; }
+.feat-item:last-child{ border-bottom:none; }
+.feat-head{ display:flex; align-items:baseline; gap:8px; }
+.feat-head .f-lvl{
+  font-family:'JetBrains Mono',monospace; font-size:10px; color: var(--neon-magenta);
+  border:1px solid rgba(255,42,109,0.4); border-radius:2px; padding:0 5px; white-space:nowrap;
+}
+.feat-head .f-name{ font-weight:600; color: var(--ink); }
+.feat-desc{ color: var(--ink-soft); font-size:12px; margin-top:3px; line-height:1.5; }
 
 ::-webkit-scrollbar{ width:8px; }
 ::-webkit-scrollbar-thumb{ background: var(--gold); border-radius:4px; }
@@ -326,22 +510,28 @@ textarea.trait{
       <div class="lvl-label">Level</div>
     </div>
     <div>
-      <input class="hero-name" id="charName" value="Unnamed Adventurer" placeholder="Character Name">
-      <div class="hero-sub">
-        <div class="field"><label>Class</label><input id="charClass" placeholder="e.g. Ranger"></div>
-        <div class="field"><label>Level</label><input id="charLevel" type="number" min="1" max="20" value="1"></div>
-        <div class="field"><label>Race / Lineage</label><input id="charRace" placeholder="e.g. Wood Elf"></div>
-        <div class="field"><label>Background</label><input id="charBackground" placeholder="e.g. Outlander"></div>
-        <div class="field"><label>Alignment</label><input id="charAlignment" placeholder="e.g. Chaotic Good"></div>
-      </div>
+      <div class="hero-name" id="heroName">Unnamed Adventurer</div>
+      <div class="hero-summary" id="heroSummary"></div>
+      <div class="hero-hint">// edit identity &amp; class in <span class="cmd">[ Settings ]</span></div>
     </div>
     <div class="xp-block">
       <label>Experience</label>
-      <input id="charXP" type="number" min="0" value="0">
+      <div class="xp-val" id="heroXP">0</div>
     </div>
   </div>
 
-  <div class="grid">
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-tab="sheet">Character</button>
+    <button class="tab-btn" data-tab="inventory">Inventory</button>
+    <button class="tab-btn" data-tab="spells">Spells</button>
+    <button class="tab-btn" data-tab="features">Features &amp; Traits</button>
+    <button class="tab-btn" data-tab="actions">Actions</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </nav>
+
+  <!-- TAB: Character sheet -->
+  <div class="tab-pane active" id="tab-sheet">
+  <div class="grid grid-sheet">
 
     <!-- LEFT COLUMN: Abilities, Saves, Skills -->
     <div>
@@ -401,26 +591,13 @@ textarea.trait{
         <button class="add-btn" id="addAttack">+ Add Attack</button>
       </div>
 
-      <div class="panel">
-        <h2><span>Features &amp; Traits</span><span class="rune">✦</span></h2>
-        <textarea class="trait" id="featuresText" placeholder="Class features, racial traits, feats..."></textarea>
-      </div>
-
-      <div class="panel">
-        <h2><span>Personality</span><span class="rune">✦</span></h2>
-        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Traits</label>
-        <textarea class="trait" id="persTraits" style="min-height:36px;"></textarea>
-        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Ideals</label>
-        <textarea class="trait" id="persIdeals" style="min-height:36px;"></textarea>
-        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Bonds</label>
-        <textarea class="trait" id="persBonds" style="min-height:36px;"></textarea>
-        <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Flaws</label>
-        <textarea class="trait" id="persFlaws" style="min-height:36px;"></textarea>
-      </div>
     </div>
+  </div>
+  </div>
 
-    <!-- RIGHT COLUMN: Equipment & Spells -->
-    <div>
+  <!-- TAB: Inventory -->
+  <div class="tab-pane" id="tab-inventory">
+    <div class="grid grid-two">
       <div class="panel">
         <h2><span>Currency</span><span class="rune">◆</span></h2>
         <div class="currency">
@@ -437,7 +614,12 @@ textarea.trait{
         <div id="inventoryList"></div>
         <button class="add-btn" id="addItem">+ Add Item</button>
       </div>
+    </div>
+  </div>
 
+  <!-- TAB: Spells -->
+  <div class="tab-pane" id="tab-spells">
+    <div class="grid grid-spells">
       <div class="panel">
         <h2><span>Spell Slots</span><span class="rune">✶</span></h2>
         <div id="spellSlots"></div>
@@ -460,6 +642,95 @@ textarea.trait{
       <div class="panel">
         <h2><span>Known Spells</span><span class="rune">✶</span></h2>
         <div id="knownSpellsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Features & Traits -->
+  <div class="tab-pane" id="tab-features">
+    <div class="grid grid-half">
+      <div>
+        <div class="panel">
+          <h2><span>Class Features</span><span class="rune">✦</span></h2>
+          <div id="classFeaturesList"></div>
+        </div>
+        <div class="panel">
+          <h2><span>Other Features &amp; Traits</span><span class="rune">✦</span></h2>
+          <textarea class="trait" id="featuresText" style="min-height:160px;" placeholder="Racial traits, feats, boons..."></textarea>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span>Personality</span><span class="rune">✦</span></h2>
+        <label style="font-family:'Orbitron', sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Traits</label>
+        <textarea class="trait" id="persTraits" style="min-height:36px;"></textarea>
+        <label style="font-family:'Orbitron', sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Ideals</label>
+        <textarea class="trait" id="persIdeals" style="min-height:36px;"></textarea>
+        <label style="font-family:'Orbitron', sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Bonds</label>
+        <textarea class="trait" id="persBonds" style="min-height:36px;"></textarea>
+        <label style="font-family:'Orbitron', sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Flaws</label>
+        <textarea class="trait" id="persFlaws" style="min-height:36px;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Actions (derived from attacks, spells, and inventory) -->
+  <div class="tab-pane" id="tab-actions">
+    <div class="grid grid-half">
+      <div>
+        <div class="panel">
+          <h2><span>Attacks</span><span class="rune">⚔</span></h2>
+          <div id="actAttacks"></div>
+        </div>
+        <div class="panel">
+          <h2><span>Standard Actions</span><span class="rune">⚔</span></h2>
+          <div id="actStandard"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h2><span>Class Abilities</span><span class="rune">⚔</span></h2>
+          <div id="actClassAbilities"></div>
+        </div>
+        <div class="panel">
+          <h2><span>Spellcasting</span><span class="rune">✶</span></h2>
+          <div id="actSpells"></div>
+        </div>
+        <div class="panel">
+          <h2><span>Usable Items</span><span class="rune">◆</span></h2>
+          <div id="actItems"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Settings (identity, class & proficiencies) -->
+  <div class="tab-pane" id="tab-settings">
+    <div class="grid grid-half">
+      <div>
+        <div class="panel">
+          <h2><span>Identity</span><span class="rune">◈</span></h2>
+          <div class="set-field"><label>Character Name</label><input id="charName" placeholder="Character Name"></div>
+          <div class="set-field"><label>Race / Lineage</label><input id="charRace" placeholder="e.g. Wood Elf"></div>
+          <div class="set-field"><label>Background</label><input id="charBackground" placeholder="e.g. Outlander"></div>
+          <div class="set-field"><label>Alignment</label><input id="charAlignment" placeholder="e.g. Chaotic Good"></div>
+          <div class="set-field"><label>Experience</label><input id="charXP" type="number" min="0" value="0"></div>
+        </div>
+        <div class="panel">
+          <h2><span>Classes &amp; Levels</span><span class="rune">◈</span></h2>
+          <div class="picker-hint">Add more classes to multiclass. The <span class="hl">first entry is your primary class</span> and provides saving-throw proficiencies; proficiency bonus is based on your <span class="hl">total level</span>.</div>
+          <div id="classList"></div>
+          <button class="add-btn" id="addClassBtn">+ Add Class</button>
+          <div class="mini-row" style="margin-top:12px;"><label>Total Level</label><span class="val" id="totalLevelDisplay">1</span></div>
+          <div id="classInfoStack"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h2><span>Skill Proficiencies</span><span class="rune">◈</span></h2>
+          <div class="picker-hint" id="skillHint"></div>
+          <div class="skill-chips" id="skillPicker"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -536,6 +807,23 @@ const SPELL_DATA = {
 };
 const SPELL_CLASSES = Object.keys(SPELL_DATA);
 
+// Actions every character can take in combat, shown on the Actions tab.
+const STANDARD_ACTIONS = [
+  {name:'Attack', desc:'Make one melee or ranged attack (see your attacks list).'},
+  {name:'Dash', desc:'Gain extra movement equal to your speed.'},
+  {name:'Disengage', desc:'Your movement does not provoke opportunity attacks.'},
+  {name:'Dodge', desc:'Attacks against you have disadvantage; DEX saves at advantage.'},
+  {name:'Help', desc:'Give an ally advantage on their next check or attack.'},
+  {name:'Hide', desc:'Make a Stealth check to become hidden.'},
+  {name:'Ready', desc:'Prepare a reaction triggered by a condition you set.'},
+  {name:'Search', desc:'Make a Perception or Investigation check.'},
+  {name:'Use an Object', desc:'Interact with a second object or use a special item.'},
+  {name:'Grapple / Shove', desc:'Athletics contest to grab or push a creature (replaces one attack).'},
+];
+
+// Keywords that mark an inventory item as "usable" on the Actions tab.
+const USABLE_ITEM_WORDS = ['potion','scroll','elixir','oil','bomb','kit','antitoxin','torch','caltrops','ration','holy water','acid','poison','wand','rope','net'];
+
 const ABILITIES = [
   {key:'str', name:'Strength'},
   {key:'dex', name:'Dexterity'},
@@ -566,10 +854,104 @@ const SKILLS = [
   {name:'Survival', ability:'wis'},
 ];
 
+// Expands compact progression rows [level, ...feature names] into feature objects.
+function P(rows){ return rows.flatMap(([lv,...names])=>names.map(n=>({lv, name:n}))); }
+
+// Class registry: saving-throw proficiencies are applied automatically when a
+// class is picked in Settings. `features` feeds the class card in Settings,
+// the Class Features panel, and (for entries with `use` tags) the Actions tab.
+// `casting` describes spell access; `subclassLevel` is when the subclass is chosen.
+const CLASS_DATA = {
+  Barbarian:{ hitDie:12, saves:['str','con'], choose:2, skills:['Animal Handling','Athletics','Intimidation','Nature','Perception','Survival'],
+    subclassLevel:3, subclasses:['Path of the Berserker','Path of the Totem Warrior'],
+    casting:{type:'none'},
+    features:P([[1,'Rage','Unarmored Defense'],[2,'Reckless Attack','Danger Sense'],[3,'Primal Path'],[4,'Ability Score Improvement'],[5,'Extra Attack','Fast Movement'],[6,'Path feature'],[7,'Feral Instinct'],[8,'Ability Score Improvement'],[9,'Brutal Critical (1 die)'],[10,'Path feature'],[11,'Relentless Rage'],[12,'Ability Score Improvement'],[13,'Brutal Critical (2 dice)'],[14,'Path feature'],[15,'Persistent Rage'],[16,'Ability Score Improvement'],[17,'Brutal Critical (3 dice)'],[18,'Indomitable Might'],[19,'Ability Score Improvement'],[20,'Primal Champion']]) },
+  Bard:{ hitDie:8, saves:['dex','cha'], choose:3, skills:'any',
+    subclassLevel:3, subclasses:['College of Lore','College of Valor'],
+    casting:{type:'full', ability:'cha'},
+    features:P([[1,'Spellcasting','Bardic Inspiration (d6)'],[2,'Jack of All Trades','Song of Rest (d6)'],[3,'Bard College','Expertise'],[4,'Ability Score Improvement'],[5,'Bardic Inspiration (d8)','Font of Inspiration'],[6,'Countercharm','College feature'],[8,'Ability Score Improvement'],[9,'Song of Rest (d8)'],[10,'Bardic Inspiration (d10)','Expertise','Magical Secrets'],[12,'Ability Score Improvement'],[13,'Song of Rest (d10)'],[14,'Magical Secrets','College feature'],[15,'Bardic Inspiration (d12)'],[16,'Ability Score Improvement'],[17,'Song of Rest (d12)'],[18,'Magical Secrets'],[19,'Ability Score Improvement'],[20,'Superior Inspiration']]) },
+  Cleric:{ hitDie:8, saves:['wis','cha'], choose:2, skills:['History','Insight','Medicine','Persuasion','Religion'],
+    subclassLevel:1, subclasses:['Knowledge','Life','Light','Nature','Tempest','Trickery','War'],
+    casting:{type:'full', ability:'wis'},
+    features:P([[1,'Spellcasting','Divine Domain'],[2,'Channel Divinity (1/rest)','Domain feature'],[4,'Ability Score Improvement'],[5,'Destroy Undead (CR 1/2)'],[6,'Channel Divinity (2/rest)','Domain feature'],[8,'Ability Score Improvement','Destroy Undead (CR 1)','Domain feature'],[10,'Divine Intervention'],[11,'Destroy Undead (CR 2)'],[12,'Ability Score Improvement'],[14,'Destroy Undead (CR 3)'],[16,'Ability Score Improvement'],[17,'Destroy Undead (CR 4)','Domain feature'],[18,'Channel Divinity (3/rest)'],[19,'Ability Score Improvement'],[20,'Divine Intervention improvement']]) },
+  Druid:{ hitDie:8, saves:['int','wis'], choose:2, skills:['Animal Handling','Arcana','Insight','Medicine','Nature','Perception','Religion','Survival'],
+    subclassLevel:2, subclasses:['Circle of the Land','Circle of the Moon'],
+    casting:{type:'full', ability:'wis'},
+    features:P([[1,'Druidic','Spellcasting'],[2,'Wild Shape','Druid Circle'],[4,'Ability Score Improvement','Wild Shape improvement'],[6,'Circle feature'],[8,'Ability Score Improvement','Wild Shape improvement'],[10,'Circle feature'],[12,'Ability Score Improvement'],[14,'Circle feature'],[16,'Ability Score Improvement'],[18,'Timeless Body','Beast Spells'],[19,'Ability Score Improvement'],[20,'Archdruid']]) },
+  Fighter:{ hitDie:10, saves:['str','con'], choose:2, skills:['Acrobatics','Animal Handling','Athletics','History','Insight','Intimidation','Perception','Survival'],
+    subclassLevel:3, subclasses:['Champion','Battle Master','Eldritch Knight'],
+    casting:{type:'none', note:'Non-caster, but the Eldritch Knight archetype gains INT-based wizard spells from L3.'},
+    features:P([[1,'Fighting Style','Second Wind'],[2,'Action Surge'],[3,'Martial Archetype'],[4,'Ability Score Improvement'],[5,'Extra Attack'],[6,'Ability Score Improvement'],[7,'Archetype feature'],[8,'Ability Score Improvement'],[9,'Indomitable'],[10,'Archetype feature'],[11,'Extra Attack (2)'],[12,'Ability Score Improvement'],[13,'Indomitable (2 uses)'],[14,'Ability Score Improvement'],[15,'Archetype feature'],[16,'Ability Score Improvement'],[17,'Action Surge (2 uses)','Indomitable (3 uses)'],[18,'Archetype feature'],[19,'Ability Score Improvement'],[20,'Extra Attack (3)']]) },
+  Jaeger:{ hitDie:8, saves:['dex','int'], choose:3, homebrew:true,
+    skills:['Acrobatics','Arcana','Athletics','History','Investigation','Medicine','Nature','Perception','Religion','Sleight of Hand','Stealth','Survival'],
+    subclassLevel:3, subclasses:['Absolute Chapter','Heretic Chapter','Marauder Chapter','Salvation Chapter','Sanguine Chapter'],
+    casting:{type:'none', note:'Martial class — no base spellcasting. The Heretic Chapter unlocks INT-based warlock spells: 1st@L3, 2nd@L7, 3rd@L13, 4th@L19 (short-rest slots).'},
+    desc:'Jaegers are defined by their efficiency in battle, using their mastery over both steel and gunpowder to lay waste to all who oppose them. Proficient with light/medium armor, simple &amp; martial weapons, and firearms.',
+    features:[
+      {lv:1, name:'Flexible Combatant', use:'passive', desc:'Draw or stow two one-handed weapons at once and reload without a free hand. No disadvantage on ranged attacks within 5 ft of a hostile while wielding a one-handed melee weapon in the other hand.'},
+      {lv:1, name:'Focus', use:'passive', desc:'Focus Points fuel Focus Arts: 1 point at 1st level, rising to 2/3/4/5/6 at levels 2/5/9/13/17. Regain all on a rest, 1 on a natural 20 against a hostile creature, and 1 when rolling initiative with none left.'},
+      {lv:1, name:'Weapon Parry', use:'reaction', cost:'1 FP', desc:'When hit by a creature in weapon range, make a special attack that blocks damage equal to its damage roll. On a 20 the dice are doubled, and a full block stuns the attacker.'},
+      {lv:1, name:'Dodge Step', use:'reaction', cost:'1 FP', desc:'When attacked, move 5 ft without provoking and make a DEX save vs the attack roll: no damage on a success, half on a failure.'},
+      {lv:1, name:'Eldritch Hunter', use:'passive', desc:'Add your proficiency bonus (double it if already proficient) on checks to track or identify Aberrations, Celestials, Fiends, Monstrosities, and Undead.'},
+      {lv:2, name:'Momentum', use:'passive', desc:'Spending a Focus Point grants a Momentum die (d6; d8 at 11th, d10 at 17th). Max dice = proficiency bonus + STR or DEX modifier. Spend all dice to execute a Finisher.'},
+      {lv:2, name:'Brutal Finisher', use:'special', cost:'all dice', desc:'On a hit, add all Momentum dice to the damage roll. If the target drops to 0 HP, regain 1 Focus Point.'},
+      {lv:2, name:'Fighting Style', use:'passive', desc:'Choose one: Dueling, Great Weapon Fighting, Flexible Fighting, Focused Fighting, or Two-Weapon Fighting.'},
+      {lv:3, name:'Jaeger Chapter', use:'passive', desc:'Choose a Chapter (subclass): Absolute, Heretic, Marauder, Salvation, or Sanguine.'},
+      {lv:3, name:'Piercing Gaze', use:'free', cost:'1/long rest', desc:'For 1 hour gain 60 ft darkvision (or +60 ft). From 7th level also see invisibility; from 13th, truesight.'},
+      {lv:4, name:'Seasoned Survivor', use:'passive', desc:'Advantage on Investigation checks to find secret passages, interpret markings, or determine fates from remains.'},
+      {lv:5, name:'Extra Attack', use:'passive', desc:'Attack twice whenever you take the Attack action on your turn.'},
+      {lv:6, name:"Hunter's Pursuit", use:'special', cost:'1 FP', desc:'At the start of your turn, immediately move up to half your speed for free, without provoking opportunity attacks.'},
+      {lv:9, name:'Evasion', use:'passive', desc:'On DEX saves for half damage, take no damage on a success and half on a failure.'},
+      {lv:11, name:'Lethal Tempo', use:'passive', desc:'The first hit on your turn grants 1 Momentum die; dropping a creature to 0 HP grants 1 more.'},
+      {lv:13, name:'Relentless Pursuit', use:'passive', desc:"Hunter's Pursuit refunds its Focus Point if you end the move next to a hostile creature."},
+      {lv:15, name:'Inured to Madness', use:'passive', desc:'Advantage on saves against charm, fright, and madness. Spend 1 FP to reroll a failed madness save.'},
+      {lv:18, name:'Eternal Watch', use:'passive', desc:'You are always under the effect of Piercing Gaze.'},
+      {lv:20, name:'Always Ready', use:'passive', desc:'Once per round, gain an extra reaction usable only on a reaction Focus Art; the Focus Point spent on it is refunded.'},
+    ] },
+  Monk:{ hitDie:8, saves:['str','dex'], choose:2, skills:['Acrobatics','Athletics','History','Insight','Religion','Stealth'],
+    subclassLevel:3, subclasses:['Way of the Open Hand','Way of Shadow','Way of the Four Elements'],
+    casting:{type:'none'},
+    features:P([[1,'Unarmored Defense','Martial Arts'],[2,'Ki','Unarmored Movement'],[3,'Monastic Tradition','Deflect Missiles'],[4,'Ability Score Improvement','Slow Fall'],[5,'Extra Attack','Stunning Strike'],[6,'Ki-Empowered Strikes','Tradition feature'],[7,'Evasion','Stillness of Mind'],[8,'Ability Score Improvement'],[9,'Unarmored Movement improvement'],[10,'Purity of Body'],[11,'Tradition feature'],[12,'Ability Score Improvement'],[13,'Tongue of the Sun and Moon'],[14,'Diamond Soul'],[15,'Timeless Body'],[16,'Ability Score Improvement'],[17,'Tradition feature'],[18,'Empty Body'],[19,'Ability Score Improvement'],[20,'Perfect Self']]) },
+  Paladin:{ hitDie:10, saves:['wis','cha'], choose:2, skills:['Athletics','Insight','Intimidation','Medicine','Persuasion','Religion'],
+    subclassLevel:3, subclasses:['Oath of Devotion','Oath of the Ancients','Oath of Vengeance'],
+    casting:{type:'half', ability:'cha'},
+    features:P([[1,'Divine Sense','Lay on Hands'],[2,'Fighting Style','Spellcasting','Divine Smite'],[3,'Divine Health','Sacred Oath'],[4,'Ability Score Improvement'],[5,'Extra Attack'],[6,'Aura of Protection'],[7,'Oath feature'],[8,'Ability Score Improvement'],[10,'Aura of Courage'],[11,'Improved Divine Smite'],[12,'Ability Score Improvement'],[14,'Cleansing Touch'],[15,'Oath feature'],[16,'Ability Score Improvement'],[18,'Aura improvements'],[19,'Ability Score Improvement'],[20,'Oath feature']]) },
+  Ranger:{ hitDie:10, saves:['str','dex'], choose:3, skills:['Animal Handling','Athletics','Insight','Investigation','Nature','Perception','Stealth','Survival'],
+    subclassLevel:3, subclasses:['Hunter','Beast Master'],
+    casting:{type:'half', ability:'wis'},
+    features:P([[1,'Favored Enemy','Natural Explorer'],[2,'Fighting Style','Spellcasting'],[3,'Ranger Archetype','Primeval Awareness'],[4,'Ability Score Improvement'],[5,'Extra Attack'],[6,'Favored Enemy & Natural Explorer improvements'],[7,'Archetype feature'],[8,'Ability Score Improvement',"Land's Stride"],[10,'Hide in Plain Sight'],[11,'Archetype feature'],[12,'Ability Score Improvement'],[14,'Vanish'],[15,'Archetype feature'],[16,'Ability Score Improvement'],[18,'Feral Senses'],[19,'Ability Score Improvement'],[20,'Foe Slayer']]) },
+  Rogue:{ hitDie:8, saves:['dex','int'], choose:4, skills:['Acrobatics','Athletics','Deception','Insight','Intimidation','Investigation','Perception','Performance','Persuasion','Sleight of Hand','Stealth'],
+    subclassLevel:3, subclasses:['Thief','Assassin','Arcane Trickster'],
+    casting:{type:'none', note:'Non-caster, but the Arcane Trickster archetype gains INT-based wizard spells from L3.'},
+    features:P([[1,'Expertise','Sneak Attack (1d6, +1d6 every odd level)',"Thieves' Cant"],[2,'Cunning Action'],[3,'Roguish Archetype'],[4,'Ability Score Improvement'],[5,'Uncanny Dodge'],[6,'Expertise'],[7,'Evasion'],[8,'Ability Score Improvement'],[9,'Archetype feature'],[10,'Ability Score Improvement'],[11,'Reliable Talent'],[12,'Ability Score Improvement'],[13,'Archetype feature'],[14,'Blindsense'],[15,'Slippery Mind'],[16,'Ability Score Improvement'],[17,'Archetype feature'],[18,'Elusive'],[19,'Ability Score Improvement'],[20,'Stroke of Luck']]) },
+  Sorcerer:{ hitDie:6, saves:['con','cha'], choose:2, skills:['Arcana','Deception','Insight','Intimidation','Persuasion','Religion'],
+    subclassLevel:1, subclasses:['Draconic Bloodline','Wild Magic'],
+    casting:{type:'full', ability:'cha'},
+    features:P([[1,'Spellcasting','Sorcerous Origin'],[2,'Font of Magic (Sorcery Points)'],[3,'Metamagic'],[4,'Ability Score Improvement'],[6,'Origin feature'],[8,'Ability Score Improvement'],[10,'Metamagic option'],[12,'Ability Score Improvement'],[14,'Origin feature'],[16,'Ability Score Improvement'],[17,'Metamagic option'],[18,'Origin feature'],[19,'Ability Score Improvement'],[20,'Sorcerous Restoration']]) },
+  Warlock:{ hitDie:8, saves:['wis','cha'], choose:2, skills:['Arcana','Deception','History','Intimidation','Investigation','Nature','Religion'],
+    subclassLevel:1, subclasses:['The Archfey','The Fiend','The Great Old One'],
+    casting:{type:'pact', ability:'cha'},
+    features:P([[1,'Otherworldly Patron','Pact Magic'],[2,'Eldritch Invocations'],[3,'Pact Boon'],[4,'Ability Score Improvement'],[6,'Patron feature'],[8,'Ability Score Improvement'],[10,'Patron feature'],[11,'Mystic Arcanum (6th level)'],[12,'Ability Score Improvement'],[13,'Mystic Arcanum (7th level)'],[14,'Patron feature'],[15,'Mystic Arcanum (8th level)'],[16,'Ability Score Improvement'],[17,'Mystic Arcanum (9th level)'],[19,'Ability Score Improvement'],[20,'Eldritch Master']]) },
+  Wizard:{ hitDie:6, saves:['int','wis'], choose:2, skills:['Arcana','History','Insight','Investigation','Medicine','Religion'],
+    subclassLevel:2, subclasses:['Abjuration','Conjuration','Divination','Enchantment','Evocation','Illusion','Necromancy','Transmutation'],
+    casting:{type:'full', ability:'int'},
+    features:P([[1,'Spellcasting','Arcane Recovery'],[2,'Arcane Tradition'],[4,'Ability Score Improvement'],[6,'Tradition feature'],[8,'Ability Score Improvement'],[10,'Tradition feature'],[12,'Ability Score Improvement'],[14,'Tradition feature'],[16,'Ability Score Improvement'],[18,'Spell Mastery'],[19,'Ability Score Improvement'],[20,'Signature Spells']]) },
+};
+
+// PHB multiclassing prerequisites: an array of alternatives, each an ability-minimum set.
+// (Jaeger has no published prereq — DEX or INT 13 mirrors its primary abilities.)
+const MC_REQS = {
+  Barbarian:[{str:13}], Bard:[{cha:13}], Cleric:[{wis:13}], Druid:[{wis:13}],
+  Fighter:[{str:13},{dex:13}], Jaeger:[{dex:13},{int:13}], Monk:[{dex:13,wis:13}],
+  Paladin:[{str:13,cha:13}], Ranger:[{dex:13,wis:13}], Rogue:[{dex:13}],
+  Sorcerer:[{cha:13}], Warlock:[{cha:13}], Wizard:[{int:13}]
+};
+
 function defaultCharacter(){
   return {
     id: null,
     name:'Unnamed Adventurer', class:'', level:1, race:'', background:'', alignment:'', xp:0,
+    classes: [], // multiclass list: [{name, level}]; first entry is the primary class
     abilities:{str:10,dex:10,con:10,int:10,wis:10,cha:10},
     saveProf:{str:false,dex:false,con:false,int:false,wis:false,cha:false},
     skillProf:{},
@@ -620,29 +1002,26 @@ function buildAbilities(){
   ABILITIES.forEach(a=>{
     document.getElementById('score_'+a.key).addEventListener('input', e=>{
       state.abilities[a.key] = parseInt(e.target.value)||0;
+      renderClassInfoStack(); // multiclass prerequisite badges depend on scores
       recalc(); save();
     });
   });
 }
 
+// Read-only rows: the bonus already includes proficiency (dot = proficient).
+// Save proficiencies come from the class; skills are picked in Settings.
 function buildSaves(){
   const panel = document.getElementById('savesPanel');
   panel.innerHTML='';
   ABILITIES.forEach(a=>{
     const row = el('div','check-row');
     row.innerHTML = `
-      <input type="checkbox" id="save_${a.key}" ${state.saveProf[a.key]?'checked':''}>
+      <span class="prof-dot ${state.saveProf[a.key]?'on':''}"></span>
       <span class="abbr-tag">${a.key.toUpperCase()}</span>
       <span class="name">${a.name} Save</span>
       <span class="bonus" id="saveBonus_${a.key}">+0</span>
     `;
     panel.appendChild(row);
-  });
-  ABILITIES.forEach(a=>{
-    document.getElementById('save_'+a.key).addEventListener('change', e=>{
-      state.saveProf[a.key] = e.target.checked;
-      recalc(); save();
-    });
   });
 }
 
@@ -654,19 +1033,12 @@ function buildSkills(){
     if(!(key in state.skillProf)) state.skillProf[key]=false;
     const row = el('div','check-row');
     row.innerHTML = `
-      <input type="checkbox" id="skillProf_${key}" ${state.skillProf[key]?'checked':''}>
+      <span class="prof-dot ${state.skillProf[key]?'on':''}"></span>
       <span class="abbr-tag">${s.ability.toUpperCase()}</span>
       <span class="name">${s.name}</span>
       <span class="bonus" id="skillBonus_${key}">+0</span>
     `;
     panel.appendChild(row);
-  });
-  SKILLS.forEach((s,i)=>{
-    const key='sk'+i;
-    document.getElementById('skillProf_'+key).addEventListener('change', e=>{
-      state.skillProf[key] = e.target.checked;
-      recalc(); save();
-    });
   });
 }
 
@@ -825,6 +1197,336 @@ function buildKnownSpells(){
   });
 }
 
+// ---------- Class & Settings (multiclass) ----------
+// Migrate older single-class saves into the classes array.
+function ensureClasses(){
+  if(!Array.isArray(state.classes)) state.classes = [];
+  if(state.classes.length===0 && state.class){
+    const base = state.class.split(' / ')[0];
+    if(CLASS_DATA[base]) state.classes = [{name: base, level: state.level||1}];
+  }
+}
+
+function pickedClasses(){
+  ensureClasses();
+  return state.classes.filter(c=>c.name && CLASS_DATA[c.name]);
+}
+
+// Recompute everything derived from the class list: total level (drives
+// proficiency bonus), joined class string, primary-class saves, hit dice
+// pools, and the default spell library.
+function applyClassesToState(){
+  const picked = pickedClasses();
+  state.level = Math.max(1, picked.reduce((s,c)=>s+(c.level||1), 0));
+  state.class = picked.map(c=>c.name).join(' / ');
+  const primary = picked[0] && CLASS_DATA[picked[0].name];
+  ABILITIES.forEach(a=> state.saveProf[a.key] = primary ? primary.saves.includes(a.key) : false);
+  if(picked.length){
+    const dice = {};
+    picked.forEach(c=>{ const d='d'+CLASS_DATA[c.name].hitDie; dice[d]=(dice[d]||0)+(c.level||1); });
+    state.hitDice = Object.entries(dice).map(([d,n])=>n+d).join(' + ');
+    document.getElementById('hitDice').value = state.hitDice;
+    const caster = picked.find(c=> SPELL_DATA[c.name]);
+    if(caster) state.spellClass = caster.name;
+  }
+}
+
+function updateHero(){
+  document.getElementById('heroName').textContent = state.name || 'Unnamed Adventurer';
+  const picked = pickedClasses();
+  const clsText = picked.length
+    ? picked.map(c=>`${c.name} ${c.level}`).join(' / ')
+    : (state.class || '[no class]');
+  const parts = ['Lv '+(state.level||1)+' '+clsText];
+  if(state.race) parts.push(state.race);
+  if(state.background) parts.push(state.background);
+  if(state.alignment) parts.push(state.alignment);
+  document.getElementById('heroSummary').innerHTML = parts.join('<span class="sep">//</span>');
+  document.getElementById('heroXP').textContent = state.xp || 0;
+}
+
+function afterClassChange(){
+  applyClassesToState();
+  buildClassList();
+  renderClassInfoStack();
+  buildSaves();
+  buildSkills();
+  buildSkillPicker();
+  buildClassFeatures();
+  buildSpellClassSelect();
+  buildSpellLibrary();
+  recalc(); save();
+}
+
+function buildClassList(){
+  ensureClasses();
+  const wrap = document.getElementById('classList');
+  const names = Object.keys(CLASS_DATA);
+  wrap.innerHTML='';
+  state.classes.forEach((entry,i)=>{
+    const taken = state.classes.filter((c,j)=>j!==i).map(c=>c.name);
+    const row = el('div','class-row');
+    row.innerHTML = `
+      <select class="mc-class" data-i="${i}">
+        <option value="">— pick a class —</option>
+        ${names.filter(n=>!taken.includes(n)).map(n=>
+          `<option value="${n}" ${entry.name===n?'selected':''}>${n}${CLASS_DATA[n].homebrew?' [homebrew]':''}</option>`).join('')}
+      </select>
+      <input class="mc-level" type="number" min="1" max="20" value="${entry.level||1}" data-i="${i}">
+      ${i===0?'<span class="primary-tag">primary</span>':''}
+      <span class="row-del mc-del" data-i="${i}">✕</span>
+    `;
+    wrap.appendChild(row);
+  });
+  if(state.classes.length===0){
+    wrap.innerHTML = '<div class="action-empty">No classes yet — add one below.</div>';
+  }
+
+  wrap.querySelectorAll('.mc-class').forEach(sel=>sel.addEventListener('change', e=>{
+    state.classes[e.target.dataset.i].name = e.target.value;
+    afterClassChange();
+  }));
+  // Level edits keep focus: recompute derived state without rebuilding this list.
+  wrap.querySelectorAll('.mc-level').forEach(inp=>inp.addEventListener('input', e=>{
+    const lvl = Math.max(1, Math.min(20, parseInt(e.target.value)||1));
+    state.classes[e.target.dataset.i].level = lvl;
+    applyClassesToState();
+    renderClassInfoStack();
+    buildClassFeatures();
+    recalc(); save();
+  }));
+  wrap.querySelectorAll('.mc-del').forEach(btn=>btn.addEventListener('click', e=>{
+    state.classes.splice(e.target.dataset.i, 1);
+    afterClassChange();
+  }));
+}
+
+// One-line description of when a class gets access to which spell levels.
+function castingSummary(cd){
+  if(!cd.casting) return null;
+  const c = cd.casting;
+  const ab = c.ability ? c.ability.toUpperCase() : '';
+  let text = null;
+  if(c.type==='full') text = `Full caster (${ab}). Spell levels: 1st@L1, 2nd@L3, 3rd@L5, 4th@L7, 5th@L9, 6th@L11, 7th@L13, 8th@L15, 9th@L17.`;
+  else if(c.type==='half') text = `Half caster (${ab}). Spell levels: 1st@L2, 2nd@L5, 3rd@L9, 4th@L13, 5th@L17.`;
+  else if(c.type==='pact') text = `Pact magic (${ab}): slots refresh on a short rest. Slot level: 1st@L1, 2nd@L3, 3rd@L5, 4th@L7, 5th@L9; Mystic Arcanum adds 6th–9th at L11/13/15/17.`;
+  if(c.note) text = text ? text+' '+c.note : c.note;
+  return text;
+}
+
+// PHB multiclass prerequisite check against current ability scores.
+function mcReqStatus(name){
+  const req = MC_REQS[name];
+  if(!req) return null;
+  const met = req.some(opt=> Object.entries(opt).every(([k,v])=> (state.abilities[k]||0) >= v));
+  const text = req.map(opt=> Object.entries(opt).map(([k,v])=>k.toUpperCase()+' '+v).join(' & ')).join(' or ');
+  return {met, text};
+}
+
+// PHB multiclass spellcasting: full-caster levels + half of paladin/ranger levels.
+// Warlock pact magic stacks separately.
+const FULL_CASTERS = ['Bard','Cleric','Druid','Sorcerer','Wizard'];
+const HALF_CASTERS = ['Paladin','Ranger'];
+function multiclassCasterLevel(picked){
+  return picked.reduce((s,c)=>{
+    if(FULL_CASTERS.includes(c.name)) return s + (c.level||1);
+    if(HALF_CASTERS.includes(c.name)) return s + Math.floor((c.level||1)/2);
+    return s;
+  }, 0);
+}
+
+function classInfoCard(entry, showReq){
+  const cd = CLASS_DATA[entry.name];
+  const lvl = entry.level||1;
+  const saveNames = cd.saves.map(k=>k.toUpperCase()).join(', ');
+  const skills = cd.skills==='any' ? `any ${cd.choose} skills` : `choose ${cd.choose} from the dashed chips`;
+  const spells = castingSummary(cd);
+  const req = showReq ? mcReqStatus(entry.name) : null;
+
+  const byLv = {};
+  (cd.features||[]).forEach(f=>{ (byLv[f.lv]=byLv[f.lv]||[]).push(f.name); });
+  const progRows = Object.keys(byLv).map(Number).sort((a,b)=>a-b).map(lv=>
+    `<div class="ci-row ${lv<=lvl?'unlocked':''}"><span class="ci-key">lv_${String(lv).padStart(2,'0')}</span><span>${byLv[lv].join(', ')}</span></div>`
+  ).join('');
+
+  return `<div class="class-info">
+    <div class="ci-title">${entry.name} — Lv ${lvl}${cd.homebrew?'<span class="homebrew-tag">Homebrew</span>':''}</div>
+    <div class="ci-row"><span class="ci-key">hit_die</span><span>d${cd.hitDie} → ${lvl}d${cd.hitDie} from this class</span></div>
+    <div class="ci-row"><span class="ci-key">save_prof</span><span>${saveNames}</span></div>
+    <div class="ci-row"><span class="ci-key">skills</span><span>${skills}</span></div>
+    ${cd.subclasses?`<div class="ci-row"><span class="ci-key">subclasses</span><span>choose at Lv ${cd.subclassLevel}: ${cd.subclasses.join(' · ')}</span></div>`:''}
+    ${spells?`<div class="ci-row"><span class="ci-key">spellcasting</span><span>${spells}</span></div>`:''}
+    ${req?`<div class="ci-row"><span class="ci-key">mc_req</span><span class="${req.met?'req-ok':'req-bad'}">${req.text} — ${req.met?'✓ met':'✗ not met'}</span></div>`:''}
+    ${cd.homebrew?`<div class="ci-row"><span class="ci-key">source</span><span>World Anvil</span></div>`:''}
+    ${progRows?`<div class="ci-prog-label">// ability progression — highlighted rows are unlocked at this class's level</div><div class="ci-prog">${progRows}</div>`:''}
+    ${cd.desc?`<div class="ci-desc">${cd.desc}</div>`:''}
+  </div>`;
+}
+
+function renderClassInfoStack(){
+  const box = document.getElementById('classInfoStack');
+  document.getElementById('totalLevelDisplay').textContent = state.level||1;
+  const picked = pickedClasses();
+  if(!picked.length){
+    box.innerHTML = '<div class="class-info"><div class="ci-desc">// no class selected — saves & skills fall back to raw ability modifiers</div></div>';
+    return;
+  }
+  const multi = picked.length>1;
+  let summary = '';
+  if(multi){
+    const casterLvl = multiclassCasterLevel(picked);
+    const hasWarlock = picked.some(c=>c.name==='Warlock');
+    summary = `<div class="class-info">
+      <div class="ci-title">Multiclass — Lv ${state.level}</div>
+      <div class="ci-row"><span class="ci-key">prof_bonus</span><span>+${profBonus(state.level)} (from total level ${state.level})</span></div>
+      <div class="ci-row"><span class="ci-key">hit_dice</span><span>${state.hitDice}</span></div>
+      <div class="ci-row"><span class="ci-key">save_prof</span><span>from primary class only (${picked[0].name})</span></div>
+      ${casterLvl>0?`<div class="ci-row"><span class="ci-key">mc_caster</span><span>combined caster level ${casterLvl} — use the PHB multiclass slot table${hasWarlock?'; Warlock pact slots stack separately':''}</span></div>`:''}
+    </div>`;
+  }
+  box.innerHTML = summary + picked.map(entry=> classInfoCard(entry, multi)).join('');
+}
+
+function buildSkillPicker(){
+  const picked = pickedClasses();
+  const primary = picked[0] && CLASS_DATA[picked[0].name];
+  const hint = document.getElementById('skillHint');
+  if(primary && primary.skills!=='any'){
+    hint.innerHTML = `<span class="hl">${picked[0].name}</span> (primary) grants <span class="hl">${primary.choose}</span> picks from the dashed chips.${picked.length>1?' Multiclass dips grant fewer skills (PHB) — ':' '}Any chip can be toggled for proficiencies from backgrounds, feats, or DM fiat.`;
+  } else if(primary){
+    hint.innerHTML = `<span class="hl">${picked[0].name}</span> (primary) grants <span class="hl">${primary.choose}</span> picks from any skill.`;
+  } else {
+    hint.textContent = 'Toggle the skills this character is proficient in — bonuses on the Character tab update automatically.';
+  }
+  const wrap = document.getElementById('skillPicker');
+  wrap.innerHTML='';
+  SKILLS.forEach((s,i)=>{
+    const key='sk'+i;
+    if(!(key in state.skillProf)) state.skillProf[key]=false;
+    const fromClass = picked.some(c=>{
+      const cd = CLASS_DATA[c.name];
+      return cd.skills!=='any' && cd.skills.includes(s.name);
+    });
+    const chip = el('div', 'skill-chip'+(state.skillProf[key]?' on':'')+(fromClass?' classpick':''));
+    chip.innerHTML = `${s.name}<span class="chip-abbr">${s.ability}</span>`;
+    chip.addEventListener('click', ()=>{
+      state.skillProf[key] = !state.skillProf[key];
+      chip.classList.toggle('on', state.skillProf[key]);
+      buildSkills(); recalc(); save();
+    });
+    wrap.appendChild(chip);
+  });
+}
+
+function buildClassFeatures(){
+  const box = document.getElementById('classFeaturesList');
+  const picked = pickedClasses();
+  if(!picked.length){
+    box.innerHTML = '<div class="action-empty">Select a class in Settings to see its features here.</div>';
+    return;
+  }
+  box.innerHTML = picked.map(entry=>{
+    const cd = CLASS_DATA[entry.name];
+    const all = cd.features||[];
+    const feats = all.filter(f=>f.lv<=(entry.level||1));
+    const upcoming = all.length - feats.length;
+    return `<div class="known-spell-group-label">${entry.name} ${entry.level}</div>`
+      + (feats.length ? feats.map(f=>`
+        <div class="feat-item">
+          <div class="feat-head">
+            <span class="f-lvl">LV ${f.lv}</span>
+            <span class="f-name">${f.name}</span>
+            ${f.use && f.use!=='passive' ? `<span class="action-badge">${f.use}${f.cost?' · '+f.cost:''}</span>`:''}
+          </div>
+          ${f.desc?`<div class="feat-desc">${f.desc}</div>`:''}
+        </div>`).join('') : '<div class="action-empty">No features at this level.</div>')
+      + (upcoming>0?`<div class="action-empty">+ ${upcoming} more at higher ${entry.name} levels.</div>`:'');
+  }).join('');
+}
+
+// ---------- Actions tab (derived from attacks, spells, and inventory) ----------
+// A spell of level L can be cast using any unspent slot of level L or higher.
+function slotsRemainingAtOrAbove(level){
+  let n=0;
+  for(let i=level-1;i<9;i++) n += Math.max(0, state.spellSlots[i].total - state.spellSlots[i].used);
+  return n;
+}
+
+function buildActions(){
+  const attacksEl = document.getElementById('actAttacks');
+  const attacks = state.attacks.filter(a=>a.name && a.name.trim());
+  attacksEl.innerHTML = attacks.length ? attacks.map(a=>`
+    <div class="action-row">
+      <span class="a-name">${a.name}</span>
+      <span class="a-detail">${a.bonus ? a.bonus+' to hit' : ''}${a.bonus && a.dmg ? ' — ' : ''}${a.dmg || ''}</span>
+      <span class="action-badge">Attack</span>
+    </div>`).join('')
+    : '<div class="action-empty">No attacks yet — add them on the Character tab.</div>';
+
+  const spellsEl = document.getElementById('actSpells');
+  if(state.knownSpells.length===0){
+    spellsEl.innerHTML = '<div class="action-empty">No known spells — add some on the Spells tab.</div>';
+  } else {
+    const sorted = [...state.knownSpells].sort((a,b)=> a.level-b.level || a.name.localeCompare(b.name));
+    spellsEl.innerHTML = sorted.map(s=>{
+      if(s.level===0){
+        return `<div class="action-row">
+          <span class="a-name">${s.name}</span>
+          <span class="a-detail">Cantrip</span>
+          <span class="action-badge">At will</span>
+        </div>`;
+      }
+      const remaining = slotsRemainingAtOrAbove(s.level);
+      const ok = remaining>0;
+      return `<div class="action-row">
+        <span class="a-name">${s.name}</span>
+        <span class="a-detail">${levelLabel(s.level)}${ok ? ` — ${remaining} slot${remaining===1?'':'s'} usable` : ''}</span>
+        <span class="action-badge ${ok?'':'dim'}">${ok?'Castable':'No slots'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const classEl = document.getElementById('actClassAbilities');
+  const picked = pickedClasses();
+  const abilities = picked.flatMap(entry=> (CLASS_DATA[entry.name].features||[])
+    .filter(f=>f.lv<=(entry.level||1) && f.use && f.use!=='passive')
+    .map(f=>({...f, cls:entry.name})));
+  classEl.innerHTML = abilities.length ? abilities.map(f=>`
+    <div class="action-row">
+      <span class="a-name">${f.name}${picked.length>1?` <span class="chip-abbr">${f.cls}</span>`:''}</span>
+      <span class="a-detail">${f.desc||''}</span>
+      <span class="action-badge">${f.use}${f.cost?' · '+f.cost:''}</span>
+    </div>`).join('')
+    : '<div class="action-empty">No class ability data — pick a class with a detailed feature reference (e.g. Jaeger) in Settings.</div>';
+
+  const itemsEl = document.getElementById('actItems');
+  const usable = state.inventory.filter(i=> i.name && i.qty>0 && USABLE_ITEM_WORDS.some(w=> i.name.toLowerCase().includes(w)));
+  itemsEl.innerHTML = usable.length ? usable.map(i=>`
+    <div class="action-row">
+      <span class="a-name">${i.name}</span>
+      <span class="a-detail">×${i.qty}</span>
+      <span class="action-badge">Use item</span>
+    </div>`).join('')
+    : '<div class="action-empty">No usable items in your inventory (potions, scrolls, kits…).</div>';
+
+  document.getElementById('actStandard').innerHTML = STANDARD_ACTIONS.map(a=>`
+    <div class="action-row">
+      <span class="a-name">${a.name}</span>
+      <span class="a-detail">${a.desc}</span>
+    </div>`).join('');
+}
+
+function bindTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
+      // Rebuild on entry so the list reflects edits made on the other tabs.
+      if(btn.dataset.tab==='actions') buildActions();
+    });
+  });
+}
+
 function recalc(){
   const pb = profBonus(state.level);
   document.getElementById('profBonusDisplay').textContent = fmt(pb);
@@ -855,6 +1557,8 @@ function recalc(){
     const p = document.querySelector(`.pip.fail[data-idx="${i}"]`);
     if(p) p.classList.toggle('filled', v);
   });
+
+  updateHero();
 }
 
 function bindStaticInputs(){
@@ -865,9 +1569,14 @@ function bindStaticInputs(){
       recalc(); save();
     });
   };
-  bind('charName','name'); bind('charClass','class'); bind('charLevel','level',true);
+  bind('charName','name');
   bind('charRace','race'); bind('charBackground','background'); bind('charAlignment','alignment');
   bind('charXP','xp',true);
+  document.getElementById('addClassBtn').addEventListener('click', ()=>{
+    ensureClasses();
+    state.classes.push({name:'', level:1});
+    buildClassList();
+  });
   bind('statAC','ac',true); bind('statSpeed','speed',true);
   bind('hpMax','hpMax',true); bind('hpCurrent','hpCurrent',true); bind('hpTemp','hpTemp',true);
   bind('hitDice','hitDice');
@@ -918,8 +1627,6 @@ function bindStaticInputs(){
 
 function applyStateToInputs(){
   document.getElementById('charName').value = state.name;
-  document.getElementById('charClass').value = state.class;
-  document.getElementById('charLevel').value = state.level;
   document.getElementById('charRace').value = state.race;
   document.getElementById('charBackground').value = state.background;
   document.getElementById('charAlignment').value = state.alignment;
@@ -1019,6 +1726,8 @@ async function refreshProfileList(selectedId){
 }
 
 function renderCharacter(){
+  ensureClasses();
+  applyClassesToState();
   buildAbilities();
   buildSaves();
   buildSkills();
@@ -1028,6 +1737,11 @@ function renderCharacter(){
   buildSpellClassSelect();
   buildSpellLibrary();
   buildKnownSpells();
+  buildClassList();
+  renderClassInfoStack();
+  buildSkillPicker();
+  buildClassFeatures();
+  buildActions();
   applyStateToInputs();
   recalc();
 }
@@ -1087,6 +1801,7 @@ async function init(){
   await refreshProfileList(state.id);
   bindStaticInputs();
   bindProfileBar();
+  bindTabs();
   setSaveStatus('saved');
 }
 
