@@ -1357,16 +1357,6 @@ function bindStaticInputs(){
   bind('persBonds','persBonds'); bind('persFlaws','persFlaws');
 
   document.getElementById('spellSearch').addEventListener('input', ()=> buildSpellLibrary());
-  document.getElementById('addCustomSpell').addEventListener('click', ()=>{
-    const nameEl = document.getElementById('customSpellName');
-    const lvlEl = document.getElementById('customSpellLevel');
-    const name = nameEl.value.trim();
-    if(!name) return;
-    const level = Math.max(0, Math.min(9, parseInt(lvlEl.value)||0));
-    state.knownSpells.push({name, level, custom:true});
-    nameEl.value=''; lvlEl.value='';
-    buildKnownSpells(); save();
-  });
   document.getElementById('cCP').addEventListener('input', e=>{state.currency.cp=parseInt(e.target.value)||0; save();});
   document.getElementById('cSP').addEventListener('input', e=>{state.currency.sp=parseInt(e.target.value)||0; save();});
   document.getElementById('cEP').addEventListener('input', e=>{state.currency.ep=parseInt(e.target.value)||0; save();});
@@ -1388,18 +1378,6 @@ function bindStaticInputs(){
     });
   });
 
-  document.getElementById('addAttack').addEventListener('click', ()=>{
-    state.attacks.push({name:'',bonus:'',dmg:''});
-    buildAttacks(); save();
-  });
-  document.getElementById('addItem').addEventListener('click', ()=>{
-    state.inventory.push({name:'',qty:1});
-    buildInventory(); save();
-  });
-  document.getElementById('addEquip').addEventListener('click', ()=>{
-    equipList().push(newEquipItem());
-    buildEquipment(); save();
-  });
 }
 
 function applyStateToInputs(){
@@ -2040,6 +2018,53 @@ function bindProfileBar(){
     await refreshProfileList(state.id);
   });
 }
+
+const app = {
+  get state(){ return state; },
+  set state(value){ state = value; },
+  save,
+  refreshEffects,
+  buildActions,
+  buildKnownSpells,
+  buildAttacks,
+  buildSaves,
+  buildSkills,
+  buildAbilities,
+  buildInventory,
+  buildEquipment,
+  buildSpellSlots,
+  buildSpellLibrary,
+  buildSpellClassSelect,
+  buildClassFilterBar,
+  buildClassList,
+  renderClassInfoStack,
+  buildSkillPicker,
+  buildClassFeatures,
+  buildSpeciesSelect,
+  renderSpeciesInfo,
+  buildSpeciesTraits,
+  buildClassFromForm,
+  buildSpeciesFromForm,
+  buildSubclassFromForm,
+  renderImportedList,
+  renderSpeciesImportedList,
+  renderSubclassImportedList,
+  buildSubclassParentSelect,
+  bindClassImport,
+  bindSpeciesImport,
+  bindSubclassImport,
+  buildAlignmentSelect,
+  buildNotes,
+  renderCharacter,
+  recalc,
+  applyStateToInputs,
+  bindTabs,
+  buildEquipAttackList,
+  bindStaticInputs,
+  bindProfileBar,
+  refreshProfileList
+};
+window.characterSheetApp = app;
 
 async function init(){
   await loadCustomClasses(); // merge imported classes before any character renders
