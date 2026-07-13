@@ -502,11 +502,21 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 .picker-hint .hl{ color: var(--neon-cyan); }
 
 /* ---------- Multiclass list ---------- */
-.class-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.class-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
 .class-row select{
   flex:1; font-size:14px; padding:7px 9px;
   background: var(--void-2); color: var(--ink);
   border:1px solid var(--parchment-line); border-radius:2px;
+}
+/* Subclass picker drops to its own full-width line under the class row. */
+.class-row select.mc-subclass{
+  flex-basis:100%; font-size:13px; color: var(--neon-magenta);
+  border-color: rgba(255,42,109,0.35); border-style:dashed;
+}
+.sub-chosen{ color: var(--neon-magenta); }
+.subclass-label{
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  color: var(--neon-magenta); margin:8px 0 4px; display:flex; align-items:center; gap:8px;
 }
 .class-row input.mc-level{
   width:64px; text-align:center; font-size:14px; padding:7px 4px;
@@ -626,6 +636,17 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 .equip-atk-row{ display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:3px 2px; border-bottom:1px dashed rgba(200,200,212,0.15); }
 .equip-atk-row span:last-child{ color: var(--ink-soft); font-family:'JetBrains Mono', monospace; font-size:12px; }
 
+/* Computed AC readout under the Skills panel */
+.ac-breakdown{
+  text-align:right; font-family:'JetBrains Mono', monospace;
+  font-size:10.5px; color: var(--ink-dim); margin-top:3px;
+}
+
+/* Equipment rows mirrored into the Inventory list (read-only) */
+.inv-row.inv-gear{ cursor:pointer; }
+.inv-row.inv-gear:hover .gear-name{ color: var(--neon-cyan); }
+.inv-row.inv-gear .gear-name{ flex:1; font-size:14px; color: var(--ink-soft); }
+
 ::-webkit-scrollbar{ width:8px; }
 ::-webkit-scrollbar-thumb{ background: var(--gold); border-radius:4px; }
 </style>
@@ -693,6 +714,11 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
       <div class="panel">
         <h2><span>Skills</span><span class="rune">✦</span></h2>
         <div id="skillsPanel"></div>
+        <div class="mini-row" style="margin-top:8px; border-top:1px solid var(--parchment-line); padding-top:8px;">
+          <label>Armor Class</label>
+          <span class="val" id="acComputedDisplay">10</span>
+        </div>
+        <div class="ac-breakdown" id="acBreakdown">10 + DEX</div>
       </div>
     </div>
 
@@ -763,7 +789,7 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
   <div class="tab-pane" id="tab-equipment">
     <div class="panel">
       <h2><span>Equipment</span><span class="rune">⚙</span></h2>
-      <div class="picker-hint">Gear you're wearing or wielding. <span class="hl">Equipped</span> items feed your attacks, spellcasting, ability scores, and skill bonuses on the other tabs. Ability fields accept <span class="hl">+2</span> (bonus) or <span class="hl">=19</span> (set score).</div>
+      <div class="picker-hint">Gear you're wearing or wielding — everything here is listed in your <span class="hl">Inventory</span> automatically. <span class="hl">Equipped</span> items feed your attacks, spellcasting, ability scores, and skill bonuses on the other tabs. Ability fields accept <span class="hl">+2</span> (bonus) or <span class="hl">=19</span> (set score).</div>
       <div id="equipmentList"></div>
       <button class="add-btn" id="addEquip">+ Add Equipment</button>
     </div>
@@ -1013,6 +1039,41 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
           <div id="speciesImportedList" style="margin-top:10px;"></div>
         </div>
       </div>
+    </div>
+
+    <div class="panel">
+      <h2><span>Import Subclass</span><span class="rune">◈</span></h2>
+      <div class="picker-hint">Add a subclass to an existing <span class="hl">parent class</span> (built-in or imported). It becomes selectable on that class in the <span class="hl">Classes &amp; Levels</span> picker, and its features show on the Features &amp; Traits and Actions tabs, gated by your class level.</div>
+      <div class="import-grid">
+        <div class="set-field"><label>Parent Class</label><select id="subParent"></select></div>
+        <div class="set-field"><label>Source</label>
+          <select id="subSource">
+            <option value="Homebrew">Homebrew</option>
+            <option value="5E">Official — 5E</option>
+            <option value="5.5E">Official — 5.5E</option>
+          </select>
+        </div>
+        <div class="set-field"><label>Subclass Name</label><input id="subName" placeholder="e.g. Circle of Stars"></div>
+        <div class="set-field"><label>Chosen at Level</label><input id="subLevel" type="number" min="1" max="20" value="3"></div>
+        <div class="set-field full"><label>Description</label>
+          <textarea id="subDesc" class="import-ta" style="min-height:60px;" placeholder="One-paragraph subclass summary."></textarea>
+        </div>
+        <div class="set-field full"><label>Features (one per line)</label>
+          <textarea id="subFeatures" class="import-ta" placeholder="level | name | description | use | cost&#10;3 | Star Map | You create a celestial map granting a bonus cantrip. | passive&#10;3 | Starry Form | Assume a constellation form. | bonus action | 2/rest"></textarea>
+          <div class="import-note">Format: <span class="hl">level | name | description | use | cost</span>. Level is the character level the feature unlocks at. <span class="hl">use</span> + <span class="hl">cost</span> surface it on the Actions tab.</div>
+        </div>
+        <div class="full">
+          <button class="add-btn" id="subSubmit">+ Import Subclass</button>
+          <button class="pbtn" id="subJsonToggle" style="margin-left:8px;">Paste JSON…</button>
+        </div>
+        <div class="set-field full" id="subJsonWrap" style="display:none;">
+          <label>Advanced — Subclass JSON</label>
+          <textarea id="subJson" class="import-ta" placeholder='{ "parent":"Druid", "name":"Circle of Stars", "source":"5E", "subclassLevel":2, "features":[{"lv":2,"name":"Star Map"},{"lv":2,"name":"Starry Form","use":"bonus action","cost":"2/rest"}] }'></textarea>
+          <div class="import-note">Paste a full subclass definition to import it directly. Overrides the form fields above.</div>
+        </div>
+      </div>
+      <div class="import-msg" id="subMsg"></div>
+      <div id="subclassImportedList" style="margin-top:10px;"></div>
     </div>
   </div>
 
@@ -1268,6 +1329,19 @@ const SPECIES_DATA = {
 };
 Object.values(SPECIES_DATA).forEach(sd=>{ if(!sd.source) sd.source='5E'; sd.builtin=true; });
 
+// ---------- Subclasses ----------
+// Detailed, imported subclasses keyed by "Parent::Name". Built-in classes list
+// their subclass *names* in CLASS_DATA[cls].subclasses; imported entries here
+// add source, description, and level-gated features. `subclassNamesForClass`
+// merges the two so pickers and cards see every option for a parent class.
+const SUBCLASS_DATA = {};
+function subKey(parent, name){ return parent + '::' + name; }
+function subclassNamesForClass(className){
+  const own = (CLASS_DATA[className] && CLASS_DATA[className].subclasses) || [];
+  const imported = Object.values(SUBCLASS_DATA).filter(s=>s.parent===className).map(s=>s.name);
+  return [...new Set([...own, ...imported])];
+}
+
 // ---------- Spell slot tables (PHB) ----------
 // Full-caster slots by caster level (also used as the multiclass table).
 const FULL_SLOTS = {
@@ -1396,7 +1470,7 @@ function equipList(){
 }
 function newEquipItem(){
   return { name:'', description:'', equipped:true,
-    attack:{bonus:'',dmg:''},
+    attack:{bonus:'',dmg:''}, ac:'',
     abilities:{str:'',dex:'',con:'',int:'',wis:'',cha:''},
     skills:[], spells:[] };
 }
@@ -1445,6 +1519,25 @@ function equipmentAttacks(){
 function equipmentGrantedSpells(){
   return equippedEquip().flatMap(it=>
     (it.spells||[]).map(sp=>({ name: sp.name, level: Number(sp.level)||0, from: it.name||'item' })));
+}
+
+// Computed Armor Class: base 10 + DEX mod (gear-adjusted), with equipped armor.
+// Armor field syntax matches abilities: "+2" stacks (shield, ring of protection);
+// "=16" is a flat armor base that replaces 10+DEX (heavy armor) — the higher of
+// the two bases wins, then bonuses apply on top.
+function computeAC(){
+  const dexMod = mod(effectiveAbilities().dex);
+  const unarmored = 10 + dexMod;
+  let adds = 0; const sets = [];
+  equippedEquip().forEach(it=>{
+    const e = parseAbilityEffect(it.ac);
+    if(!e) return;
+    if(e.mode==='set') sets.push(e.value); else adds += e.value;
+  });
+  const armorBase = sets.length ? Math.max(...sets) : null;
+  const usedArmor = armorBase!==null && armorBase >= unarmored;
+  const base = usedArmor ? armorBase : unarmored;
+  return { ac: base + adds, dexMod, usedArmor, armorBase, adds };
 }
 
 // ---------- Build Abilities Panel ----------
@@ -1529,6 +1622,21 @@ function buildAttacks(){
 function buildInventory(){
   const list = document.getElementById('inventoryList');
   list.innerHTML='';
+  // Equipment items are carried gear, so they appear here automatically.
+  // Read-only: they're managed on the Equipment tab (click a row to jump there).
+  const gear = equipList().filter(it=> it.name && it.name.trim());
+  if(gear.length){
+    list.insertAdjacentHTML('beforeend',
+      '<div class="equip-atk-head">From equipment — managed on the Equipment tab</div>'
+      + gear.map(it=>`
+        <div class="inv-row inv-gear" title="Edit on the Equipment tab">
+          <span class="item-name gear-name">${esc(it.name)}</span>
+          <span class="action-badge ${it.equipped?'':'dim'}">${it.equipped?'Equipped':'Packed'}</span>
+        </div>`).join(''));
+    list.querySelectorAll('.inv-gear').forEach(row=>row.addEventListener('click', ()=>{
+      document.querySelector('.tab-btn[data-tab="equipment"]').click();
+    }));
+  }
   state.inventory.forEach((item,i)=>{
     const row = el('div','inv-row');
     row.innerHTML = `
@@ -1810,6 +1918,10 @@ function buildClassList(){
   state.classes.forEach((entry,i)=>{
     const taken = state.classes.filter((c,j)=>j!==i).map(c=>c.name);
     const names = classNamesForFilter(entry.name);
+    const subs = entry.name ? subclassNamesForClass(entry.name) : [];
+    const cd = CLASS_DATA[entry.name];
+    const subLevel = cd ? cd.subclassLevel : 0;
+    const subReady = cd && (entry.level||1) >= subLevel;
     const row = el('div','class-row');
     row.innerHTML = `
       <select class="mc-class" data-i="${i}">
@@ -1820,6 +1932,10 @@ function buildClassList(){
       <input class="mc-level" type="number" min="1" max="20" value="${entry.level||1}" data-i="${i}">
       ${i===0?'<span class="primary-tag">primary</span>':''}
       <span class="row-del mc-del" data-i="${i}">✕</span>
+      ${subs.length ? `<select class="mc-subclass" data-i="${i}" title="${subReady?'':'unlocks at Lv '+subLevel}">
+        <option value="">${subReady?'— subclass —':'— subclass (Lv '+subLevel+') —'}</option>
+        ${subs.map(s=>`<option value="${esc(s)}" ${entry.subclass===s?'selected':''}>${esc(s)}${SUBCLASS_DATA[subKey(entry.name,s)]?' ✦':''}</option>`).join('')}
+      </select>` : ''}
     `;
     wrap.appendChild(row);
   });
@@ -1829,7 +1945,15 @@ function buildClassList(){
 
   wrap.querySelectorAll('.mc-class').forEach(sel=>sel.addEventListener('change', e=>{
     state.classes[e.target.dataset.i].name = e.target.value;
+    state.classes[e.target.dataset.i].subclass = ''; // reset subclass when class changes
     afterClassChange();
+  }));
+  wrap.querySelectorAll('.mc-subclass').forEach(sel=>sel.addEventListener('change', e=>{
+    state.classes[e.target.dataset.i].subclass = e.target.value;
+    renderClassInfoStack();
+    buildClassFeatures();
+    buildActions();
+    save();
   }));
   // Level edits keep focus: recompute derived state without rebuilding this list.
   wrap.querySelectorAll('.mc-level').forEach(inp=>inp.addEventListener('input', e=>{
@@ -1901,7 +2025,8 @@ function classInfoCard(entry, showReq){
     <div class="ci-row"><span class="ci-key">hit_die</span><span>d${cd.hitDie} → ${lvl}d${cd.hitDie} from this class</span></div>
     <div class="ci-row"><span class="ci-key">save_prof</span><span>${saveNames}</span></div>
     <div class="ci-row"><span class="ci-key">skills</span><span>${skills}</span></div>
-    ${cd.subclasses?`<div class="ci-row"><span class="ci-key">subclasses</span><span>choose at Lv ${cd.subclassLevel}: ${cd.subclasses.join(' · ')}</span></div>`:''}
+    ${(()=>{ const subs=subclassNamesForClass(entry.name); if(!subs.length) return ''; const chosen=entry.subclass;
+      return `<div class="ci-row"><span class="ci-key">subclasses</span><span>choose at Lv ${cd.subclassLevel}: ${subs.map(s=> s===chosen?`<b class="sub-chosen">${esc(s)}</b>`:esc(s)).join(' · ')}</span></div>`; })()}
     ${spells?`<div class="ci-row"><span class="ci-key">spellcasting</span><span>${spells}</span></div>`:''}
     ${req?`<div class="ci-row"><span class="ci-key">mc_req</span><span class="${req.met?'req-ok':'req-bad'}">${req.text} — ${req.met?'✓ met':'✗ not met'}</span></div>`:''}
     <div class="ci-row"><span class="ci-key">source</span><span>${cd.custom ? 'Imported · '+cd.source : cd.homebrew ? 'World Anvil · Homebrew' : 'Official · '+cd.source}</span></div>
@@ -1965,6 +2090,17 @@ function buildSkillPicker(){
   });
 }
 
+function featItem(f){
+  return `<div class="feat-item">
+    <div class="feat-head">
+      <span class="f-lvl">LV ${f.lv}</span>
+      <span class="f-name">${esc(f.name)}</span>
+      ${f.use && f.use!=='passive' ? `<span class="action-badge">${esc(f.use)}${f.cost?' · '+esc(f.cost):''}</span>`:''}
+    </div>
+    ${f.desc?`<div class="feat-desc">${esc(f.desc)}</div>`:''}
+  </div>`;
+}
+
 function buildClassFeatures(){
   const box = document.getElementById('classFeaturesList');
   const picked = pickedClasses();
@@ -1974,20 +2110,28 @@ function buildClassFeatures(){
   }
   box.innerHTML = picked.map(entry=>{
     const cd = CLASS_DATA[entry.name];
+    const lvl = entry.level||1;
     const all = cd.features||[];
-    const feats = all.filter(f=>f.lv<=(entry.level||1));
+    const feats = all.filter(f=>f.lv<=lvl);
     const upcoming = all.length - feats.length;
-    return `<div class="known-spell-group-label">${entry.name} ${entry.level}</div>`
-      + (feats.length ? feats.map(f=>`
-        <div class="feat-item">
-          <div class="feat-head">
-            <span class="f-lvl">LV ${f.lv}</span>
-            <span class="f-name">${f.name}</span>
-            ${f.use && f.use!=='passive' ? `<span class="action-badge">${f.use}${f.cost?' · '+f.cost:''}</span>`:''}
-          </div>
-          ${f.desc?`<div class="feat-desc">${f.desc}</div>`:''}
-        </div>`).join('') : '<div class="action-empty">No features at this level.</div>')
-      + (upcoming>0?`<div class="action-empty">+ ${upcoming} more at higher ${entry.name} levels.</div>`:'');
+    let html = `<div class="known-spell-group-label">${esc(entry.name)} ${entry.level}</div>`
+      + (feats.length ? feats.map(featItem).join('') : '<div class="action-empty">No features at this level.</div>')
+      + (upcoming>0?`<div class="action-empty">+ ${upcoming} more at higher ${esc(entry.name)} levels.</div>`:'');
+    // Chosen subclass features (imported detail, gated by class level).
+    if(entry.subclass){
+      const sc = SUBCLASS_DATA[subKey(entry.name, entry.subclass)];
+      html += `<div class="subclass-label">↳ ${esc(entry.subclass)}${sc?' '+sourceTag(sc.source):''}</div>`;
+      const sfeatsAll = (sc && sc.features) || [];
+      if(sfeatsAll.length){
+        const sfeats = sfeatsAll.filter(f=>f.lv<=lvl);
+        const sUpcoming = sfeatsAll.length - sfeats.length;
+        html += (sfeats.length ? sfeats.map(featItem).join('') : '<div class="action-empty">No subclass features unlocked at this level yet.</div>')
+          + (sUpcoming>0?`<div class="action-empty">+ ${sUpcoming} more at higher levels.</div>`:'');
+      } else {
+        html += '<div class="action-empty">No feature detail imported — add it on the Library tab.</div>';
+      }
+    }
+    return html;
   }).join('');
 }
 
@@ -2025,6 +2169,10 @@ function buildEquipment(){
           <input class="eq-atk-dmg" data-i="${i}" value="${esc(atk.dmg)}" placeholder="1d8+4 slashing">
         </div>
         <div class="eq-field-group">
+          <span class="eq-lbl">Armor</span>
+          <input class="eq-ac" data-i="${i}" value="${esc(it.ac)}" placeholder="+2 (shield) or =16 (heavy armor)" style="width:220px;">
+        </div>
+        <div class="eq-field-group">
           <span class="eq-lbl">Ability</span>
           ${ABILITIES.map(a=>`<label class="eq-ab"><span>${a.key.toUpperCase()}</span><input class="eq-abil" data-i="${i}" data-k="${a.key}" value="${esc(ab[a.key])}" placeholder="—"></label>`).join('')}
         </div>
@@ -2050,10 +2198,10 @@ function buildEquipment(){
 
 function bindEquipList(wrap){
   const list = equipList();
-  const refreshEffects = ()=>{ recalc(); buildActions(); buildKnownSpells(); buildEquipAttackList(); };
+  const refreshEffects = ()=>{ recalc(); buildActions(); buildKnownSpells(); buildEquipAttackList(); buildInventory(); };
   // In-place text edits: update state without rebuilding (preserve focus).
   wrap.querySelectorAll('.eq-name').forEach(inp=>inp.addEventListener('input', e=>{
-    list[e.target.dataset.i].name = e.target.value; buildActions(); buildEquipAttackList(); save();
+    list[e.target.dataset.i].name = e.target.value; buildActions(); buildEquipAttackList(); buildInventory(); save();
   }));
   wrap.querySelectorAll('.eq-desc').forEach(inp=>inp.addEventListener('input', e=>{
     list[e.target.dataset.i].description = e.target.value; save();
@@ -2068,6 +2216,10 @@ function bindEquipList(wrap){
   }));
   wrap.querySelectorAll('.eq-abil').forEach(inp=>inp.addEventListener('input', e=>{
     const it=list[e.target.dataset.i]; it.abilities=it.abilities||{}; it.abilities[e.target.dataset.k]=e.target.value;
+    recalc(); save();
+  }));
+  wrap.querySelectorAll('.eq-ac').forEach(inp=>inp.addEventListener('input', e=>{
+    list[e.target.dataset.i].ac = e.target.value;
     recalc(); save();
   }));
   // Structural edits: rebuild the list.
@@ -2161,19 +2313,31 @@ function buildActions(){
 
   const classEl = document.getElementById('actClassAbilities');
   const picked = pickedClasses();
-  const abilities = picked.flatMap(entry=> (CLASS_DATA[entry.name].features||[])
-    .filter(f=>f.lv<=(entry.level||1) && f.use && f.use!=='passive')
-    .map(f=>({...f, cls:entry.name})));
+  const abilities = picked.flatMap(entry=>{
+    const lvl = entry.level||1;
+    const fromClass = (CLASS_DATA[entry.name].features||[])
+      .filter(f=>f.lv<=lvl && f.use && f.use!=='passive')
+      .map(f=>({...f, cls:entry.name}));
+    const sc = entry.subclass && SUBCLASS_DATA[subKey(entry.name, entry.subclass)];
+    const fromSub = (sc && sc.features || [])
+      .filter(f=>f.lv<=lvl && f.use && f.use!=='passive')
+      .map(f=>({...f, cls:entry.subclass}));
+    return [...fromClass, ...fromSub];
+  });
   classEl.innerHTML = abilities.length ? abilities.map(f=>`
     <div class="action-row">
-      <span class="a-name">${f.name}${picked.length>1?` <span class="chip-abbr">${f.cls}</span>`:''}</span>
-      <span class="a-detail">${f.desc||''}</span>
-      <span class="action-badge">${f.use}${f.cost?' · '+f.cost:''}</span>
+      <span class="a-name">${esc(f.name)}${picked.length>1||f.cls!==picked[0].name?` <span class="chip-abbr">${esc(f.cls)}</span>`:''}</span>
+      <span class="a-detail">${esc(f.desc||'')}</span>
+      <span class="action-badge">${esc(f.use)}${f.cost?' · '+esc(f.cost):''}</span>
     </div>`).join('')
     : '<div class="action-empty">No class ability data — pick a class with a detailed feature reference (e.g. Jaeger) in Settings.</div>';
 
   const itemsEl = document.getElementById('actItems');
-  const usable = state.inventory.filter(i=> i.name && i.qty>0 && USABLE_ITEM_WORDS.some(w=> i.name.toLowerCase().includes(w)));
+  const isUsableName = n=> n && USABLE_ITEM_WORDS.some(w=> n.toLowerCase().includes(w));
+  const usable = [
+    ...state.inventory.filter(i=> i.qty>0 && isUsableName(i.name)),
+    ...equipList().filter(it=> isUsableName(it.name)).map(it=>({name:it.name, qty:1}))
+  ];
   itemsEl.innerHTML = usable.length ? usable.map(i=>`
     <div class="action-row">
       <span class="a-name">${i.name}</span>
@@ -2230,6 +2394,15 @@ function recalc(){
   });
 
   document.getElementById('statInit').textContent = fmt(mod(eff.dex));
+
+  const acInfo = computeAC();
+  const acEl = document.getElementById('acComputedDisplay');
+  if(acEl){
+    acEl.textContent = acInfo.ac;
+    document.getElementById('acBreakdown').textContent =
+      (acInfo.usedArmor ? `armor ${acInfo.armorBase}` : `10 + DEX ${fmt(acInfo.dexMod)}`)
+      + (acInfo.adds ? ` + gear ${fmt(acInfo.adds)}` : '');
+  }
 
   state.deathSuccess.forEach((v,i)=>{
     const p = document.querySelector(`.pip.success[data-idx="${i}"]`);
@@ -2396,6 +2569,22 @@ async function apiImportSpecies(payload){
 }
 async function apiDeleteSpecies(id){
   const r = await fetch('/api/species/'+id, { method:'DELETE' });
+  return r.json();
+}
+async function apiListSubclasses(){
+  const r = await fetch('/api/subclasses');
+  return r.json();
+}
+async function apiImportSubclass(payload){
+  const r = await fetch('/api/subclasses', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error||('HTTP '+r.status)); }
+  return r.json();
+}
+async function apiDeleteSubclass(id){
+  const r = await fetch('/api/subclasses/'+id, { method:'DELETE' });
   return r.json();
 }
 
@@ -2682,6 +2871,120 @@ function bindSpeciesImport(){
   });
 }
 
+// ---------- Subclass import (Library tab) ----------
+async function loadCustomSubclasses(){
+  let list = [];
+  try { list = await apiListSubclasses(); } catch(e){ return; }
+  Object.keys(SUBCLASS_DATA).forEach(k=>{ if(SUBCLASS_DATA[k].custom) delete SUBCLASS_DATA[k]; });
+  list.forEach(rec=>{
+    SUBCLASS_DATA[subKey(rec.parent, rec.name)] = Object.assign(
+      { parent: rec.parent, name: rec.name }, rec.data,
+      { source: rec.source, custom:true, customId: rec.id });
+  });
+}
+
+// Parent-class dropdown for the import form (every class can be a parent).
+function buildSubclassParentSelect(){
+  const sel = document.getElementById('subParent');
+  if(!sel) return;
+  const cur = sel.value;
+  const names = Object.keys(CLASS_DATA).sort();
+  sel.innerHTML = '<option value="">— pick parent class —</option>' + names.map(n=>
+    `<option value="${esc(n)}">${esc(n)} · ${CLASS_DATA[n].source}</option>`).join('');
+  if(cur && CLASS_DATA[cur]) sel.value = cur;
+}
+
+function buildSubclassFromForm(){
+  const parent = document.getElementById('subParent').value;
+  if(!parent) throw new Error('Pick a parent class.');
+  if(!CLASS_DATA[parent]) throw new Error('Unknown parent class.');
+  const name = document.getElementById('subName').value.trim();
+  if(!name) throw new Error('Subclass name is required.');
+  const source = document.getElementById('subSource').value;
+  const data = {
+    subclassLevel: Math.max(1, Math.min(20, parseInt(document.getElementById('subLevel').value)||CLASS_DATA[parent].subclassLevel||3)),
+    features: parseFeatureLines(document.getElementById('subFeatures').value)
+  };
+  const desc = document.getElementById('subDesc').value.trim();
+  if(desc) data.desc = desc;
+  return { parent, name, source, data };
+}
+
+async function submitSubclassImport(payload){
+  const msg = document.getElementById('subMsg');
+  try{
+    if(!payload) payload = buildSubclassFromForm();
+    if(!payload.parent || !CLASS_DATA[payload.parent]) throw new Error('A valid parent class is required.');
+    if(!payload.name) throw new Error('Subclass name is required.');
+    if(!payload.data || typeof payload.data!=='object') throw new Error('Subclass data is required.');
+    const source = CLASS_SOURCES.includes(payload.source) ? payload.source : 'Homebrew';
+    const res = await apiImportSubclass({ parent: payload.parent, name: payload.name, source, data: payload.data });
+    SUBCLASS_DATA[subKey(payload.parent, payload.name)] = Object.assign(
+      { parent: payload.parent, name: payload.name }, payload.data,
+      { source, custom:true, customId: res.id });
+    msg.className = 'import-msg ok';
+    msg.textContent = `Imported "${payload.name}" under ${payload.parent} (${source}) — now selectable on that class in Settings.`;
+    // Reflect the new subclass everywhere it's listed.
+    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList();
+  }catch(err){
+    msg.className = 'import-msg err';
+    msg.textContent = 'Import failed: ' + err.message;
+  }
+}
+
+function renderSubclassImportedList(){
+  const box = document.getElementById('subclassImportedList');
+  if(!box) return;
+  const customs = Object.values(SUBCLASS_DATA).filter(s=>s.custom);
+  if(!customs.length){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="picker-hint" style="margin-bottom:6px;">Imported subclasses</div>' + customs.map(s=>`
+    <div class="imported-item">
+      <span class="ii-name">${esc(s.name)} <span class="chip-abbr">${esc(s.parent)}</span></span>
+      ${sourceTag(s.source)}
+      <span class="row-del" data-id="${s.customId}" data-parent="${esc(s.parent)}" data-name="${esc(s.name)}">✕</span>
+    </div>`).join('');
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
+    const id = e.target.dataset.id, parent = e.target.dataset.parent, name = e.target.dataset.name;
+    if(!confirm(`Remove imported subclass "${name}" (${parent})?`)) return;
+    await apiDeleteSubclass(id);
+    delete SUBCLASS_DATA[subKey(parent, name)];
+    // Clear it from any character rows that had it selected.
+    (state.classes||[]).forEach(c=>{ if(c.name===parent && c.subclass===name) c.subclass=''; });
+    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList(); save();
+  }));
+}
+
+function bindSubclassImport(){
+  buildSubclassParentSelect();
+  const parentSel = document.getElementById('subParent');
+  // Default the subclass level to the parent class's own subclass level.
+  parentSel.addEventListener('change', ()=>{
+    const cd = CLASS_DATA[parentSel.value];
+    if(cd) document.getElementById('subLevel').value = cd.subclassLevel || 3;
+  });
+  document.getElementById('subJsonToggle').addEventListener('click', ()=>{
+    const w = document.getElementById('subJsonWrap');
+    w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+  document.getElementById('subSubmit').addEventListener('click', ()=>{
+    const jsonWrap = document.getElementById('subJsonWrap');
+    const jsonText = document.getElementById('subJson').value.trim();
+    if(jsonWrap.style.display!=='none' && jsonText){
+      let obj;
+      try { obj = JSON.parse(jsonText); }
+      catch(e){
+        const m = document.getElementById('subMsg');
+        m.className = 'import-msg err'; m.textContent = 'Invalid JSON: ' + e.message;
+        return;
+      }
+      const { parent, name, source, data, ...rest } = obj;
+      submitSubclassImport({ parent, name, source, data: data || rest });
+    } else {
+      submitSubclassImport();
+    }
+  });
+}
+
 // ---------- Save status indicator ----------
 function setSaveStatus(status){
   const el = document.getElementById('saveStatus');
@@ -2823,6 +3126,7 @@ function bindProfileBar(){
 async function init(){
   await loadCustomClasses(); // merge imported classes before any character renders
   await loadCustomSpecies(); // merge imported species too
+  await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
   const list = await apiListCharacters();
   if(list.length>0){
     await loadCharacter(list[0].id);
@@ -2840,6 +3144,8 @@ async function init(){
   renderImportedList();
   bindSpeciesImport();
   renderSpeciesImportedList();
+  bindSubclassImport();
+  renderSubclassImportedList();
   setSaveStatus('saved');
 }
 
