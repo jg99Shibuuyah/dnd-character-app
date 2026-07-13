@@ -87,8 +87,23 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   personality), **Actions** — a read-only combat reference generated
   from the other tabs: your attacks, class abilities, which spells you can
   still cast given your remaining slots, usable items in your inventory,
-  and the standard 5e actions — and **Settings**, where you edit identity,
-  pick a class and level, and toggle skill proficiencies.
+  and the standard 5e actions — **Settings**, where you edit identity, pick a
+  species, class(es) and level(s), and toggle skill proficiencies, and
+  **Library**, where you import homebrew/official classes and species.
+- Equipment tab: gear cards with a name, description, and an **Equipped**
+  toggle. Everything added here is listed in your Inventory automatically
+  (read-only rows tagged Equipped/Packed — click one to jump to the
+  Equipment tab), and usable gear (potions, wands, scrolls…) shows up
+  under Actions → Usable Items. Optional effect fields per item feed the rest of the sheet while
+  the item is equipped: an attack line (to-hit + damage) appears in the
+  Character tab's attack panel and on the Actions tab; ability-score
+  effects (`+2` bonus or `=19` set-score, à la Gauntlets of Ogre Power)
+  flow into every derived stat — modifiers, saves, skills, initiative —
+  with the badge glowing green/red and a tooltip showing base vs. gear;
+  per-skill bonuses (e.g. Cloak of Elvenkind, Stealth +2) add to skill
+  totals; and granted spells show up under Known Spells and Actions →
+  Spellcasting tagged with the item that grants them. Unequip and every
+  effect disappears instantly; your typed base scores are never modified.
 - Picking a class applies its saving-throw proficiencies and hit dice
   automatically; save and skill bonuses on the Character tab are computed
   (no checkboxes). Classes include the 5e SRD roster plus the homebrew
@@ -110,13 +125,25 @@ copy it elsewhere if you want to keep a snapshot of your characters.
     multiclass, with use/cost badges.
   - **Class features** — the Features & Traits tab shows every class's
     features gated by that class's own level.
-- Class import: Settings has an **Import Class** form (same fields as the
-  built-in Jaeger — hit die, saves, skills, subclasses, spellcasting, and
-  level-by-level features) plus an advanced "paste JSON" option. Each class
-  is tagged by source — **5E**, **5.5E**, or **Homebrew** — and the class
-  picker has a source filter. Imported classes are stored server-side (in a
-  `custom_classes` table) so they're shared across every character and
-  survive reloads.
+- Library tab: a dedicated page for importing homebrew or official content.
+  - **Import Class** — the same fields as the built-in Jaeger (hit die, saves,
+    skills, subclasses, spellcasting, and level-by-level features) plus an
+    advanced "paste JSON" option. Imported classes appear in the class picker
+    on the Settings tab.
+  - **Import Species** — add a playable species / lineage (size, walk speed,
+    darkvision, ability-score summary, languages, and traits), also with a
+    "paste JSON" option. Imported species appear in the **Species** picker on
+    the Settings tab; picking one applies its speed and lists its traits on the
+    Features & Traits tab. A handful of core 5E species ship built in.
+  - **Import Subclass** — attach a subclass to any existing **parent class**
+    (built-in or imported) with its own level-gated features. It becomes
+    selectable per class in the Classes & Levels picker, and its features show
+    on the Features & Traits and Actions tabs, gated by your class level.
+  - Classes, species, and subclasses are tagged by source — **5E**, **5.5E**,
+    or **Homebrew** — and stored server-side (in `custom_classes`,
+    `custom_species`, and `custom_subclasses` tables) so they're shared across
+    every character and survive reloads. The class picker also has a source
+    filter.
 - Every edit (ability scores, HP, inventory, spells, everything) autosaves
   to the database about half a second after you stop typing. The "Saving…
   / Saved" indicator on the profile bar tells you the state.
@@ -130,9 +157,9 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   - `src/app.js` — Express app wiring (middleware, static files, routes)
   - `src/config.js` — port, database file path, and other settings
   - `src/db.js` — SQLite connection and schema setup
-  - `src/routes/characters.routes.js`, `src/routes/classes.routes.js` — route definitions
-  - `src/controllers/characters.controller.js`, `src/controllers/classes.controller.js` — request/response handling
-  - `src/models/character.model.js`, `src/models/customClass.model.js` — database queries
+  - `src/routes/*.routes.js` — route definitions (characters, classes, species, subclasses)
+  - `src/controllers/*.controller.js` — request/response handling
+  - `src/models/*.model.js` — database queries (character, customClass, customSpecies, customSubclass)
   - `src/middleware/error-handler.js` — JSON error responses
 - The REST API:
   - `GET /api/characters` — list all saved characters (summary only)
@@ -144,10 +171,17 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   - `GET /api/classes` — list imported (custom) classes
   - `POST /api/classes` — import/update a class by name (upsert)
   - `DELETE /api/classes/:id` — remove an imported class
+  - `GET /api/species` — list imported (custom) species
+  - `POST /api/species` — import/update a species by name (upsert)
+  - `DELETE /api/species/:id` — remove an imported species
+  - `GET /api/subclasses` — list imported (custom) subclasses
+  - `POST /api/subclasses` — import/update a subclass by (parent, name) (upsert)
+  - `DELETE /api/subclasses/:id` — remove an imported subclass
 - `characters.db` — a SQLite database (via `better-sqlite3`), created
   automatically on first run. A `characters` table stores an id, name, and a
-  JSON blob of the full character data; a `custom_classes` table stores
-  imported classes (unique name, source tag, and a JSON class definition).
+  JSON blob of the full character data; `custom_classes`, `custom_species`,
+  and `custom_subclasses` tables store imported content (source tag + JSON
+  definition, keyed by unique name — subclasses by unique parent+name).
 - `public/index.html` — the character sheet itself. Pure HTML/CSS/JS,
   talks to the API above with `fetch()`.
 
