@@ -82,9 +82,10 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   a new one, duplicate one, or delete one.
 - A cyberpunk terminal look: neon-on-black, monospace type, CRT scanlines.
 - The sheet is organized into tabs: **Character** (abilities, saves, skills,
-  combat, attacks), **Inventory** (currency and items), **Spells** (slots,
-  spell library, known spells), **Features & Traits** (class features and
-  personality), **Actions** — a read-only combat reference generated
+  combat, attacks), **Inventory & Equipment** (currency, items, and equipped
+  gear together), **Spells** (slots, spell library, known spells),
+  **Features & Traits** (class features and personality), **Actions** — a
+  read-only combat reference generated
   from the other tabs: your attacks, class abilities, which spells you can
   still cast given your remaining slots, usable items in your inventory,
   and the standard 5e actions — **Settings**, where you edit identity, pick a
@@ -154,13 +155,17 @@ copy it elsewhere if you want to keep a snapshot of your characters.
 
 - `src/` — a small Express server, split into conventional layers:
   - `src/server.js` — entry point; starts the HTTP server
-  - `src/app.js` — Express app wiring (middleware, static files, routes)
+  - `src/app.js` — Express app wiring (middleware, static files, views, routes)
   - `src/config.js` — port, database file path, and other settings
   - `src/db.js` — SQLite connection and schema setup
   - `src/routes/*.routes.js` — route definitions (characters, classes, species, subclasses)
   - `src/controllers/*.controller.js` — request/response handling
   - `src/models/*.model.js` — database queries (character, customClass, customSpecies, customSubclass)
   - `src/middleware/error-handler.js` — JSON error responses
+  - `src/views/index.html` — the server-rendered character sheet view
+- `public/` — static browser assets served by Express:
+  - `public/styles.css` — page styling
+  - `public/app.js` — client-side logic for the sheet
 - The REST API:
   - `GET /api/characters` — list all saved characters (summary only)
   - `GET /api/characters/:id` — full data for one character
@@ -182,8 +187,8 @@ copy it elsewhere if you want to keep a snapshot of your characters.
   JSON blob of the full character data; `custom_classes`, `custom_species`,
   and `custom_subclasses` tables store imported content (source tag + JSON
   definition, keyed by unique name — subclasses by unique parent+name).
-- `public/index.html` — the character sheet itself. Pure HTML/CSS/JS,
-  talks to the API above with `fetch()`.
+- The main UI is rendered from `src/views/index.html` and talks to the API
+  above with `fetch()`.
 
 ## Extending it
 
