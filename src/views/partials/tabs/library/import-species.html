@@ -1,0 +1,48 @@
+<div class="panel">
+  <h2><span>Import Species</span><span class="rune">◈</span></h2>
+  <div class="picker-hint">Add a playable species / lineage. Imported species are saved to the database and appear in the <span class="hl">Species</span> picker on the Settings tab; their traits show on the Features &amp; Traits tab.</div>
+  <div class="import-grid">
+    <div class="set-field full"><label>Load Existing — Edit</label>
+      <select id="spEdit"></select>
+      <div class="import-note">Pick any built-in or imported species to load it into the form. Re-importing with the <span class="hl">same name overwrites</span> it; a new name saves a copy.</div>
+    </div>
+    <div class="set-field full"><label>Species Name</label><input id="spName" placeholder="e.g. Aarakocra"></div>
+    <div class="set-field"><label>Source</label>
+      <select id="spSource">
+        <option value="Homebrew">Homebrew</option>
+        <option value="5E">Official — 5E</option>
+        <option value="5.5E">Official — 5.5E</option>
+      </select>
+    </div>
+    <div class="set-field"><label>Size</label>
+      <select id="spSize"><option>Small</option><option selected>Medium</option><option>Large</option></select>
+    </div>
+    <div class="set-field"><label>Walk Speed</label><input id="spSpeed" type="number" min="0" max="120" value="30"></div>
+    <div class="set-field"><label>Darkvision (ft)</label><input id="spDarkvision" type="number" min="0" max="120" value="0"></div>
+    <div class="set-field full"><label>Ability Score Increase</label>
+      <input id="spAsi" placeholder="e.g. +2 DEX, +1 WIS  (or leave blank)">
+      <div class="import-note">Free-text summary; not auto-applied to ability scores.</div>
+    </div>
+    <div class="set-field full"><label>Languages</label>
+      <input id="spLanguages" placeholder="Common, Elvish">
+    </div>
+    <div class="set-field full"><label>Description</label>
+      <textarea id="spDesc" class="import-ta" style="min-height:60px;" placeholder="One-paragraph species summary."></textarea>
+    </div>
+    <div class="set-field full"><label>Traits (one per line)</label>
+      <textarea id="spTraits" class="import-ta" placeholder="name | description&#10;Flight | You have a flying speed of 50 ft while not wearing heavy armor.&#10;Talons | Your unarmed strikes deal 1d4 slashing damage."></textarea>
+      <div class="import-note">Format: <span class="hl">name | description</span>, one trait per line.</div>
+    </div>
+    <div class="full">
+      <button class="add-btn" id="spSubmit">+ Import Species</button>
+      <button class="pbtn" id="spJsonToggle" style="margin-left:8px;">Paste JSON…</button>
+    </div>
+    <div class="set-field full" id="spJsonWrap" style="display:none;">
+      <label>Advanced — Species JSON</label>
+      <textarea id="spJson" class="import-ta" placeholder='{ "name":"Aarakocra", "source":"5E", "size":"Medium", "speed":25, "asi":"+2 DEX, +1 WIS", "languages":"Common, Aarakocra, Auran", "traits":[{"name":"Flight","desc":"Flying speed 50 ft."}] }'></textarea>
+      <div class="import-note">Paste a full species definition to import it directly. Overrides the form fields above.</div>
+    </div>
+  </div>
+  <div class="import-msg" id="spMsg"></div>
+  <div id="speciesImportedList" style="margin-top:10px;"></div>
+</div>

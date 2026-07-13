@@ -1,17 +1,10 @@
 (function(){
   function init(app){
-    const { buildClassFromForm, buildSpeciesFromForm, buildSubclassFromForm, renderImportedList, renderSpeciesImportedList, renderSubclassImportedList } = app;
-
-    function wireLibraryEvents(){
-      document.getElementById('importClassBtn')?.addEventListener('click', buildClassFromForm);
-      document.getElementById('importSpeciesBtn')?.addEventListener('click', buildSpeciesFromForm);
-      document.getElementById('importSubclassBtn')?.addEventListener('click', buildSubclassFromForm);
-      renderImportedList();
-      renderSpeciesImportedList();
-      renderSubclassImportedList();
-    }
-
-    document.addEventListener('DOMContentLoaded', wireLibraryEvents);
+    // The Library tab's import forms, imported lists, and load-existing pickers
+    // are all bound by app.js init() (bindClassImport, bindSpeciesImport,
+    // bindSubclassImport, bindSpellImport, bindLibraryEditSelects), because
+    // they must wait for the custom entries fetched from the database.
+    // Nothing extra to wire here.
   }
 
   window.characterSheetModules.register('libraryTab', init);

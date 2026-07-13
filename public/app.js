@@ -319,6 +319,16 @@ Object.values(CLASS_DATA).forEach(cd=>{
   });
 });
 
+// Snapshots of the built-in registries, taken after source tagging and
+// FEATURE_META enrichment. When a custom import overrides a built-in entry
+// (same name) and is later deleted, the original is restored from here.
+const BUILTIN_CLASSES = JSON.parse(JSON.stringify(CLASS_DATA));
+const BUILTIN_SPECIES = JSON.parse(JSON.stringify(SPECIES_DATA));
+
+// Imported spells (global, DB-backed), keyed by name. A custom spell with the
+// same name as a built-in SPELL_DATA entry shadows it in the Spell Library.
+let CUSTOM_SPELLS = {};
+
 // PHB multiclassing prerequisites: an array of alternatives, each an ability-minimum set.
 // (Jaeger has no published prereq — DEX or INT 13 mirrors its primary abilities.)
 const MC_REQS = {
@@ -657,21 +667,73 @@ function buildSpellSlots(){
 
 function levelLabel(lvl){ return lvl===0 ? 'Cantrip' : 'Level '+lvl; }
 
-function parseSpellTags(raw){
-  return (raw || '')
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(Boolean)
-    .map(tag => tag.replace(/\s+/g, ' '));
+// <option> list for spell-level dropdowns: 0 renders as "Cantrip".
+function levelOptions(selected){
+  return Array.from({length:10},(_,i)=>
+    `<option value="${i}" ${i===Number(selected)?'selected':''}>${levelLabel(i)}</option>`).join('');
 }
+
+// Fill the static spell-level dropdowns (Library import + custom spell row).
+function buildSpellLevelSelects(){
+  ['splLevel','customSpellLevel'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(sel && !sel.options.length) sel.innerHTML = levelOptions(0);
+  });
+}
+
+// ---------- Tag pickers (dropdown + removable chips) ----------
+// Tags are chosen from a dropdown instead of typed. The option list is the
+// default set plus every tag already used on an imported or known spell.
+const DEFAULT_SPELL_TAGS = ['5E','5.5E','Homebrew'];
+const tagPickerState = {}; // container id -> currently selected tags
+
+function allSpellTags(){
+  const tags = new Set(DEFAULT_SPELL_TAGS);
+  Object.values(CUSTOM_SPELLS).forEach(s=> (s.tags||[]).forEach(t=>tags.add(t)));
+  (state.knownSpells||[]).forEach(s=> (Array.isArray(s.tags)?s.tags:[]).forEach(t=>tags.add(t)));
+  Object.values(tagPickerState).forEach(sel=> sel.forEach(t=>tags.add(t)));
+  return [...tags].sort((a,b)=>a.localeCompare(b));
+}
+
+function buildTagPicker(id){
+  const box = document.getElementById(id);
+  if(!box) return;
+  const selected = tagPickerState[id] || (tagPickerState[id]=[]);
+  const options = allSpellTags().filter(t=>!selected.includes(t));
+  box.innerHTML =
+    selected.map((t,i)=>`<span class="picker-tag">${esc(t)}<span class="tag-del" data-i="${i}" title="Remove tag">✕</span></span>`).join('')
+    + `<select class="tag-select"><option value="">+ tag…</option>${options.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select>`;
+  box.querySelector('.tag-select').addEventListener('change', e=>{
+    if(e.target.value){ selected.push(e.target.value); buildTagPicker(id); }
+  });
+  box.querySelectorAll('.tag-del').forEach(x=>x.addEventListener('click', e=>{
+    selected.splice(parseInt(e.target.dataset.i),1); buildTagPicker(id);
+  }));
+}
+function setTagPicker(id, tags){ tagPickerState[id] = [...(tags||[])]; buildTagPicker(id); }
+function getTagPicker(id){ return [...(tagPickerState[id]||[])]; }
+function refreshTagPickers(){ Object.keys(tagPickerState).forEach(buildTagPicker); }
 
 function isKnown(name){
   return state.knownSpells.some(s=>s.name.toLowerCase()===name.toLowerCase());
 }
 
+// Imported spells that belong to a class's library: an explicit class list
+// restricts them; an empty/missing list makes them available to every class.
+function customSpellsForClass(className){
+  return Object.entries(CUSTOM_SPELLS)
+    .filter(([,s])=> !(Array.isArray(s.classes) && s.classes.length) || s.classes.includes(className))
+    .map(([name,s])=>({ name, level: Number(s.level)||0, imported:true, spell:s }));
+}
+
+function spellClassNames(){
+  const fromCustoms = Object.values(CUSTOM_SPELLS).flatMap(s=> Array.isArray(s.classes)?s.classes:[]);
+  return [...new Set([...SPELL_CLASSES, ...fromCustoms])].sort();
+}
+
 function buildSpellClassSelect(){
   const sel = document.getElementById('spellClassSelect');
-  sel.innerHTML = SPELL_CLASSES.map(c=>`<option value="${c}" ${c===state.spellClass?'selected':''}>${c}</option>`).join('');
+  sel.innerHTML = spellClassNames().map(c=>`<option value="${esc(c)}" ${c===state.spellClass?'selected':''}>${esc(c)}</option>`).join('');
   sel.onchange = e=>{
     state.spellClass = e.target.value;
     buildSpellLibrary(); save();
@@ -681,7 +743,11 @@ function buildSpellClassSelect(){
 function buildSpellLibrary(){
   const container = document.getElementById('spellLibraryList');
   const query = (document.getElementById('spellSearch').value || '').toLowerCase();
-  const list = (SPELL_DATA[state.spellClass] || []).filter(s => s.name.toLowerCase().includes(query));
+  const customs = customSpellsForClass(state.spellClass);
+  const customNames = new Set(customs.map(s=>s.name.toLowerCase()));
+  // Imported spells shadow built-ins with the same name.
+  const builtins = (SPELL_DATA[state.spellClass] || []).filter(s=>!customNames.has(s.name.toLowerCase()));
+  const list = [...builtins, ...customs].filter(s => s.name.toLowerCase().includes(query));
   if(list.length===0){
     container.innerHTML = '<div class="spell-lib-empty">No spells match.</div>';
     return;
@@ -692,10 +758,13 @@ function buildSpellLibrary(){
   let html='';
   levels.forEach(lvl=>{
     html += `<div class="spell-lib-group-label">${levelLabel(lvl)}</div>`;
-    byLevel[lvl].forEach(s=>{
+    byLevel[lvl].sort((a,b)=>a.name.localeCompare(b.name)).forEach(s=>{
       const already = isKnown(s.name);
+      const meta = s.imported
+        ? ` <span class="custom-tag" title="${esc([s.spell.school, s.spell.castingTime, s.spell.range, s.spell.duration, s.spell.desc].filter(Boolean).join(' · '))}">${esc(s.spell.source||'Imported')}</span>`
+        : '';
       html += `<div class="spell-lib-item">
-        <span>${esc(s.name)}</span>
+        <span>${esc(s.name)}${meta}</span>
         <span class="spell-add-btn ${already?'added':''}" data-name="${esc(s.name)}" data-level="${lvl}">${already?'Added':'+ Add'}</span>
       </div>`;
     });
@@ -705,7 +774,8 @@ function buildSpellLibrary(){
     btn.addEventListener('click', e=>{
       const name = e.target.dataset.name, level = parseInt(e.target.dataset.level);
       if(!isKnown(name)){
-        state.knownSpells.push({name, level, custom:false});
+        const imp = CUSTOM_SPELLS[name];
+        state.knownSpells.push({name, level, custom:!!imp, tags: (imp && Array.isArray(imp.tags)) ? imp.tags : []});
         buildSpellLibrary(); buildKnownSpells(); save();
       }
     });
@@ -757,14 +827,13 @@ function buildKnownSpells(){
 function addCustomSpellFromForm(){
   const nameEl = document.getElementById('customSpellName');
   const lvlEl = document.getElementById('customSpellLevel');
-  const tagEl = document.getElementById('customSpellTags');
   const name = nameEl?.value.trim();
   if(!name) return false;
   const level = Math.max(0, Math.min(9, parseInt(lvlEl?.value, 10) || 0));
-  state.knownSpells.push({ name, level, custom:true, tags: parseSpellTags(tagEl?.value) });
+  state.knownSpells.push({ name, level, custom:true, tags: getTagPicker('customSpellTagPicker') });
   if(nameEl) nameEl.value = '';
-  if(lvlEl) lvlEl.value = '';
-  if(tagEl) tagEl.value = '';
+  if(lvlEl) lvlEl.value = '0';
+  setTagPicker('customSpellTagPicker', []);
   buildSpellLibrary();
   buildKnownSpells();
   save();
@@ -1135,7 +1204,7 @@ function buildEquipment(){
           <span class="eq-lbl">Spells</span>
           <div class="eq-spell-list">${(it.spells||[]).map((sp,si)=>`<span class="eq-chip">${esc(sp.name)} <em>${sp.level==0?'C':'L'+sp.level}</em><span class="eq-spell-del" data-i="${i}" data-si="${si}">✕</span></span>`).join('')}</div>
           <input class="eq-spell-name" data-i="${i}" placeholder="Granted spell">
-          <input class="eq-spell-lvl" data-i="${i}" type="number" min="0" max="9" placeholder="Lv" style="width:56px;">
+          <select class="eq-spell-lvl" data-i="${i}" style="width:110px;">${levelOptions(0)}</select>
           <button class="add-btn eq-spell-add" data-i="${i}">Add</button>
         </div>
       </div>
@@ -1144,9 +1213,11 @@ function buildEquipment(){
   bindEquipList(wrap);
 }
 
+// Re-derive everything equipped gear can affect. Also used by the tab modules.
+function refreshEffects(){ recalc(); buildActions(); buildKnownSpells(); buildEquipAttackList(); buildInventory(); }
+
 function bindEquipList(wrap){
   const list = equipList();
-  const refreshEffects = ()=>{ recalc(); buildActions(); buildKnownSpells(); buildEquipAttackList(); buildInventory(); };
   // In-place text edits: update state without rebuilding (preserve focus).
   wrap.querySelectorAll('.eq-name').forEach(inp=>inp.addEventListener('input', e=>{
     list[e.target.dataset.i].name = e.target.value; buildActions(); buildEquipAttackList(); buildInventory(); save();
@@ -1311,6 +1382,158 @@ function bindTabs(){
       if(btn.dataset.tab==='notes') buildNotes();
     });
   });
+}
+
+// ---------- Options menu & themes ----------
+// Named themes (dark/light/ember) swap the CSS-variable blocks in styles.css
+// via body[data-theme]; the custom theme writes derived variables inline on
+// :root. Selection persists in localStorage.
+function closeOptionsMenu(){
+  const menu = document.getElementById('optionsMenu');
+  const btn = document.getElementById('optionsBtn');
+  if(!menu || !btn) return;
+  menu.classList.remove('open');
+  btn.classList.remove('active');
+  btn.setAttribute('aria-expanded','false');
+  menu.setAttribute('aria-hidden','true');
+}
+
+function toggleOptionsMenu(){
+  const menu = document.getElementById('optionsMenu');
+  const btn = document.getElementById('optionsBtn');
+  if(!menu || !btn) return;
+  const willOpen = !menu.classList.contains('open');
+  menu.classList.toggle('open', willOpen);
+  btn.classList.toggle('active', willOpen);
+  btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  menu.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
+}
+
+function hexToRgb(hex){
+  const trimmed = hex.replace('#','');
+  const value = trimmed.length===3 ? trimmed.split('').map(ch=>ch+ch).join('') : trimmed;
+  const num = parseInt(value, 16);
+  return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+}
+
+function rgbToHex(r,g,b){
+  const clamp = v=> Math.max(0, Math.min(255, Math.round(v)));
+  return '#' + [clamp(r), clamp(g), clamp(b)].map(v=> v.toString(16).padStart(2,'0')).join('');
+}
+
+function mixHex(hexA, hexB, amount){
+  const a = hexToRgb(hexA);
+  const b = hexToRgb(hexB);
+  const mix = (x,y) => x + (y-x)*amount;
+  return rgbToHex(mix(a.r,b.r), mix(a.g,b.g), mix(a.b,b.b));
+}
+
+function alphaHex(hex, alpha){
+  const {r,g,b}=hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function getDefaultCustomTheme(){
+  return {
+    accent:'#00ffd5',
+    accent2:'#ff2a6d',
+    surface:'#12141d',
+    text:'#c8c8d4',
+    background:'#0a0a0f'
+  };
+}
+
+function getStoredCustomTheme(){
+  try {
+    const stored = JSON.parse(localStorage.getItem('characterSheetCustomTheme') || 'null');
+    return stored || getDefaultCustomTheme();
+  } catch (e) { return getDefaultCustomTheme(); }
+}
+
+const CUSTOM_THEME_VARS = ['--void','--void-2','--void-3','--neon-cyan','--neon-magenta','--ink','--ink-dim','--ink-soft','--parchment','--parchment-2','--parchment-line','--gold','--gold-bright','--crimson','--crimson-bright','--border-glow','--shadow','--dark-panel'];
+
+function applyCustomTheme(theme){
+  const t = theme || getStoredCustomTheme();
+  const accent = t.accent || '#00ffd5';
+  const accent2 = t.accent2 || '#ff2a6d';
+  const surface = t.surface || '#12141d';
+  const text = t.text || '#c8c8d4';
+  const background = t.background || '#0a0a0f';
+  const root = document.documentElement;
+  root.style.setProperty('--void', background);
+  root.style.setProperty('--void-2', mixHex(background, surface, 0.22));
+  root.style.setProperty('--void-3', mixHex(background, surface, 0.38));
+  root.style.setProperty('--neon-cyan', accent);
+  root.style.setProperty('--neon-magenta', accent2);
+  root.style.setProperty('--ink', text);
+  root.style.setProperty('--ink-dim', alphaHex(text, 0.5));
+  root.style.setProperty('--ink-soft', alphaHex(text, 0.72));
+  root.style.setProperty('--parchment', surface);
+  root.style.setProperty('--parchment-2', mixHex(surface, background, 0.18));
+  root.style.setProperty('--parchment-line', alphaHex(accent, 0.18));
+  root.style.setProperty('--gold', accent);
+  root.style.setProperty('--gold-bright', mixHex(accent, '#ffffff', 0.34));
+  root.style.setProperty('--crimson', accent2);
+  root.style.setProperty('--crimson-bright', mixHex(accent2, '#ffffff', 0.34));
+  root.style.setProperty('--border-glow', alphaHex(accent, 0.35));
+  root.style.setProperty('--shadow', `0 0 0 1px ${alphaHex(accent, 0.08)}, 0 0 18px ${alphaHex(accent, 0.06)}`);
+  root.style.setProperty('--dark-panel', mixHex(surface, '#ffffff', 0.07));
+  document.body.dataset.theme = 'custom';
+}
+
+function updateCustomControls(theme){
+  const controls = document.getElementById('customThemeControls');
+  if(!controls) return;
+  controls.classList.toggle('open', theme === 'custom');
+  const values = theme === 'custom' ? getStoredCustomTheme() : getDefaultCustomTheme();
+  document.getElementById('customAccent').value = values.accent;
+  document.getElementById('customAccent2').value = values.accent2;
+  document.getElementById('customSurface').value = values.surface;
+  document.getElementById('customText').value = values.text;
+  document.getElementById('customBackground').value = values.background;
+}
+
+function applyTheme(theme){
+  document.querySelectorAll('.theme-option').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.theme===theme);
+  });
+  if(theme === 'custom'){
+    applyCustomTheme(getStoredCustomTheme());
+  } else {
+    document.body.dataset.theme = theme;
+    if(theme === 'dark') document.body.removeAttribute('data-theme');
+    CUSTOM_THEME_VARS.forEach(v=> document.documentElement.style.removeProperty(v));
+  }
+  updateCustomControls(theme);
+  localStorage.setItem('characterSheetTheme', theme);
+}
+
+function initTheme(){
+  const saved = localStorage.getItem('characterSheetTheme') || 'dark';
+  applyTheme(saved);
+}
+
+function bindOptionsMenu(){
+  const optionsBtn = document.getElementById('optionsBtn');
+  if(optionsBtn){ optionsBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleOptionsMenu(); }); }
+  document.querySelectorAll('.theme-option').forEach(btn=>btn.addEventListener('click', ()=>{
+    applyTheme(btn.dataset.theme);
+    if(btn.dataset.theme !== 'custom') closeOptionsMenu();
+  }));
+  const fieldByInput = { customAccent:'accent', customAccent2:'accent2', customSurface:'surface', customText:'text', customBackground:'background' };
+  Object.keys(fieldByInput).forEach(id=>{
+    const input = document.getElementById(id);
+    if(!input) return;
+    input.addEventListener('input', ()=>{
+      const current = getStoredCustomTheme();
+      current[fieldByInput[id]] = input.value;
+      localStorage.setItem('characterSheetCustomTheme', JSON.stringify(current));
+      localStorage.setItem('characterSheetTheme', 'custom');
+      applyCustomTheme(current);
+      document.querySelectorAll('.theme-option').forEach(btn=> btn.classList.toggle('active', btn.dataset.theme==='custom'));
+    });
+  });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.options-shell')) closeOptionsMenu(); });
 }
 
 function recalc(){
@@ -1513,14 +1736,37 @@ async function apiDeleteSubclass(id){
   const r = await fetch('/api/subclasses/'+id, { method:'DELETE' });
   return r.json();
 }
+async function apiListSpells(){
+  const r = await fetch('/api/spells');
+  return r.json();
+}
+async function apiImportSpell(payload){
+  const r = await fetch('/api/spells', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error||('HTTP '+r.status)); }
+  return r.json();
+}
+async function apiDeleteSpell(id){
+  const r = await fetch('/api/spells/'+id, { method:'DELETE' });
+  return r.json();
+}
 
 // ---------- Custom class import ----------
 // Merge server-stored custom classes into CLASS_DATA. Called at startup and
 // after any import/delete so the dropdowns and cards stay in sync.
+// Drop a custom entry from an in-memory registry, restoring the built-in
+// definition if the custom one was shadowing it.
+function restoreOrDelete(registry, builtins, name){
+  if(builtins[name]) registry[name] = JSON.parse(JSON.stringify(builtins[name]));
+  else delete registry[name];
+}
+
 async function loadCustomClasses(){
   let list = [];
   try { list = await apiListClasses(); } catch(e){ return; }
-  Object.keys(CLASS_DATA).forEach(n=>{ if(CLASS_DATA[n].custom) delete CLASS_DATA[n]; });
+  Object.keys(CLASS_DATA).forEach(n=>{ if(CLASS_DATA[n].custom) restoreOrDelete(CLASS_DATA, BUILTIN_CLASSES, n); });
   list.forEach(rec=>{
     CLASS_DATA[rec.name] = Object.assign({}, rec.data, {
       source: rec.source,
@@ -1582,6 +1828,7 @@ async function submitImport(payload){
     msg.className = 'import-msg ok';
     msg.textContent = `Imported "${payload.name}" (${source}) — now available in the class dropdown.`;
     buildClassFilterBar(); buildClassList(); renderImportedList();
+    buildSubclassParentSelect(); buildLibraryEditSelects();
   }catch(err){
     msg.className = 'import-msg err';
     msg.textContent = 'Import failed: ' + err.message;
@@ -1597,16 +1844,21 @@ function renderImportedList(){
     <div class="imported-item">
       <span class="ii-name">${n}</span>
       ${sourceTag(cd.source)}
+      <span class="ii-edit" data-name="${n}" title="Load into the form to edit">✎</span>
       <span class="row-del" data-id="${cd.customId}" data-name="${n}">✕</span>
     </div>`).join('');
+  box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
+    fillClassForm(e.target.dataset.name);
+  }));
   box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
     const id = e.target.dataset.id, name = e.target.dataset.name;
-    if(!confirm(`Remove imported class "${name}"? Characters using it will lose it.`)) return;
+    if(!confirm(`Remove imported class "${name}"? Characters using it will lose it${BUILTIN_CLASSES[name]?' (the built-in version is restored)':''}.`)) return;
     await apiDeleteClass(id);
-    delete CLASS_DATA[name];
-    state.classes = (state.classes||[]).filter(c=>c.name!==name);
+    restoreOrDelete(CLASS_DATA, BUILTIN_CLASSES, name);
+    if(!CLASS_DATA[name]) state.classes = (state.classes||[]).filter(c=>c.name!==name);
     afterClassChange();
     renderImportedList();
+    buildLibraryEditSelects();
   }));
 }
 
@@ -1643,7 +1895,7 @@ function bindClassImport(){
 async function loadCustomSpecies(){
   let list = [];
   try { list = await apiListSpecies(); } catch(e){ return; }
-  Object.keys(SPECIES_DATA).forEach(n=>{ if(SPECIES_DATA[n].custom) delete SPECIES_DATA[n]; });
+  Object.keys(SPECIES_DATA).forEach(n=>{ if(SPECIES_DATA[n].custom) restoreOrDelete(SPECIES_DATA, BUILTIN_SPECIES, n); });
   list.forEach(rec=>{
     SPECIES_DATA[rec.name] = Object.assign({}, rec.data, {
       source: rec.source, custom:true, customId: rec.id, builtin:false
@@ -1746,7 +1998,7 @@ async function submitSpeciesImport(payload){
     SPECIES_DATA[payload.name] = Object.assign({}, payload.data, { source, custom:true, customId: res.id, builtin:false });
     msg.className = 'import-msg ok';
     msg.textContent = `Imported "${payload.name}" (${source}) — now available in the Species picker on the Settings tab.`;
-    buildSpeciesSelect(); renderSpeciesInfo(); renderSpeciesImportedList();
+    buildSpeciesSelect(); renderSpeciesInfo(); renderSpeciesImportedList(); buildLibraryEditSelects();
   }catch(err){
     msg.className = 'import-msg err';
     msg.textContent = 'Import failed: ' + err.message;
@@ -1762,14 +2014,19 @@ function renderSpeciesImportedList(){
     <div class="imported-item">
       <span class="ii-name">${n}</span>
       ${sourceTag(sd.source)}
+      <span class="ii-edit" data-name="${n}" title="Load into the form to edit">✎</span>
       <span class="row-del" data-id="${sd.customId}" data-name="${n}">✕</span>
     </div>`).join('');
+  box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
+    fillSpeciesForm(e.target.dataset.name);
+  }));
   box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
     const id = e.target.dataset.id, name = e.target.dataset.name;
-    if(!confirm(`Remove imported species "${name}"?`)) return;
+    if(!confirm(`Remove imported species "${name}"?${BUILTIN_SPECIES[name]?' The built-in version is restored.':''}`)) return;
     await apiDeleteSpecies(id);
-    delete SPECIES_DATA[name];
+    restoreOrDelete(SPECIES_DATA, BUILTIN_SPECIES, name);
     buildSpeciesSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSpeciesImportedList();
+    buildLibraryEditSelects();
   }));
 }
 
@@ -1851,7 +2108,7 @@ async function submitSubclassImport(payload){
     msg.className = 'import-msg ok';
     msg.textContent = `Imported "${payload.name}" under ${payload.parent} (${source}) — now selectable on that class in Settings.`;
     // Reflect the new subclass everywhere it's listed.
-    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList();
+    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList(); buildLibraryEditSelects();
   }catch(err){
     msg.className = 'import-msg err';
     msg.textContent = 'Import failed: ' + err.message;
@@ -1867,8 +2124,12 @@ function renderSubclassImportedList(){
     <div class="imported-item">
       <span class="ii-name">${esc(s.name)} <span class="chip-abbr">${esc(s.parent)}</span></span>
       ${sourceTag(s.source)}
+      <span class="ii-edit" data-parent="${esc(s.parent)}" data-name="${esc(s.name)}" title="Load into the form to edit">✎</span>
       <span class="row-del" data-id="${s.customId}" data-parent="${esc(s.parent)}" data-name="${esc(s.name)}">✕</span>
     </div>`).join('');
+  box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
+    fillSubclassForm(e.target.dataset.parent, e.target.dataset.name);
+  }));
   box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
     const id = e.target.dataset.id, parent = e.target.dataset.parent, name = e.target.dataset.name;
     if(!confirm(`Remove imported subclass "${name}" (${parent})?`)) return;
@@ -1876,7 +2137,7 @@ function renderSubclassImportedList(){
     delete SUBCLASS_DATA[subKey(parent, name)];
     // Clear it from any character rows that had it selected.
     (state.classes||[]).forEach(c=>{ if(c.name===parent && c.subclass===name) c.subclass=''; });
-    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList(); save();
+    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList(); buildLibraryEditSelects(); save();
   }));
 }
 
@@ -1909,6 +2170,253 @@ function bindSubclassImport(){
       submitSubclassImport();
     }
   });
+}
+
+// ---------- Spell import (Library tab) ----------
+async function loadCustomSpells(){
+  let list = [];
+  try { list = await apiListSpells(); } catch(e){ return; }
+  CUSTOM_SPELLS = {};
+  list.forEach(rec=>{
+    CUSTOM_SPELLS[rec.name] = Object.assign({}, rec.data, {
+      source: rec.source, custom:true, customId: rec.id
+    });
+  });
+}
+
+function parseNameList(raw){
+  return (raw||'').split(',').map(s=>s.trim()).filter(Boolean);
+}
+
+function buildSpellFromForm(){
+  const name = document.getElementById('splName').value.trim();
+  if(!name) throw new Error('Spell name is required.');
+  const source = document.getElementById('splSource').value;
+  const data = {
+    level: Math.max(0, Math.min(9, parseInt(document.getElementById('splLevel').value, 10) || 0)),
+    classes: parseNameList(document.getElementById('splClasses').value),
+    tags: getTagPicker('splTagPicker')
+  };
+  [['school','splSchool'],['castingTime','splCastTime'],['range','splRange'],
+   ['components','splComponents'],['duration','splDuration'],['desc','splDesc']].forEach(([key,id])=>{
+    const v = document.getElementById(id).value.trim();
+    if(v) data[key] = v;
+  });
+  return { name, source, data };
+}
+
+async function submitSpellImport(payload){
+  const msg = document.getElementById('splMsg');
+  try{
+    if(!payload) payload = buildSpellFromForm();
+    if(!payload.name) throw new Error('Spell name is required.');
+    if(!payload.data || typeof payload.data!=='object') throw new Error('Spell data is required.');
+    const source = CLASS_SOURCES.includes(payload.source) ? payload.source : 'Homebrew';
+    const res = await apiImportSpell({ name: payload.name, source, data: payload.data });
+    CUSTOM_SPELLS[payload.name] = Object.assign({}, payload.data, { source, custom:true, customId: res.id });
+    msg.className = 'import-msg ok';
+    const cls = (payload.data.classes||[]);
+    msg.textContent = `Imported "${payload.name}" (${source}) — in the Spell Library for ${cls.length?cls.join(', '):'every class'}.`;
+    buildSpellClassSelect(); buildSpellLibrary(); renderSpellImportedList(); buildLibraryEditSelects(); refreshTagPickers();
+  }catch(err){
+    msg.className = 'import-msg err';
+    msg.textContent = 'Import failed: ' + err.message;
+  }
+}
+
+function renderSpellImportedList(){
+  const box = document.getElementById('spellImportedList');
+  if(!box) return;
+  const customs = Object.entries(CUSTOM_SPELLS);
+  if(!customs.length){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="picker-hint" style="margin-bottom:6px;">Imported spells</div>' + customs.map(([n,s])=>`
+    <div class="imported-item">
+      <span class="ii-name">${esc(n)} <span class="chip-abbr">${levelLabel(Number(s.level)||0)}</span></span>
+      ${sourceTag(s.source)}
+      <span class="ii-edit" data-name="${esc(n)}" title="Load into the form to edit">✎</span>
+      <span class="row-del" data-id="${s.customId}" data-name="${esc(n)}">✕</span>
+    </div>`).join('');
+  box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
+    fillSpellForm(e.target.dataset.name);
+  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
+    const id = e.target.dataset.id, name = e.target.dataset.name;
+    if(!confirm(`Remove imported spell "${name}"?`)) return;
+    await apiDeleteSpell(id);
+    delete CUSTOM_SPELLS[name];
+    buildSpellClassSelect(); buildSpellLibrary(); renderSpellImportedList(); buildLibraryEditSelects(); refreshTagPickers();
+  }));
+}
+
+function bindSpellImport(){
+  document.getElementById('splJsonToggle').addEventListener('click', ()=>{
+    const w = document.getElementById('splJsonWrap');
+    w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+  document.getElementById('splSubmit').addEventListener('click', ()=>{
+    const jsonWrap = document.getElementById('splJsonWrap');
+    const jsonText = document.getElementById('splJson').value.trim();
+    if(jsonWrap.style.display!=='none' && jsonText){
+      let obj;
+      try { obj = JSON.parse(jsonText); }
+      catch(e){
+        const m = document.getElementById('splMsg');
+        m.className = 'import-msg err'; m.textContent = 'Invalid JSON: ' + e.message;
+        return;
+      }
+      const { name, source, data, ...rest } = obj;
+      submitSpellImport({ name, source, data: data || rest });
+    } else {
+      submitSpellImport();
+    }
+  });
+}
+
+// ---------- Load-existing pickers (Library tab) ----------
+// Every panel gets a dropdown listing built-in AND imported entries; picking
+// one fills the form so it can be tweaked and re-imported. Saving under the
+// same name overwrites the entry (built-ins become imported overrides);
+// saving under a new name creates a copy.
+
+function setImportMsg(id, name){
+  const msg = document.getElementById(id);
+  if(!msg) return;
+  msg.className = 'import-msg ok';
+  msg.textContent = `Loaded "${name}" into the form — edit and press Import to save. Same name overwrites; a new name makes a copy.`;
+}
+
+// features [{lv,name,desc,use,cost}] → "lv | name | desc | use | cost" lines.
+function featuresToLines(features){
+  return (features||[]).map(f=>{
+    const parts = [f.lv, f.name, f.desc||'', f.use||'', f.cost||''].map(p=>String(p==null?'':p));
+    while(parts.length>2 && !parts[parts.length-1]) parts.pop();
+    return parts.join(' | ');
+  }).join('\n');
+}
+function traitsToLines(traits){
+  return (traits||[]).map(t=> t.desc ? `${t.name} | ${t.desc}` : t.name).join('\n');
+}
+
+function fillClassForm(name){
+  const cd = CLASS_DATA[name];
+  if(!cd) return;
+  document.getElementById('impName').value = name;
+  document.getElementById('impSource').value = CLASS_SOURCES.includes(cd.source) ? cd.source : 'Homebrew';
+  document.getElementById('impHitDie').value = String(cd.hitDie||8);
+  document.querySelectorAll('#impSaves .mini-toggle').forEach(t=>
+    t.classList.toggle('on', (cd.saves||[]).includes(t.dataset.k)));
+  document.getElementById('impChoose').value = cd.choose||0;
+  document.getElementById('impSubLevel').value = cd.subclassLevel||3;
+  document.getElementById('impSkills').value = Array.isArray(cd.skills) ? cd.skills.join(', ') : '';
+  document.getElementById('impSubclasses').value = (cd.subclasses||[]).join(', ');
+  document.getElementById('impCasting').value = (cd.casting&&cd.casting.type)||'none';
+  document.getElementById('impCastAbility').value = (cd.casting&&cd.casting.ability)||'';
+  document.getElementById('impDesc').value = cd.desc||'';
+  document.getElementById('impFeatures').value = featuresToLines(cd.features);
+  setImportMsg('impMsg', name);
+}
+
+function fillSpeciesForm(name){
+  const sd = SPECIES_DATA[name];
+  if(!sd) return;
+  document.getElementById('spName').value = name;
+  document.getElementById('spSource').value = CLASS_SOURCES.includes(sd.source) ? sd.source : 'Homebrew';
+  document.getElementById('spSize').value = sd.size||'Medium';
+  document.getElementById('spSpeed').value = sd.speed||30;
+  document.getElementById('spDarkvision').value = sd.darkvision||0;
+  document.getElementById('spAsi').value = sd.asi||'';
+  document.getElementById('spLanguages').value = sd.languages||'';
+  document.getElementById('spDesc').value = sd.desc||'';
+  document.getElementById('spTraits').value = traitsToLines(sd.traits);
+  setImportMsg('spMsg', name);
+}
+
+function fillSubclassForm(parent, name){
+  const cd = CLASS_DATA[parent];
+  if(!cd) return;
+  const sc = SUBCLASS_DATA[subKey(parent, name)];
+  buildSubclassParentSelect();
+  document.getElementById('subParent').value = parent;
+  document.getElementById('subName').value = name;
+  const source = sc ? sc.source : cd.source;
+  document.getElementById('subSource').value = CLASS_SOURCES.includes(source) ? source : 'Homebrew';
+  document.getElementById('subLevel').value = (sc && sc.subclassLevel) || cd.subclassLevel || 3;
+  document.getElementById('subDesc').value = (sc && sc.desc)||'';
+  document.getElementById('subFeatures').value = featuresToLines(sc && sc.features);
+  setImportMsg('subMsg', `${name} (${parent})`);
+}
+
+// Which built-in class lists carry a spell — used to prefill its class list.
+function builtinSpellInfo(name){
+  const classes = [];
+  let level = 0;
+  SPELL_CLASSES.forEach(c=>{
+    const hit = SPELL_DATA[c].find(s=>s.name===name);
+    if(hit){ classes.push(c); level = hit.level; }
+  });
+  return classes.length ? { level, classes } : null;
+}
+
+function fillSpellForm(name){
+  const imp = CUSTOM_SPELLS[name];
+  const info = imp || builtinSpellInfo(name);
+  if(!info) return;
+  document.getElementById('splName').value = name;
+  document.getElementById('splSource').value = CLASS_SOURCES.includes(info.source) ? info.source : (imp ? 'Homebrew' : '5E');
+  document.getElementById('splLevel').value = Number(info.level)||0;
+  document.getElementById('splClasses').value = (info.classes||[]).join(', ');
+  document.getElementById('splSchool').value = info.school||'';
+  document.getElementById('splCastTime').value = info.castingTime||'';
+  document.getElementById('splRange').value = info.range||'';
+  document.getElementById('splComponents').value = info.components||'';
+  document.getElementById('splDuration').value = info.duration||'';
+  setTagPicker('splTagPicker', info.tags||[]);
+  document.getElementById('splDesc').value = info.desc||'';
+  setImportMsg('splMsg', name);
+}
+
+function buildLibraryEditSelects(){
+  const fill = (id, options)=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = '<option value="">— pick an entry to edit —</option>' + options;
+  };
+  const tag = obj => obj.custom ? 'imported' : 'built-in';
+  fill('impEdit', Object.keys(CLASS_DATA).sort().map(n=>
+    `<option value="${esc(n)}">${esc(n)} · ${CLASS_DATA[n].source} · ${tag(CLASS_DATA[n])}</option>`).join(''));
+  fill('spEdit', Object.keys(SPECIES_DATA).sort().map(n=>
+    `<option value="${esc(n)}">${esc(n)} · ${SPECIES_DATA[n].source} · ${tag(SPECIES_DATA[n])}</option>`).join(''));
+  // Subclasses: built-in name lists on each class plus imported records.
+  const subEntries = [];
+  Object.keys(CLASS_DATA).forEach(parent=>
+    subclassNamesForClass(parent).forEach(n=>{
+      const sc = SUBCLASS_DATA[subKey(parent, n)];
+      subEntries.push({ parent, name:n, label:`${n} — ${parent} · ${sc?sc.source+' · imported':'built-in'}` });
+    }));
+  fill('subEdit', subEntries.sort((a,b)=>a.label.localeCompare(b.label)).map(s=>
+    `<option value="${esc(subKey(s.parent, s.name))}">${esc(s.label)}</option>`).join(''));
+  // Spells: unique built-in names plus imported ones (imported shadow built-ins).
+  const spellNames = new Set(Object.keys(CUSTOM_SPELLS));
+  SPELL_CLASSES.forEach(c=> SPELL_DATA[c].forEach(s=> spellNames.add(s.name)));
+  fill('splEdit', [...spellNames].sort().map(n=>{
+    const imp = CUSTOM_SPELLS[n];
+    const lvl = imp ? (Number(imp.level)||0) : (builtinSpellInfo(n)||{}).level;
+    return `<option value="${esc(n)}">${esc(n)} · ${levelLabel(lvl||0)} · ${imp?imp.source+' · imported':'built-in'}</option>`;
+  }).join(''));
+}
+
+function bindLibraryEditSelects(){
+  const wire = (id, fn)=>{
+    const sel = document.getElementById(id);
+    if(sel) sel.addEventListener('change', ()=>{ if(sel.value) fn(sel.value); });
+  };
+  wire('impEdit', fillClassForm);
+  wire('spEdit', fillSpeciesForm);
+  wire('subEdit', key=>{
+    const i = key.indexOf('::');
+    if(i>0) fillSubclassForm(key.slice(0,i), key.slice(i+2));
+  });
+  wire('splEdit', fillSpellForm);
 }
 
 // ---------- Save status indicator ----------
@@ -2003,6 +2511,7 @@ function renderCharacter(){
   buildClassFeatures();
   buildActions();
   applyStateToInputs();
+  refreshTagPickers(); // known-spell tags feed the dropdown option pool
   recalc();
 }
 
@@ -2054,6 +2563,7 @@ const app = {
   set state(value){ state = value; },
   save,
   refreshEffects,
+  newEquipItem,
   buildActions,
   buildKnownSpells,
   buildAttacks,
@@ -2077,13 +2587,22 @@ const app = {
   buildClassFromForm,
   buildSpeciesFromForm,
   buildSubclassFromForm,
+  buildSpellFromForm,
   renderImportedList,
   renderSpeciesImportedList,
   renderSubclassImportedList,
+  renderSpellImportedList,
   buildSubclassParentSelect,
   bindClassImport,
   bindSpeciesImport,
   bindSubclassImport,
+  bindSpellImport,
+  fillClassForm,
+  fillSpeciesForm,
+  fillSubclassForm,
+  fillSpellForm,
+  buildLibraryEditSelects,
+  bindLibraryEditSelects,
   buildAlignmentSelect,
   buildNotes,
   renderCharacter,
@@ -2098,9 +2617,12 @@ const app = {
 window.characterSheetApp = app;
 
 async function init(){
+  initTheme(); // apply the saved theme before any awaits so the page doesn't flash dark
+  bindOptionsMenu();
   await loadCustomClasses(); // merge imported classes before any character renders
   await loadCustomSpecies(); // merge imported species too
   await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
+  await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)
   const list = await apiListCharacters();
   if(list.length>0){
     await loadCharacter(list[0].id);
@@ -2120,6 +2642,13 @@ async function init(){
   renderSpeciesImportedList();
   bindSubclassImport();
   renderSubclassImportedList();
+  bindSpellImport();
+  renderSpellImportedList();
+  buildLibraryEditSelects();
+  bindLibraryEditSelects();
+  buildSpellLevelSelects();
+  setTagPicker('splTagPicker', []);
+  setTagPicker('customSpellTagPicker', []);
   setSaveStatus('saved');
 }
 

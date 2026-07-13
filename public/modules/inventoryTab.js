@@ -1,16 +1,18 @@
 (function(){
   function init(app){
-    const { state, save, buildInventory, buildEquipment, refreshEffects, buildActions, buildKnownSpells } = app;
+    const { save, buildInventory, buildEquipment, refreshEffects } = app;
 
     function wireInventoryEvents(){
+      // Read app.state at click time — the state object is replaced whenever a
+      // different character profile is loaded.
       document.getElementById('addItem')?.addEventListener('click', () => {
-        state.inventory.push({name:'', qty:1});
+        app.state.inventory.push({name:'', qty:1});
         buildInventory(); save();
       });
 
       document.getElementById('addEquip')?.addEventListener('click', () => {
-        state.equipment.push({name:'', desc:'', equipped:false, skills:[], spells:[], attackBonus:'', attackDamage:'', abilities:{}, effects:{}});
-        buildEquipment(); refreshEffects(); buildActions(); buildKnownSpells(); save();
+        app.state.equipment.push(app.newEquipItem());
+        buildEquipment(); refreshEffects(); save();
       });
     }
 

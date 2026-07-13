@@ -1,25 +1,15 @@
 (function(){
   function init(app){
-    const { state, save, refreshEffects, buildActions, buildKnownSpells, buildAttacks, buildSaves, buildSkills, buildAbilities, buildInventory, buildEquipment, buildSpellSlots, buildSpellLibrary, buildKnownSpells: buildKnown } = app;
+    const { save, buildAttacks } = app;
 
-    function buildCharacterTab(){
-      buildAbilities();
-      buildSaves();
-      buildSkills();
-      buildAttacks();
-      buildInventory();
-      buildEquipment();
-      buildSpellSlots();
-      buildSpellLibrary();
-      buildKnown();
-      buildActions();
-      refreshEffects();
-      save();
+    function wireCharacterEvents(){
+      document.getElementById('addAttack')?.addEventListener('click', () => {
+        app.state.attacks.push({name:'', bonus:'', dmg:''});
+        buildAttacks(); save();
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      buildCharacterTab();
-    });
+    document.addEventListener('DOMContentLoaded', wireCharacterEvents);
   }
 
   window.characterSheetModules.register('characterTab', init);

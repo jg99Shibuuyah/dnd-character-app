@@ -1,0 +1,71 @@
+<!-- TAB: Character sheet -->
+<div class="tab-pane active" id="tab-sheet">
+<div class="grid grid-sheet">
+
+  <!-- LEFT COLUMN: Abilities, Saves, Skills -->
+  <div>
+    <div class="panel" id="abilitiesPanel">
+      <h2><span>Ability Scores</span><span class="rune">✦</span></h2>
+      <!-- filled by JS -->
+    </div>
+
+    <div class="panel">
+      <h2><span>Saving Throws</span><span class="rune">✦</span></h2>
+      <div id="savesPanel"></div>
+      <div class="mini-row" style="margin-top:8px; border-top:1px solid var(--parchment-line); padding-top:8px;">
+        <label>Proficiency Bonus</label>
+        <span class="val" id="profBonusDisplay">+2</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span>Skills</span><span class="rune">✦</span></h2>
+      <div id="skillsPanel"></div>
+      <div class="mini-row" style="margin-top:8px; border-top:1px solid var(--parchment-line); padding-top:8px;">
+        <label>Armor Class</label>
+        <span class="val" id="acComputedDisplay">10</span>
+      </div>
+      <div class="ac-breakdown" id="acBreakdown">10 + DEX</div>
+    </div>
+  </div>
+
+  <!-- CENTER COLUMN: Combat -->
+  <div>
+    <div class="panel">
+      <h2><span>Combat</span><span class="rune">⚔</span></h2>
+      <div class="stat-strip">
+        <div class="stat-box"><label>Armor Class</label><input id="statAC" type="number" value="10"></div>
+        <div class="stat-box"><label>Initiative</label><div class="computed" id="statInit">+0</div></div>
+        <div class="stat-box"><label>Speed</label><input id="statSpeed" type="number" value="30"></div>
+      </div>
+
+      <div class="hp-row">
+        <div class="hp-field"><label>Max HP</label><input id="hpMax" type="number" value="10"></div>
+        <div class="hp-field current"><label>Current HP</label><input id="hpCurrent" type="number" value="10"></div>
+        <div class="hp-field"><label>Temp HP</label><input id="hpTemp" type="number" value="0"></div>
+      </div>
+      <div class="stat-strip" style="margin-bottom:0;">
+        <div class="stat-box"><label>Hit Dice</label><input id="hitDice" value="1d10"></div>
+        <div class="stat-box" style="grid-column: span 2;">
+          <label>Death Saves</label>
+          <div class="death-saves">
+            <div class="grp">Success<span class="pip success" data-idx="0"></span><span class="pip success" data-idx="1"></span><span class="pip success" data-idx="2"></span></div>
+            <div class="grp">Fail<span class="pip fail" data-idx="0"></span><span class="pip fail" data-idx="1"></span><span class="pip fail" data-idx="2"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span>Attacks &amp; Spellcasting</span><span class="rune">⚔</span></h2>
+      <table class="attacks">
+        <thead><tr><th style="width:34%">Name</th><th style="width:16%">Bonus</th><th style="width:34%">Damage / Type</th><th></th></tr></thead>
+        <tbody id="attacksBody"></tbody>
+      </table>
+      <button class="add-btn" id="addAttack">+ Add Attack</button>
+      <div id="equipAttackList"></div>
+    </div>
+
+  </div>
+</div>
+</div>

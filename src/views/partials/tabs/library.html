@@ -1,0 +1,17 @@
+<!-- TAB: Library (import & manage homebrew / official classes and species).
+     Each import panel lives in library/; includes resolve relative to this file. -->
+<div class="tab-pane" id="tab-library">
+  <div class="grid grid-half">
+    <div>
+      <%- include('library/import-class.html') %>
+    </div>
+    <div>
+      <%- include('library/import-species.html') %>
+    </div>
+  </div>
+
+  <div class="grid grid-half">
+    <%- include('library/import-subclass.html') %>
+    <%- include('library/import-spell.html') %>
+  </div>
+</div>

@@ -11,12 +11,12 @@
       "name": "dev-scratch-db",
       "runtimeExecutable": "env",
       "runtimeArgs": [
-        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/e41bcfff-e131-484f-adbb-3a80f7fb1267/scratchpad/preview.db",
-        "PORT=4173",
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/ba830708-4f09-4ca1-90b5-30040e78ef8d/scratchpad/preview.db",
         "node",
         "src/server.js"
       ],
-      "port": 4173
+      "port": 4174,
+      "autoPort": true
     }
   ]
 }

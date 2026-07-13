@@ -1,0 +1,32 @@
+<!-- TAB: Settings (identity, class & proficiencies) -->
+<div class="tab-pane" id="tab-settings">
+  <div class="grid grid-half">
+    <div>
+      <div class="panel">
+        <h2><span>Identity</span><span class="rune">◈</span></h2>
+        <div class="set-field"><label>Character Name</label><input id="charName" placeholder="Character Name"></div>
+        <div class="set-field"><label>Species / Lineage</label><select id="charRace"></select></div>
+        <div class="class-info" id="speciesInfo"></div>
+        <div class="set-field"><label>Background</label><input id="charBackground" placeholder="e.g. Outlander"></div>
+        <div class="set-field"><label>Alignment</label><select id="charAlignment"></select></div>
+        <div class="set-field"><label>Experience</label><input id="charXP" type="number" min="0" value="0"></div>
+      </div>
+      <div class="panel">
+        <h2><span>Classes &amp; Levels</span><span class="rune">◈</span></h2>
+        <div class="picker-hint">Add more classes to multiclass. The <span class="hl">first entry is your primary class</span> and provides saving-throw proficiencies; proficiency bonus is based on your <span class="hl">total level</span>.</div>
+        <div class="filter-bar" id="classFilterBar"><span class="filter-label">Filter</span></div>
+        <div id="classList"></div>
+        <button class="add-btn" id="addClassBtn">+ Add Class</button>
+        <div class="mini-row" style="margin-top:12px;"><label>Total Level</label><span class="val" id="totalLevelDisplay">1</span></div>
+        <div id="classInfoStack"></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2><span>Skill Proficiencies</span><span class="rune">◈</span></h2>
+        <div class="picker-hint" id="skillHint"></div>
+        <div class="skill-chips" id="skillPicker"></div>
+      </div>
+    </div>
+  </div>
+</div>
