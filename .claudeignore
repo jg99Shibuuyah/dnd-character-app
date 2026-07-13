@@ -1,0 +1,11 @@
+.env
+.env.*
+*.pem
+*.secret
+node_modules/
+dist/
+build/
+out/
+assets/images/
+old_data/
+*.csv
