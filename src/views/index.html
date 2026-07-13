@@ -5,25 +5,27 @@
 <title>Character Ledger</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body data-page="sheet">
+<%- include('partials/sidebar.html') %>
 <div class="sheet">
 
   <%- include('partials/profile-bar.html') %>
   <%- include('partials/hero.html') %>
   <%- include('partials/tab-bar.html') %>
 
-  <!-- Tab panes. Pane ids stay tab-<key>, matching the data-tab keys in partials/tab-bar.html. -->
+  <!-- Tab panes. Pane ids stay tab-<key>, matching the data-tab keys in partials/tab-bar.html.
+       Notes and Library are standalone pages now: /notes and /library. -->
   <%- include('partials/tabs/sheet.html') %>
   <%- include('partials/tabs/inventory.html') %>
   <%- include('partials/tabs/spells.html') %>
   <%- include('partials/tabs/features.html') %>
   <%- include('partials/tabs/actions.html') %>
-  <%- include('partials/tabs/notes.html') %>
   <%- include('partials/tabs/settings.html') %>
-  <%- include('partials/tabs/library.html') %>
 
   <div class="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
 </div>
+
+<%- include('partials/journal.html') %>
 
 <script src="/app.js"></script>
 <script src="/modules/core.js"></script>
@@ -31,7 +33,7 @@
 <script src="/modules/inventoryTab.js"></script>
 <script src="/modules/spellsTab.js"></script>
 <script src="/modules/settingsTab.js"></script>
-<script src="/modules/libraryTab.js"></script>
 <script src="/modules/actionsTab.js"></script>
+<script src="/modules/journal.js"></script>
 </body>
 </html>

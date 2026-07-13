@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Ledger — Library</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="library">
+<%- include('partials/sidebar.html') %>
+<div class="sheet">
+
+  <%- include('partials/page-bar.html', { title: 'Library' }) %>
+
+  <div class="grid grid-half">
+    <div>
+      <%- include('partials/library/import-class.html') %>
+    </div>
+    <div>
+      <%- include('partials/library/import-species.html') %>
+    </div>
+  </div>
+
+  <div class="grid grid-half">
+    <%- include('partials/library/import-subclass.html') %>
+    <%- include('partials/library/import-spell.html') %>
+  </div>
+
+  <div class="footer-note">Imports are saved to the shared database and available to every character.</div>
+</div>
+
+<script src="/app.js"></script>
+<script src="/modules/core.js"></script>
+<script src="/modules/libraryTab.js"></script>
+</body>
+</html>

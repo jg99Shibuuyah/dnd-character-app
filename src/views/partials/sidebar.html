@@ -1,0 +1,10 @@
+<!-- Slide-in navigation drawer, shared by every page. Opened with the ☰ button
+     in the top bar; the backdrop or Escape closes it. Wired in app.js: bindSidebar(),
+     which also marks the current page's link active via body[data-page]. -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar" id="sidebar" aria-label="Pages">
+  <div class="sidebar-head">Character Ledger</div>
+  <a class="side-link" data-page="sheet" href="/">Character Sheet</a>
+  <a class="side-link" data-page="library" href="/library">Library</a>
+  <a class="side-link" data-page="notes" href="/notes">Notes</a>
+</nav>

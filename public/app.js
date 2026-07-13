@@ -67,6 +67,132 @@ const SPELL_DATA = {
 };
 const SPELL_CLASSES = Object.keys(SPELL_DATA);
 
+// School + short effect summary for every built-in SPELL_DATA spell, adapted
+// from the SRD 5.1 (Open Game Content). Feeds the Notes reference search and
+// prefills the Library's spell-edit form for built-in names.
+const SPELL_DETAILS = {
+  // Cantrips
+  'Druidcraft':{school:'Transmutation', desc:'Minor nature magic: predict the weather, bloom a flower, snuff or light a candle-sized flame, or make a harmless sensory effect.'},
+  'Eldritch Blast':{school:'Evocation', desc:'A beam of crackling energy; ranged spell attack for 1d10 force damage. Extra beams at higher character levels.'},
+  'Fire Bolt':{school:'Evocation', desc:'Hurl a mote of fire; ranged spell attack for 1d10 fire damage. Ignites unattended flammable objects.'},
+  'Guidance':{school:'Divination', desc:'Touched creature adds 1d4 to one ability check of its choice before the spell ends. Concentration, 1 minute.'},
+  'Light':{school:'Evocation', desc:'Touched object sheds bright light in a 20-ft radius (dim for another 20 ft) for 1 hour.'},
+  'Mage Hand':{school:'Conjuration', desc:'A spectral floating hand manipulates objects, opens doors, or carries up to 10 pounds within 30 ft for 1 minute.'},
+  'Minor Illusion':{school:'Illusion', desc:'Create a sound or an image of an object no larger than a 5-ft cube for 1 minute. Investigation check reveals it.'},
+  'Prestidigitation':{school:'Transmutation', desc:'Minor magical trick: spark, clean or soil, chill, warm or flavor, light or snuff, or a small mark or trinket.'},
+  'Produce Flame':{school:'Conjuration', desc:'A flame in your palm sheds light for 10 minutes; hurl it as a ranged spell attack for 1d8 fire damage.'},
+  'Ray of Frost':{school:'Evocation', desc:'A frigid beam; ranged spell attack for 1d8 cold damage and −10 ft speed until your next turn.'},
+  'Sacred Flame':{school:'Evocation', desc:'Flame-like radiance descends on a creature; DEX save or 1d8 radiant damage, gaining no benefit from cover.'},
+  'Shillelagh':{school:'Transmutation', desc:'Your club or quarterstaff becomes magical: use your spellcasting ability for its attacks and deal 1d8 damage.'},
+  'Spare the Dying':{school:'Necromancy', desc:'Touch a living creature at 0 hit points; it becomes stable.'},
+  'Thaumaturgy':{school:'Transmutation', desc:'Minor divine wonder: booming voice, flickering flames, harmless tremors, or slamming doors and windows.'},
+  'Vicious Mockery':{school:'Enchantment', desc:'Enchantment-laced insults; WIS save or 1d4 psychic damage and disadvantage on its next attack roll.'},
+  // Level 1
+  'Armor of Agathys':{school:'Abjuration', desc:'Gain 5 temporary hit points; while they last, melee attackers take 5 cold damage.'},
+  'Bless':{school:'Enchantment', desc:'Up to three creatures add 1d4 to attack rolls and saving throws. Concentration, 1 minute.'},
+  'Burning Hands':{school:'Evocation', desc:'A 15-ft cone of flame; DEX save, 3d6 fire damage, half on a success.'},
+  'Charm Person':{school:'Enchantment', desc:'A humanoid makes a WIS save or is charmed by you for 1 hour; it knows afterward.'},
+  'Chromatic Orb':{school:'Evocation', desc:'Hurl an energy sphere; ranged spell attack for 3d8 acid, cold, fire, lightning, poison, or thunder damage.'},
+  'Command':{school:'Enchantment', desc:'Speak a one-word command; WIS save or the creature obeys on its next turn (approach, drop, flee, grovel, halt).'},
+  'Cure Wounds':{school:'Evocation', desc:'A touched creature regains 1d8 + your spellcasting modifier hit points.'},
+  'Detect Evil and Good':{school:'Divination', desc:'Sense aberrations, celestials, elementals, fey, fiends, and undead within 30 ft. Concentration, 10 minutes.'},
+  'Detect Magic':{school:'Divination', desc:'Sense magic within 30 ft; see faint auras and learn schools of magic. Ritual. Concentration, 10 minutes.'},
+  'Dissonant Whispers':{school:'Enchantment', desc:'A discordant melody; WIS save or 3d6 psychic damage and must use its reaction to move away from you.'},
+  'Divine Favor':{school:'Evocation', desc:'Bonus action; your weapon attacks deal an extra 1d4 radiant damage. Concentration, 1 minute.'},
+  'Ensnaring Strike':{school:'Conjuration', desc:'Your next weapon hit sprouts vines; STR save or restrained, taking 1d6 piercing at the start of each turn.'},
+  'Entangle':{school:'Conjuration', desc:'A 20-ft square of grasping weeds becomes difficult terrain; STR save or restrained. Concentration, 1 minute.'},
+  'Faerie Fire':{school:'Evocation', desc:'Creatures in a 20-ft cube make a DEX save or glow: attacks against them have advantage and they can\'t be invisible.'},
+  'Find Familiar':{school:'Conjuration', desc:'Summon a spirit familiar in beast form; share its senses and deliver touch spells through it. Ritual.'},
+  'Goodberry':{school:'Transmutation', desc:'Ten berries appear; eating one restores 1 hit point and nourishes a creature for a day.'},
+  'Guiding Bolt':{school:'Evocation', desc:'A flash of light; ranged spell attack for 4d6 radiant damage, and the next attack against the target has advantage.'},
+  'Healing Word':{school:'Evocation', desc:'Bonus action; a creature within 60 ft regains 1d4 + your spellcasting modifier hit points.'},
+  'Hex':{school:'Enchantment', desc:'Bonus action curse; your attacks deal an extra 1d6 necrotic to the target and it has disadvantage on one ability\'s checks.'},
+  "Hunter's Mark":{school:'Divination', desc:'Bonus action; mark a quarry — your weapon attacks against it deal +1d6, with advantage to track it. Concentration.'},
+  'Identify':{school:'Divination', desc:'Learn a magic item\'s properties, how to use them, and whether it requires attunement. Ritual.'},
+  'Mage Armor':{school:'Abjuration', desc:'An unarmored touched creature\'s base AC becomes 13 + its DEX modifier for 8 hours.'},
+  'Magic Missile':{school:'Evocation', desc:'Three darts of force, each dealing 1d4+1 damage; they hit automatically.'},
+  'Shield':{school:'Abjuration', desc:'Reaction; +5 AC until your next turn, including against the triggering attack, and immunity to Magic Missile.'},
+  'Shield of Faith':{school:'Abjuration', desc:'Bonus action; a shimmering field grants +2 AC to one creature. Concentration, 10 minutes.'},
+  'Sleep':{school:'Enchantment', desc:'5d8 hit points of creatures fall unconscious, lowest current hit points first; undead are unaffected.'},
+  'Thunderwave':{school:'Evocation', desc:'A 15-ft cube of thunderous force; CON save, 2d8 thunder damage and pushed 10 ft, half and no push on a success.'},
+  'Witch Bolt':{school:'Evocation', desc:'An arc of lightning; ranged spell attack for 1d12, then 1d12 lightning each turn you sustain it. Concentration.'},
+  // Level 2
+  'Aid':{school:'Abjuration', desc:'Up to three creatures gain +5 hit point maximum and current hit points for 8 hours.'},
+  'Animal Messenger':{school:'Enchantment', desc:'A Tiny beast carries a short spoken message to a place you describe. Ritual.'},
+  'Barkskin':{school:'Transmutation', desc:'A touched creature\'s AC can\'t be lower than 16. Concentration, 1 hour.'},
+  'Find Steed':{school:'Conjuration', desc:'Summon a spirit steed (warhorse, pony, camel, elk, or mastiff) that serves as a loyal, intelligent mount.'},
+  'Flame Blade':{school:'Evocation', desc:'A fiery scimitar in your hand; melee spell attack for 3d6 fire damage, sheds light. Concentration, 10 minutes.'},
+  'Heat Metal':{school:'Transmutation', desc:'A metal object glows red-hot: 2d8 fire damage to whoever holds or wears it; drop it or have disadvantage. Concentration.'},
+  'Hold Person':{school:'Enchantment', desc:'A humanoid makes a WIS save or is paralyzed; it repeats the save each turn. Concentration, 1 minute.'},
+  'Invisibility':{school:'Illusion', desc:'A touched creature is invisible up to 1 hour; ends if it attacks or casts a spell. Concentration.'},
+  'Lesser Restoration':{school:'Abjuration', desc:'Touch ends one disease or one condition: blinded, deafened, paralyzed, or poisoned.'},
+  'Mirror Image':{school:'Illusion', desc:'Three illusory duplicates of yourself misdirect attacks; each hit may strike an image instead.'},
+  'Misty Step':{school:'Conjuration', desc:'Bonus action; teleport up to 30 ft to an unoccupied space you can see.'},
+  'Moonbeam':{school:'Evocation', desc:'A 5-ft-radius beam of pale light; CON save or 2d10 radiant damage when a creature enters or starts its turn there. Concentration.'},
+  'Pass without Trace':{school:'Abjuration', desc:'A veil of shadows: +10 to the group\'s Stealth checks and you can\'t be tracked except by magic. Concentration.'},
+  'Prayer of Healing':{school:'Evocation', desc:'Up to six creatures regain 2d8 + your spellcasting modifier hit points. Casting time 10 minutes.'},
+  'Scorching Ray':{school:'Evocation', desc:'Three rays of fire; make a ranged spell attack for each, dealing 2d6 fire damage per hit.'},
+  'Shatter':{school:'Evocation', desc:'A sudden ringing noise in a 10-ft sphere; CON save, 3d8 thunder damage, half on a success.'},
+  'Silence':{school:'Illusion', desc:'No sound within a 20-ft sphere: creatures are deafened, thunder damage is blocked, verbal spells fail. Ritual. Concentration.'},
+  'Spike Growth':{school:'Transmutation', desc:'A 20-ft radius sprouts hidden spikes: difficult terrain dealing 2d4 piercing per 5 ft moved. Concentration.'},
+  'Spiritual Weapon':{school:'Evocation', desc:'Bonus action; a floating spectral weapon makes melee spell attacks for 1d8 + your spellcasting modifier force damage.'},
+  'Suggestion':{school:'Enchantment', desc:'WIS save or the creature pursues a reasonable course of activity you suggest. Concentration, 8 hours.'},
+  'Web':{school:'Conjuration', desc:'A 20-ft cube of thick, flammable webs; DEX save or restrained. Concentration, 1 hour.'},
+  'Zone of Truth':{school:'Enchantment', desc:'In a 15-ft sphere, creatures that fail a CHA save can\'t speak a deliberate lie.'},
+  // Level 3
+  'Aura of Vitality':{school:'Evocation', desc:'A healing aura surrounds you; each turn, a bonus action heals a creature in it for 2d6. Concentration, 1 minute.'},
+  'Beacon of Hope':{school:'Abjuration', desc:'Chosen creatures gain advantage on WIS and death saves and regain maximum hit points from healing. Concentration.'},
+  'Blinding Smite':{school:'Evocation', desc:'Your next melee hit deals +3d8 radiant damage; CON save or the target is blinded. Concentration.'},
+  'Call Lightning':{school:'Conjuration', desc:'A storm cloud forms; each turn call a bolt — DEX save, 3d10 lightning damage, half on a success. Concentration.'},
+  'Conjure Animals':{school:'Conjuration', desc:'Summon fey spirits in beast form (e.g. eight CR 1/4 wolves) that obey your commands. Concentration, 1 hour.'},
+  'Counterspell':{school:'Abjuration', desc:'Reaction; interrupt a spell of 3rd level or lower automatically, or make an ability check for higher levels.'},
+  'Dispel Magic':{school:'Abjuration', desc:'End spells of 3rd level or lower on a target; make an ability check to end higher-level ones.'},
+  'Fear':{school:'Illusion', desc:'A 30-ft cone of terror; WIS save or drop what you\'re holding and flee. Concentration, 1 minute.'},
+  'Fireball':{school:'Evocation', desc:'A 20-ft-radius explosion of flame; DEX save, 8d6 fire damage, half on a success. Ignites objects.'},
+  'Fly':{school:'Transmutation', desc:'A touched creature gains a 60-ft flying speed. Concentration, 10 minutes.'},
+  'Haste':{school:'Transmutation', desc:'Double speed, +2 AC, advantage on DEX saves, and one extra limited action; lethargy when it ends. Concentration.'},
+  'Hunger of Hadar':{school:'Conjuration', desc:'A 20-ft sphere of lightless cold: 2d6 cold on entering, DEX save or 2d6 acid on leaving your turn there. Concentration.'},
+  'Hypnotic Pattern':{school:'Illusion', desc:'A twisting pattern in a 30-ft cube; WIS save or charmed and incapacitated. Concentration, 1 minute.'},
+  'Lightning Arrow':{school:'Transmutation', desc:'Your next ranged weapon attack becomes a bolt of lightning: 4d8 to the target, burst around it. Concentration.'},
+  'Lightning Bolt':{school:'Evocation', desc:'A 100-ft line of lightning; DEX save, 8d6 lightning damage, half on a success.'},
+  'Mass Healing Word':{school:'Evocation', desc:'Bonus action; up to six creatures regain 1d4 + your spellcasting modifier hit points.'},
+  'Plant Growth':{school:'Transmutation', desc:'Overgrow an area (movement costs quadruple) instantly, or enrich the land\'s crops for a year.'},
+  'Revivify':{school:'Necromancy', desc:'Touch a creature dead less than 1 minute; it returns to life with 1 hit point. Consumes 300 gp of diamonds.'},
+  'Sleet Storm':{school:'Conjuration', desc:'Freezing rain in a 40-ft radius: heavily obscured, difficult terrain, DEX save or fall prone. Concentration.'},
+  'Speak with Dead':{school:'Necromancy', desc:'A corpse answers up to five questions, with knowledge from its life only.'},
+  'Spirit Guardians':{school:'Conjuration', desc:'Protective spirits in a 15-ft radius: enemies are slowed, WIS save, 3d8 radiant (or necrotic) damage. Concentration.'},
+  // Level 4
+  'Aura of Life':{school:'Abjuration', desc:'A 30-ft aura: resistance to necrotic damage, hit point maximums can\'t drop, and 0-HP allies regain 1 HP each turn. Concentration.'},
+  'Banishment':{school:'Abjuration', desc:'CHA save or banished to another plane; permanent if the target is native to a different plane. Concentration, 1 minute.'},
+  'Blight':{school:'Necromancy', desc:'Necromantic energy withers a creature; CON save, 8d8 necrotic damage, half on a success. Kills plants.'},
+  'Confusion':{school:'Enchantment', desc:'Creatures in a 10-ft sphere make WIS saves or act randomly — wandering, babbling, or attacking. Concentration.'},
+  'Death Ward':{school:'Abjuration', desc:'The first time the target would drop to 0 hit points, it drops to 1 instead. Lasts 8 hours.'},
+  'Dimension Door':{school:'Conjuration', desc:'Teleport up to 500 ft to a spot you can see, visualize, or describe, with one willing creature.'},
+  'Freedom of Movement':{school:'Abjuration', desc:'Immune to difficult terrain, paralysis, and restraint; escape grapples by spending 5 ft of movement.'},
+  'Grasping Vine':{school:'Conjuration', desc:'Bonus action; a vine lashes out — DEX save or be pulled 20 ft toward it each turn. Concentration.'},
+  'Greater Invisibility':{school:'Illusion', desc:'A touched creature is invisible even while attacking or casting spells. Concentration, 1 minute.'},
+  'Guardian of Faith':{school:'Conjuration', desc:'A large spectral guardian; enemies that come within 10 ft make a DEX save or take 20 radiant damage (half on success).'},
+  'Ice Storm':{school:'Evocation', desc:'Hail in a 20-ft radius; DEX save, 2d8 bludgeoning + 4d6 cold damage, and the area becomes difficult terrain.'},
+  'Polymorph':{school:'Transmutation', desc:'WIS save or transformed into a beast of your choice with CR at or below the target\'s level or CR. Concentration.'},
+  'Staggering Smite':{school:'Evocation', desc:'Your next melee hit deals +4d6 psychic damage; WIS save or disadvantage on attacks and checks, no reactions. Concentration.'},
+  // Level 5
+  'Circle of Power':{school:'Abjuration', desc:'A 30-ft aura: allies have advantage on saves against spells, and half damage on a success becomes none. Concentration.'},
+  'Cone of Cold':{school:'Evocation', desc:'A 60-ft cone of frigid air; CON save, 8d8 cold damage, half on a success.'},
+  'Contact Other Plane':{school:'Divination', desc:'Question an extraplanar intelligence: five one-word answers, but risk psychic damage and insanity. Ritual.'},
+  'Destructive Wave':{school:'Evocation', desc:'A 30-ft burst of divine energy; CON save, 5d6 thunder + 5d6 radiant or necrotic damage and knocked prone.'},
+  'Flame Strike':{school:'Evocation', desc:'A 10-ft-radius column of divine fire; DEX save, 4d6 fire + 4d6 radiant damage, half on a success.'},
+  'Hold Monster':{school:'Enchantment', desc:'Any creature makes a WIS save or is paralyzed; it repeats the save each turn. Concentration, 1 minute.'},
+  'Insect Plague':{school:'Conjuration', desc:'A 20-ft sphere of biting locusts: difficult terrain, CON save, 4d10 piercing damage. Concentration, 10 minutes.'},
+  'Legend Lore':{school:'Divination', desc:'Learn significant lore about a legendary person, place, or object.'},
+  'Mass Cure Wounds':{school:'Evocation', desc:'Up to six creatures in a 30-ft sphere regain 3d8 + your spellcasting modifier hit points.'},
+  'Raise Dead':{school:'Necromancy', desc:'Return a creature dead up to 10 days to life with 1 hit point. Consumes a 500 gp diamond.'},
+  'Reincarnate':{school:'Transmutation', desc:'A dead humanoid returns to life in a new, randomly determined body.'},
+  'Swift Quiver':{school:'Transmutation', desc:'Your quiver produces endless ammunition; each turn, a bonus action makes two weapon attacks. Concentration.'},
+  'Telekinesis':{school:'Transmutation', desc:'Move a creature (contested check) or an object up to 1,000 pounds with your mind each turn. Concentration.'},
+  'Tree Stride':{school:'Conjuration', desc:'Step into a tree and emerge from another of the same kind within 500 ft, once per turn. Concentration.'},
+  'Wall of Force':{school:'Evocation', desc:'An invisible, indestructible wall of force that nothing can pass through. Concentration, 10 minutes.'}
+};
+
 // Actions every character can take in combat, shown on the Actions tab.
 const STANDARD_ACTIONS = [
   {name:'Attack', desc:'Make one melee or ranged attack (see your attacks list).'},
@@ -217,7 +343,7 @@ const CLASS_DATA = {
 // Tag every built-in class with a source for filtering. The SRD roster is
 // official 5E; Jaeger is the World Anvil homebrew. `homebrew`/`builtin` flags
 // are kept in sync so older code paths and re-imports behave consistently.
-const CLASS_SOURCES = ['5E', '5.5E', 'Homebrew'];
+const CLASS_SOURCES = ['5E', '5E (legacy)', '5.5E', 'Homebrew'];
 Object.values(CLASS_DATA).forEach(cd=>{
   if(!cd.source) cd.source = cd.homebrew ? 'Homebrew' : '5E';
   cd.homebrew = cd.source === 'Homebrew';
@@ -244,6 +370,102 @@ const SPECIES_DATA = {
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Relentless Endurance', desc:'Once per long rest, drop to 1 HP instead of 0.'},{name:'Savage Attacks', desc:'Roll one extra weapon damage die on a melee critical hit.'}] },
   Tiefling:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 CHA, +1 INT', languages:'Common, Infernal', desc:'Bearers of an infernal bloodline, marked by horns and a fiendish legacy.',
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Hellish Resistance', desc:'Resistance to fire damage.'},{name:'Infernal Legacy', desc:'Know Thaumaturgy; gain Hellish Rebuke and Darkness at higher levels.'}] },
+  // Steinhardt's Guide to the Eldritch Hunt (World Anvil) — Luyarnha's tieflings,
+  // severed from their infernal origins and bound to the Black Goat instead.
+  'Accursed Tiefling':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 CHA, +1 CON', languages:'Common, Deep Speech', desc:'Called "accursed" for their monstrous shape — dozens of horns crowd their skulls and eye-like protrusions stud them. Severed from their devilish origins, their blood is tied to the Black Goat, and they vanish from the city soon after reaching adulthood.',
+    traits:[
+      {name:'Darkvision', desc:'Eldritch heritage: see in dim light within 60 ft as if bright, and in darkness as if dim (shades of gray only).'},
+      {name:'Child of the Black Goat', desc:'You have a climbing speed equal to your walking speed.'},
+      {name:'Eldritch Resistance', desc:'You have resistance to necrotic damage.'},
+      {name:'Legacy of a Thousand Young', desc:'You know Spare the Dying. At 3rd level, cast False Life (as 2nd level) once per long rest; at 5th level, cast Mirror Image once per long rest. CON is your spellcasting ability for these.'},
+      {name:'Call of the Brood', desc:'If a Blood Moon is out while you sleep, the Black Goat sends a dream (as the spell, DC 16) compelling a task; on waking you are affected by Suggestion (DC 16, cast at 7th level) and must carry out the order.'}
+    ] },
+  // Mordenkainen Presents: Monsters of the Multiverse lineage.
+  Tortle:{ source:'5E', size:'Medium or Small', speed:30, darkvision:0, asi:'+2 / +1 to two abilities (floating)', languages:'Common + one other', desc:'"We wear our homes on our backs." Turtle folk who travel coasts and waterways, carrying their shelter wherever they go.',
+    traits:[
+      {name:'Claws', desc:'Your unarmed strikes deal 1d6 + STR modifier slashing damage.'},
+      {name:'Hold Breath', desc:'You can hold your breath for up to 1 hour.'},
+      {name:'Natural Armor', desc:'Your shell gives you base AC 17 (DEX modifier doesn\'t apply). A shield\'s bonus applies as normal, but you gain no benefit from wearing armor.'},
+      {name:"Nature's Intuition", desc:'Proficiency in one of: Animal Handling, Medicine, Nature, Perception, Stealth, or Survival.'},
+      {name:'Shell Defense', desc:'Withdraw into your shell as an action: +4 AC and advantage on STR and CON saves, but you are prone, speed 0, disadvantage on DEX saves, and can\'t take reactions. Emerge as a bonus action.'}
+    ] },
+  // ---- Steinhardt's Guide to the Eldritch Hunt (World Anvil) species ----
+  // Luyarnha's playable races. Names that collide with the 5E built-ins carry
+  // an "(Eldritch Hunt)" suffix so both versions stay selectable.
+  'Cursed-Blood':{ source:'Homebrew', size:'Small', speed:25, darkvision:0, asi:'+1 DEX, +1 any (+1 more from subrace)', languages:'Common + Draconic or Infernal', desc:'Born as conjoined twins of whom one must perish, the cursed-blood wear quiescent marble masks from birth and carry the remnant of their lost sibling in their chest. Shunned by Luyarnha, they guard their kin fiercely in the slums.',
+    traits:[
+      {name:'Cursed Climber', desc:'25 ft walking speed and a 25 ft climbing speed (unusable in medium or heavy armor).'},
+      {name:'Vigilant Nature', desc:'You can\'t be surprised. On a turn when you would have been surprised, you can\'t attack or cast spells that affect enemies.'},
+      {name:'Conjoined Twin — Chest Maw', desc:'(Choose one manifestation.) A mouth on your abdomen stores up to 250 lb / 32 cu ft in a pocket dimension; unconsciousness or death regurgitates it. Creatures inside can breathe for 1 minute. At 5th level, capacity doubles and storage is indefinite.'},
+      {name:'Conjoined Twin — Heedful Eye', desc:'While the chest eye is open (bonus action to open): darkvision 120 ft and one casting of Detect Magic per short/long rest. At 5th level, also See Invisibility 1/long rest.'},
+      {name:'Conjoined Twin — Gaping Remain', desc:'Speak telepathically (your twin\'s voice) to a creature you can see within 5 ft × your level; at 5th level it can respond. You also know Mage Hand (no somatic/verbal components, the hand looks like your twin\'s; CHA is the ability).'},
+      {name:'Subrace — Doused', desc:'+1 STR or WIS. Insulated Skin: choose two of acid/cold/fire/lightning/poison; reduce damage of those types by your proficiency bonus.'},
+      {name:'Subrace — Hulking', desc:'+1 CON. Stone Skin: critical hits with piercing attacks deal no extra critical damage to you.'},
+      {name:'Subrace — Mirage', desc:'+1 INT or CHA. Shadowveil Skin: hide while only lightly obscured by shadow, smog, or urban phenomena; move through the space of creatures one size larger.'}
+    ] },
+  Demidritch:{ source:'Homebrew', size:'Medium', speed:30, darkvision:120, asi:'+2 CHA (+1 CON Oculare / +1 STR Nebulare)', languages:'Common, Deep Speech', desc:'Born of a union between humanoids and eldritch beings, "half-angels" bear galaxy-swirl eyes in jet-black sclera. Equal parts revered and abhorred in Luyarnha, their alignment is a product of upbringing, not origin.',
+    traits:[
+      {name:'Darkvision (120 ft)', desc:'Your many eyes were made for the darkness of space: dim light within 120 ft counts as bright, darkness as dim (grayscale).'},
+      {name:'Shard of Infinity', desc:'You have resistance to cold damage.'},
+      {name:'Astral Being', desc:'Advantage on saving throws against being blinded.'},
+      {name:'Subrace — Oculare', desc:'+1 CON. Watchers: Perception proficiency. All Seeing Eyes (3rd level, 1/long rest): action, for 1 minute creatures within 60 ft gain no advantage on attacks against you from being unseen; at 12th level also grow eye-covered wings (fly 30 ft, see invisibility 60 ft). Subrace DC = 8 + 2×PB.'},
+      {name:'Subrace — Nebulare', desc:'+1 STR. Glow: cast Light on your own body at will. Astral Attraction (3rd level, 1/long rest): action, transform 1 minute — burst PB d6 radiant (DEX save) in 10 ft, shed light, and a 20 ft gravitational field is difficult terrain for creatures you choose; at 12th level 60 ft field and fly/hover 30 ft.'}
+    ] },
+  'Deep One Dwarf':{ source:'Homebrew', size:'Medium', speed:25, darkvision:0, asi:'+2 CON, +1 CHA', languages:'Common, Deep Speech, Dwarvish', desc:'Y\'ha-nthlei — Luyarnha\'s dwarves, cursed for their avarice into eternal service of He Who Lies Dreaming. Tentacled and warped beneath an illusion of ordinary dwarvenhood, they cannot die of old age; their minds slip to Him at ~50 years.',
+    traits:[
+      {name:'Aberration', desc:'Your creature type is aberration, rather than humanoid.'},
+      {name:'Swimmer', desc:'25 ft walking speed and a 25 ft swimming speed.'},
+      {name:'Otherworldly Resilience', desc:'Advantage on saves against poison; resistance to cold damage.'},
+      {name:'Illusory Body', desc:'An illusion makes you appear a normal hill dwarf; action to toggle it. Other Deep Ones see through it.'},
+      {name:'Sailor Training', desc:'Proficiency with cleavers, tridents, and firearms.'},
+      {name:'Amphibious', desc:'You can breathe air and water.'},
+      {name:'Cosmic Knowledge', desc:'On History checks about the origin of eldritch items or constructions, you count as proficient and add double your proficiency bonus.'},
+      {name:'Guiding Light', desc:'You know the Dancing Lights cantrip (CHA).'},
+      {name:'The Dreamer\'s Curse', desc:'Disadvantage on saving throws against illusions.'},
+      {name:'Fathomless Limb — Coiling Arm', desc:'(Choose one alteration.) After hitting with a melee attack, attempt a grapple as a bonus action.'},
+      {name:'Fathomless Limb — Brutal Pincers', desc:'Pincer unarmed strikes deal 1d6 + STR piercing (d10 vs a creature you\'re grappling); no fine manipulation with that arm.'},
+      {name:'Fathomless Limb — Mucoid Extremities', desc:'Swimming speed becomes 30 ft and you gain a 20 ft climbing speed.'},
+      {name:'The Dreamer\'s Gifts (optional, GM)', desc:'From 5th level: when you fail an ability check or save, succeed instead — unusable again until the Dreamer replaces one of your d20 rolls with a 1 (GM decides). You are immune to the curse of the Slumbering Moon.'}
+    ] },
+  Manikin:{ source:'Homebrew', size:'Medium or Small', speed:30, darkvision:0, asi:'+2 CON (+1 STR/DEX/CHA by subrace)', languages:'Common', desc:'Marionettes "born" of gold, lightning, and meticulous welding by the Scions. Golden stitching joins the plates of their artificial skin; their obedience is inscribed on human eyes inside their skulls.',
+    traits:[
+      {name:'Construct Nature', desc:'You are a Humanoid, but count as a Construct for any prerequisite or effect.'},
+      {name:'Born to Serve', desc:'Made unable to hate or resent: disadvantage on Insight checks.'},
+      {name:'Lightning Heart', desc:'Resistance to lightning damage.'},
+      {name:'Living Material', desc:'No need to eat, drink, or breathe; immune to the poisoned condition; advantage on saves against madness.'},
+      {name:'Modular Gold Plating', desc:'Built-in armor (no benefit from worn armor; shields fine). Unarmored: AC 11 + DEX. Medium (needs prof): 13 + DEX (max 2) or STR (max 3). Heavy (needs prof): 16 + STR (max 2). STR-based AC gives disadvantage on Stealth. 8 hours in a workshop to switch.'},
+      {name:'Subrace — Custodian', desc:'+1 STR. Careful Defender: reaction to swap places with a willing creature within 5 ft targeted by an attack, PB/long rest. Powerful Build: count one size larger for carrying.'},
+      {name:'Subrace — Handler', desc:'+1 DEX. Inconspicuous Appearance: Stealth and disguise kit proficiency. Embedded Armament: up to two finesse/light melee weapons in your body; draw/stow as bonus action; can\'t be disarmed.'},
+      {name:'Subrace — Thespian', desc:'+1 CHA. Artist\'s Puppet: Performance proficiency. Ethereal Strings: bonus action, attach to a willing creature within 30 ft for 1 hour; reaction at end of its turn to move up to its unused movement. 1/short rest.'}
+    ] },
+  Scourgeborne:{ source:'Homebrew', size:'Medium', speed:30, darkvision:0, asi:'+1 CON (+ subrace)', languages:'Common + one', desc:'Made, not born — a curse on those who peered beyond the veil, laying their innermost darkness bare as a monstrous form. Those who accept the inner monster without letting it rule often become Luyarnha\'s messianic heroes.',
+    traits:[
+      {name:'Feral Limbs', desc:'Horns, claws, or fangs: unarmed strikes deal 1d6 + STR piercing (d8 if your alignment is Evil).'},
+      {name:'Eldritch Curse', desc:'Immune to any spell that would alter your form (Alter Self, Polymorph, etc.).'},
+      {name:'Born of Madness', desc:'Good alignment: advantage on saves against madness. Evil: disadvantage on madness saves but +PB to DEX saving throws.'},
+      {name:'Subrace — Aranea', desc:'+1 INT, +1 any. Spider Climb: 30 ft climb (walls/ceilings) for PB minutes per long rest. Web Spit (1/long rest): bonus action, DEX save (8+PB+CON) or restrained; escape via STR check or destroy the web (AC 10, HP 3×PB, vulnerable fire).'},
+      {name:'Subrace — Belua', desc:'+1 STR, +1 any. Keen Hearing and Smell: advantage on Perception by hearing/smell. Hungry Jaws: bonus-action unarmed strike that heals you for the damage dealt, PB uses/long rest.'},
+      {name:'Subrace — Cervus', desc:'+1 WIS or STR, +1 any. Goring Charge: move 20 ft straight then hit melee → STR save (8+PB+STR) or prone, and you may bonus-action attack a prone target; PB uses/long rest. Nimble Build: +10 ft speed.'},
+      {name:'Subrace — Vespertilio', desc:'+1 DEX, +1 any. Echolocative Sight: blindsight 30 ft, disadvantage on sight checks/attacks beyond it. Tattered Wings: bonus action to fly 30 ft until end of turn (fall if aloft), PB uses/short or long rest.'}
+    ] },
+  'Elf (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX (not CON w/ optional rule)', languages:'Common, Elvish', desc:'Luyarnha\'s founding elves — wood elves whose skins turned stone-gray and obsidian with urbanization, first acolytes of the Radiant One, driven above all to stave off their race\'s extinction. Uses the standard 5E elf mechanics.',
+    traits:[
+      {name:'Standard Elf Traits', desc:'Darkvision 60 ft, Keen Senses, Fey Ancestry, and Trance, as the 5E elf.'},
+      {name:'Frail Constitution (optional rule)', desc:'Elven bodies are meek and frail: no racial or subrace ability score increase may be applied to Constitution.'}
+    ] },
+  'Half-Elf (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 CHA, +1 to two others', languages:'Common, Elvish + one', desc:'Luyarnha\'s "noble-bloods" — cherished aristocrats of the city, the Silverblood family and the hunter Steinhardt among them, though consanguinity bred madness into the line. Uses the standard 5E half-elf mechanics.',
+    traits:[
+      {name:'Standard Half-Elf Traits', desc:'Darkvision 60 ft, Fey Ancestry, and Skill Versatility (two skill proficiencies), as the 5E half-elf.'},
+      {name:'Weak to Madness (optional rule)', desc:'The tight balance of human and elven blood is easily disrupted: disadvantage on saving throws against madness.'}
+    ] },
+  'Human (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:0, asi:'+1 to all abilities', languages:'Common + one', desc:'Luyarnha\'s builders and thinkers — fertile, secular, and proud, raising cathedral spires and aqueducts while walking the line between self-actualization and self-destruction. Lore article; uses the standard 5E human mechanics.',
+    traits:[
+      {name:'Versatile', desc:'A +1 bonus to every ability score (or extra skill/feat in variant rules), as the 5E human.'}
+    ] },
+  'Orc (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 STR, +1 CON', languages:'Common, Orc', desc:'Grey-skinned merchant-folk of Luyarnha, tempering an ancient curse of avarice with a culture of self-reliance in youth and magnanimity in age. Lore article; pair with a standard 5E orc/half-orc stat block.',
+    traits:[
+      {name:'Standard Orc Traits', desc:'The Steinhardt entry is lore-only — use standard orc traits (e.g. Darkvision 60 ft, Relentless Endurance, Powerful Build / Savage Attacks).'}
+    ] },
 };
 Object.values(SPECIES_DATA).forEach(sd=>{ if(!sd.source) sd.source='5E'; sd.builtin=true; });
 
@@ -361,11 +583,17 @@ function defaultCharacter(){
     // {name, description, equipped, attack:{bonus,dmg},
     //  abilities:{str,dex,con,int,wis,cha} (string "+2" or "=19"),
     //  skills:[{name,bonus}], spells:[{name,level}]}
-    equipment: []
+    equipment: [],
+    journal: [] // character journal entries: {id, title, text, created, updated}
   };
 }
 
 let state = defaultCharacter();
+
+// Which page this script is running on: 'sheet' (index), 'library', or 'notes'.
+// Standalone pages set data-page on <body>; shared handlers check this to skip
+// character-sheet-only work (autosave, sheet panel rebuilds).
+const PAGE = document.body.dataset.page || 'sheet';
 
 function mod(score){ return Math.floor((score-10)/2); }
 function fmt(n){ return (n>=0?'+':'') + n; }
@@ -684,7 +912,7 @@ function buildSpellLevelSelects(){
 // ---------- Tag pickers (dropdown + removable chips) ----------
 // Tags are chosen from a dropdown instead of typed. The option list is the
 // default set plus every tag already used on an imported or known spell.
-const DEFAULT_SPELL_TAGS = ['5E','5.5E','Homebrew'];
+const DEFAULT_SPELL_TAGS = ['5E','5E (legacy)','5.5E','Homebrew'];
 const tagPickerState = {}; // container id -> currently selected tags
 
 function allSpellTags(){
@@ -733,6 +961,7 @@ function spellClassNames(){
 
 function buildSpellClassSelect(){
   const sel = document.getElementById('spellClassSelect');
+  if(!sel) return;
   sel.innerHTML = spellClassNames().map(c=>`<option value="${esc(c)}" ${c===state.spellClass?'selected':''}>${esc(c)}</option>`).join('');
   sel.onchange = e=>{
     state.spellClass = e.target.value;
@@ -742,6 +971,7 @@ function buildSpellClassSelect(){
 
 function buildSpellLibrary(){
   const container = document.getElementById('spellLibraryList');
+  if(!container) return;
   const query = (document.getElementById('spellSearch').value || '').toLowerCase();
   const customs = customSpellsForClass(state.spellClass);
   const customNames = new Set(customs.map(s=>s.name.toLowerCase()));
@@ -890,6 +1120,7 @@ function updateHero(){
 }
 
 function afterClassChange(){
+  if(PAGE!=='sheet') return; // sheet-only refresh cascade
   applyClassesToState();
   buildClassList();
   renderClassInfoStack();
@@ -905,7 +1136,7 @@ function afterClassChange(){
 }
 
 // ---------- Class source tags & filtering ----------
-function sourceKey(src){ return src==='5E' ? '5e' : src==='5.5E' ? '55e' : 'homebrew'; }
+function sourceKey(src){ return src==='5E' ? '5e' : src==='5E (legacy)' ? '5eleg' : src==='5.5E' ? '55e' : 'homebrew'; }
 function sourceTag(src){ return `<span class="src-tag src-${sourceKey(src)}">${src}</span>`; }
 
 let classFilter = 'all';
@@ -918,6 +1149,7 @@ function classNamesForFilter(alwaysInclude){
 
 function buildClassFilterBar(){
   const bar = document.getElementById('classFilterBar');
+  if(!bar) return;
   const opts = ['all', ...CLASS_SOURCES];
   bar.innerHTML = '<span class="filter-label">Filter</span>' + opts.map(o=>
     `<span class="filter-chip ${classFilter===o?'on':''}" data-f="${o}">${o==='all'?'All':o}</span>`).join('');
@@ -931,6 +1163,7 @@ function buildClassFilterBar(){
 function buildClassList(){
   ensureClasses();
   const wrap = document.getElementById('classList');
+  if(!wrap) return;
   wrap.innerHTML='';
   state.classes.forEach((entry,i)=>{
     const taken = state.classes.filter((c,j)=>j!==i).map(c=>c.name);
@@ -1054,6 +1287,7 @@ function classInfoCard(entry, showReq){
 
 function renderClassInfoStack(){
   const box = document.getElementById('classInfoStack');
+  if(!box) return;
   document.getElementById('totalLevelDisplay').textContent = state.level||1;
   const picked = pickedClasses();
   if(!picked.length){
@@ -1120,6 +1354,7 @@ function featItem(f){
 
 function buildClassFeatures(){
   const box = document.getElementById('classFeaturesList');
+  if(!box) return;
   const picked = pickedClasses();
   if(!picked.length){
     box.innerHTML = '<div class="action-empty">Select a class in Settings to see its features here.</div>';
@@ -1286,6 +1521,7 @@ function buildEquipAttackList(){
 
 function buildActions(){
   const attacksEl = document.getElementById('actAttacks');
+  if(!attacksEl) return;
   const manual = state.attacks.filter(a=>a.name && a.name.trim()).map(a=>({name:a.name, bonus:a.bonus, dmg:a.dmg, src:'Attack'}));
   const gearAtk = equipmentAttacks().map(a=>({...a, src:'Equipped'}));
   const allAtk = [...manual, ...gearAtk];
@@ -1379,9 +1615,28 @@ function bindTabs(){
       document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
       // Rebuild on entry so the list reflects edits made on the other tabs.
       if(btn.dataset.tab==='actions') buildActions();
-      if(btn.dataset.tab==='notes') buildNotes();
     });
   });
+}
+
+// ---------- Sidebar navigation drawer ----------
+// Shared by every page (partials/sidebar.html): ☰ opens it, backdrop click or
+// Escape hides it away. The current page's link is highlighted via PAGE.
+function bindSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('sidebarToggle');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if(!sidebar || !toggle) return;
+  const setOpen = open=>{
+    sidebar.classList.toggle('open', open);
+    if(backdrop) backdrop.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  toggle.addEventListener('click', ()=> setOpen(!sidebar.classList.contains('open')));
+  if(backdrop) backdrop.addEventListener('click', ()=> setOpen(false));
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') setOpen(false); });
+  const current = sidebar.querySelector(`.side-link[data-page="${PAGE}"]`);
+  if(current) current.classList.add('active');
 }
 
 // ---------- Options menu & themes ----------
@@ -1905,6 +2160,7 @@ async function loadCustomSpecies(){
 
 function buildSpeciesSelect(){
   const sel = document.getElementById('charRace');
+  if(!sel) return;
   const names = Object.keys(SPECIES_DATA).sort();
   sel.innerHTML = '<option value="">— none —</option>' + names.map(n=>
     `<option value="${n}" ${state.race===n?'selected':''}>${n} · ${SPECIES_DATA[n].source}</option>`).join('');
@@ -2347,6 +2603,8 @@ function fillSubclassForm(parent, name){
 }
 
 // Which built-in class lists carry a spell — used to prefill its class list.
+// Folds in school + description from SPELL_DETAILS so editing a built-in
+// spell in the Library starts from its reference data.
 function builtinSpellInfo(name){
   const classes = [];
   let level = 0;
@@ -2354,7 +2612,7 @@ function builtinSpellInfo(name){
     const hit = SPELL_DATA[c].find(s=>s.name===name);
     if(hit){ classes.push(c); level = hit.level; }
   });
-  return classes.length ? { level, classes } : null;
+  return classes.length ? Object.assign({}, SPELL_DETAILS[name]||{}, { level, classes }) : null;
 }
 
 function fillSpellForm(name){
@@ -2431,6 +2689,7 @@ function setSaveStatus(status){
 // ---------- Debounced autosave to the local database ----------
 let saveTimeout=null;
 function save(){
+  if(PAGE!=='sheet') return; // no character is loaded on standalone pages
   clearTimeout(saveTimeout);
   setSaveStatus('saving');
   saveTimeout = setTimeout(async ()=>{
@@ -2487,6 +2746,261 @@ function buildNotes(){
   grid.dataset.built = '1';
 }
 
+// ---------- Notes page: reference search ----------
+// A flat index over everything the app knows — built-in and imported classes,
+// their features, subclasses, species & traits, spells, standard actions, and
+// alignments — so the Notes page can look any of it up by name or text.
+let NOTES_INDEX = [];
+let notesFilter = 'All';
+const NOTES_TYPES = ['All','Classes','Subclasses','Species','Spells','Features','Actions','Alignments'];
+
+function notesEntry(type, name, badges, haystack, detail, edit){
+  return { type, name, badges: badges.filter(Boolean).map(String),
+    text: (name + ' ' + haystack).toLowerCase(), detail, edit };
+}
+
+// Deep link into the Library page's import forms: /library?edit=<type>:<key>.
+// The Library page loads the entry into the matching form (see openLibraryEditParam).
+function editLink(type, key, label){
+  return { href: '/library?edit=' + type + ':' + encodeURIComponent(key), label };
+}
+
+// Level-tagged feature list used inside the detail popup for classes and subclasses.
+function classFeaturesHtml(features){
+  return (features||[]).map(f=>`
+    <div class="feat-item">
+      <div class="feat-head"><span class="f-lvl">L${f.lv}</span><span class="f-name">${esc(f.name)}</span>
+        ${f.use?`<span class="nr-badge">${esc(f.use)}</span>`:''}${f.cost?`<span class="nr-badge">${esc(f.cost)}</span>`:''}</div>
+      ${f.desc?`<div class="feat-desc">${esc(f.desc)}</div>`:''}
+    </div>`).join('');
+}
+
+function castingLabel(c){
+  if(!c || c.type==='none') return 'non-caster';
+  const ab = c.ability ? ' ('+c.ability.toUpperCase()+')' : '';
+  return c.type==='full' ? 'full caster'+ab : c.type==='half' ? 'half caster'+ab : 'pact magic'+ab;
+}
+
+function featureEntry(f, ownerName, extraHay, edit){
+  return notesEntry('Features', f.name, [ownerName, 'level '+f.lv],
+    [f.desc, f.use, f.cost, ownerName, extraHay].filter(Boolean).join(' '),
+    `<div class="nr-meta">${esc(ownerName)} · level ${f.lv}${f.use?' · '+esc(f.use):''}${f.cost?' · '+esc(f.cost):''}</div>
+     ${f.desc?`<div class="feat-desc">${esc(f.desc)}</div>`:''}`, edit);
+}
+
+function buildNotesIndex(){
+  const ix = [];
+
+  // Classes and their features.
+  Object.entries(CLASS_DATA).forEach(([name, cd])=>{
+    const skills = Array.isArray(cd.skills) ? cd.skills.join(', ') : 'any skill';
+    const subNames = subclassNamesForClass(name); // built-in + imported
+    const meta = `<div class="nr-meta">d${cd.hitDie||8} hit die · saves ${(cd.saves||[]).map(s=>s.toUpperCase()).join(' / ')||'—'} · ${esc(castingLabel(cd.casting))} · subclass at level ${cd.subclassLevel||'—'}</div>
+       <div class="nr-meta">skills (choose ${cd.choose||0}): ${esc(skills)}</div>`;
+    ix.push(Object.assign(notesEntry('Classes', name, [cd.source, cd.custom?'imported':'built-in'],
+      [cd.desc, skills, subNames.join(' '), castingLabel(cd.casting)].filter(Boolean).join(' '),
+      meta
+      + `${subNames.length?`<div class="nr-meta">subclasses: ${esc(subNames.join(', '))}</div>`:''}
+       ${cd.desc?`<div class="feat-desc">${esc(cd.desc)}</div>`:''}`,
+      editLink('class', name, 'Edit class in Library')),
+      { full: meta
+        + `${cd.desc?`<div class="feat-desc">${esc(cd.desc)}</div>`:''}`
+        + (subNames.length?`<div class="nr-sect">Subclasses — click to view</div><div class="nr-sub-list">${
+            subNames.map(n=>`<span class="nr-sub-link" data-key="${esc(subKey(name, n))}">${esc(n)}</span>`).join('')}</div>`:'')
+        + ((cd.features||[]).length?`<div class="nr-sect">Features</div>`+classFeaturesHtml(cd.features):'') }));
+    (cd.features||[]).forEach(f=> ix.push(featureEntry(f, name, null,
+      editLink('class', name, 'Edit '+name+' in Library'))));
+  });
+
+  // Subclasses: imported records carry detail; built-in ones are name-only lists.
+  const seenSubs = new Set();
+  Object.values(SUBCLASS_DATA).forEach(sc=>{
+    seenSubs.add(subKey(sc.parent, sc.name));
+    const summary = `<div class="nr-meta">${esc(sc.parent)} subclass · chosen at level ${sc.subclassLevel||3}</div>
+       ${sc.desc?`<div class="feat-desc">${esc(sc.desc)}</div>`:''}`;
+    ix.push(Object.assign(notesEntry('Subclasses', sc.name, [sc.parent, sc.source||'Homebrew', 'imported'],
+      [sc.desc, sc.parent, (sc.features||[]).map(f=>f.name+' '+(f.desc||'')).join(' ')].filter(Boolean).join(' '),
+      summary,
+      editLink('subclass', subKey(sc.parent, sc.name), 'Edit subclass in Library')),
+      { key: subKey(sc.parent, sc.name),
+        full: summary + ((sc.features||[]).length?`<div class="nr-sect">Features</div>`+classFeaturesHtml(sc.features):'') }));
+    (sc.features||[]).forEach(f=> ix.push(featureEntry(f, sc.name, sc.parent,
+      editLink('subclass', subKey(sc.parent, sc.name), 'Edit '+sc.name+' in Library'))));
+  });
+  Object.entries(CLASS_DATA).forEach(([parent, cd])=>{
+    (cd.subclasses||[]).forEach(n=>{
+      if(seenSubs.has(subKey(parent, n))) return;
+      ix.push(Object.assign(notesEntry('Subclasses', n, [parent, 'built-in'], parent,
+        `<div class="nr-meta">${esc(parent)} subclass · chosen at level ${cd.subclassLevel||3}</div>`,
+        editLink('subclass', subKey(parent, n), 'Edit subclass in Library')),
+        { key: subKey(parent, n),
+          full: `<div class="nr-meta">${esc(parent)} subclass · chosen at level ${cd.subclassLevel||3}</div>
+                 <div class="feat-desc">Name-only entry — import it in the Library to add a description and features.</div>` }));
+    });
+  });
+
+  // Species with their traits inline.
+  Object.entries(SPECIES_DATA).forEach(([name, sd])=>{
+    const traits = sd.traits||[];
+    ix.push(notesEntry('Species', name, [sd.source, sd.custom?'imported':'built-in'],
+      [sd.desc, sd.asi, sd.languages, traits.map(t=>t.name+' '+(t.desc||'')).join(' ')].filter(Boolean).join(' '),
+      `<div class="nr-meta">${esc(sd.size||'Medium')} · ${sd.speed||30} ft${sd.darkvision?' · darkvision '+sd.darkvision+' ft':''}${sd.asi?' · '+esc(sd.asi):''}</div>
+       ${sd.languages?`<div class="nr-meta">languages: ${esc(sd.languages)}</div>`:''}
+       ${sd.desc?`<div class="feat-desc">${esc(sd.desc)}</div>`:''}
+       ${traits.map(t=>`<div class="feat-desc"><b>${esc(t.name)}</b>${t.desc?' — '+esc(t.desc):''}</div>`).join('')}`,
+      editLink('species', name, 'Edit species in Library')));
+  });
+
+  // Spells: imported entries carry full detail and shadow built-in names.
+  const builtinSpells = {};
+  SPELL_CLASSES.forEach(c=> SPELL_DATA[c].forEach(s=>{
+    (builtinSpells[s.name] = builtinSpells[s.name] || {level:s.level, classes:[]}).classes.push(c);
+  }));
+  new Set([...Object.keys(CUSTOM_SPELLS), ...Object.keys(builtinSpells)]).forEach(name=>{
+    const imp = CUSTOM_SPELLS[name];
+    const bi = builtinSpells[name];
+    // Imported spells carry their own data; built-ins get school + description
+    // from the SPELL_DETAILS reference table.
+    const det = imp || SPELL_DETAILS[name] || {};
+    const level = imp ? Number(imp.level)||0 : bi.level;
+    const classes = imp
+      ? (Array.isArray(imp.classes) && imp.classes.length ? imp.classes : ['every class'])
+      : bi.classes;
+    const bits = [det.school, det.castingTime&&'cast '+det.castingTime, det.range&&'range '+det.range,
+      det.components, det.duration&&'duration '+det.duration].filter(Boolean).join(' · ');
+    ix.push(notesEntry('Spells', name, [levelLabel(level), imp?imp.source:null, imp?'imported':'built-in'],
+      [classes.join(' '), det.school, det.desc, (det.tags||[]).join(' ')].filter(Boolean).join(' '),
+      `<div class="nr-meta">${esc(levelLabel(level))} · ${esc(classes.join(', '))}</div>
+       ${bits?`<div class="nr-meta">${esc(bits)}</div>`:''}
+       ${(det.tags||[]).length?`<div class="nr-meta">tags: ${esc(det.tags.join(', '))}</div>`:''}
+       ${det.desc?`<div class="feat-desc">${esc(det.desc)}</div>`:''}`,
+      editLink('spell', name, 'Edit spell in Library')));
+  });
+
+  // Standard combat actions and alignments.
+  STANDARD_ACTIONS.forEach(a=> ix.push(notesEntry('Actions', a.name, ['combat action'], a.desc,
+    `<div class="feat-desc">${esc(a.desc)}</div>`)));
+  ALIGNMENTS.forEach(a=> ix.push(notesEntry('Alignments', a.name, [a.abbr], a.desc+' '+a.eg,
+    `<div class="feat-desc">${esc(a.desc)}</div><div class="nr-meta">e.g. ${esc(a.eg)}</div>`)));
+
+  return ix;
+}
+
+function renderNotesResults(){
+  const box = document.getElementById('notesResults');
+  const ref = document.getElementById('notesReference');
+  if(!box) return;
+  const q = (document.getElementById('notesSearch').value||'').trim().toLowerCase();
+  if(!q){
+    box.innerHTML = '';
+    if(ref) ref.style.display = '';
+    return;
+  }
+  if(ref) ref.style.display = 'none';
+  const hits = NOTES_INDEX.filter(e=> (notesFilter==='All' || e.type===notesFilter) && e.text.includes(q));
+  if(!hits.length){
+    box.innerHTML = `<div class="action-empty">No matches for "${esc(q)}"${notesFilter==='All'?'':' in '+notesFilter}.</div>`;
+    return;
+  }
+  // Name matches outrank text-only matches; earlier match positions rank higher.
+  hits.sort((a,b)=>{
+    const an = a.name.toLowerCase().indexOf(q), bn = b.name.toLowerCase().indexOf(q);
+    return ((an<0)-(bn<0)) || (an-bn) || a.name.localeCompare(b.name);
+  });
+  const MAX = 80;
+  notesHits = hits.slice(0, MAX);
+  const grouped = {};
+  notesHits.forEach(e=> (grouped[e.type] = grouped[e.type]||[]).push(e));
+  let html = '';
+  NOTES_TYPES.slice(1).forEach(type=>{
+    const list = grouped[type];
+    if(!list) return;
+    html += `<div class="nr-group">${type}</div>` + list.map(e=>`
+      <div class="feat-item nr-item" data-i="${notesHits.indexOf(e)}" title="Click for full details">
+        <div class="feat-head">
+          <span class="f-name">${esc(e.name)}</span>
+          ${e.badges.map(b=>`<span class="nr-badge">${esc(b)}</span>`).join('')}
+        </div>
+        ${e.detail}
+      </div>`).join('');
+  });
+  if(hits.length > MAX) html += `<div class="picker-hint" style="margin-top:8px;">Showing the first ${MAX} of ${hits.length} matches — narrow the search.</div>`;
+  box.innerHTML = html;
+  // Clicking a result opens its detail popup (with the edit action, when editable).
+  box.querySelectorAll('.nr-item').forEach(item=>{
+    item.addEventListener('click', ()=> openNotesModal(notesHits[Number(item.dataset.i)]));
+  });
+}
+
+// ---------- Notes detail popup ----------
+// Shows an entry's full information; classes list their subclasses as chips
+// that open the subclass's own popup. The edit action lives only here.
+let notesHits = []; // entries behind the currently rendered result rows
+
+function openNotesModal(entry){
+  const backdrop = document.getElementById('nrModalBackdrop');
+  if(!backdrop || !entry) return;
+  document.getElementById('nrModalTitle').textContent = entry.name;
+  document.getElementById('nrModalBadges').innerHTML =
+    entry.badges.map(b=>`<span class="nr-badge">${esc(b)}</span>`).join('');
+  const body = document.getElementById('nrModalBody');
+  body.innerHTML = entry.full || entry.detail;
+  document.getElementById('nrModalFoot').innerHTML = entry.edit
+    ? `<a class="pbtn nr-edit-link" href="${entry.edit.href}">✎ ${esc(entry.edit.label)}</a>
+       <span class="nr-hint">opens the Library form with this entry loaded — re-import to save changes</span>`
+    : '<span class="nr-hint">Built-in rule — not editable.</span>';
+  // Subclass chips open that subclass's own popup in place of this one.
+  body.querySelectorAll('.nr-sub-link').forEach(chip=>chip.addEventListener('click', ()=>{
+    const target = NOTES_INDEX.find(e=>e.key===chip.dataset.key);
+    if(target) openNotesModal(target);
+  }));
+  backdrop.classList.add('open');
+  backdrop.setAttribute('aria-hidden','false');
+  const modal = backdrop.querySelector('.nr-modal');
+  if(modal) modal.scrollTop = 0;
+}
+
+function closeNotesModal(){
+  const backdrop = document.getElementById('nrModalBackdrop');
+  if(!backdrop) return;
+  backdrop.classList.remove('open');
+  backdrop.setAttribute('aria-hidden','true');
+}
+
+function bindNotesModal(){
+  const backdrop = document.getElementById('nrModalBackdrop');
+  if(!backdrop) return;
+  document.getElementById('nrModalClose').addEventListener('click', closeNotesModal);
+  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeNotesModal(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeNotesModal(); });
+}
+
+function buildNotesFilterBar(){
+  const bar = document.getElementById('notesFilterBar');
+  if(!bar) return;
+  bar.innerHTML = '<span class="filter-label">Show</span>' + NOTES_TYPES.map(t=>
+    `<span class="filter-chip ${notesFilter===t?'on':''}" data-t="${t}">${t}</span>`).join('');
+  bar.querySelectorAll('.filter-chip').forEach(chip=>chip.addEventListener('click', ()=>{
+    notesFilter = chip.dataset.t;
+    buildNotesFilterBar();
+    renderNotesResults();
+  }));
+}
+
+// The Notes page: a search box over the full reference index; the alignment
+// tables stay visible underneath until a query is typed.
+function initNotesPage(){
+  buildNotes();
+  NOTES_INDEX = buildNotesIndex();
+  buildNotesFilterBar();
+  bindNotesModal();
+  const input = document.getElementById('notesSearch');
+  if(input){
+    input.addEventListener('input', renderNotesResults);
+    input.focus();
+  }
+}
+
 function renderCharacter(){
   ensureClasses();
   applyClassesToState();
@@ -2512,6 +3026,8 @@ function renderCharacter(){
   buildActions();
   applyStateToInputs();
   refreshTagPickers(); // known-spell tags feed the dropdown option pool
+  // Journal lives in modules/journal.js; guard in case the module didn't load.
+  if(window.characterSheetApp && window.characterSheetApp.buildJournal) window.characterSheetApp.buildJournal();
   recalc();
 }
 
@@ -2616,13 +3132,55 @@ const app = {
 };
 window.characterSheetApp = app;
 
-async function init(){
-  initTheme(); // apply the saved theme before any awaits so the page doesn't flash dark
-  bindOptionsMenu();
-  await loadCustomClasses(); // merge imported classes before any character renders
-  await loadCustomSpecies(); // merge imported species too
-  await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
-  await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)
+// Deep link from the Notes search: /library?edit=<type>:<key> loads the entry
+// into the matching import form and scrolls its panel into view.
+function openLibraryEditParam(){
+  const param = new URLSearchParams(location.search).get('edit');
+  if(!param) return;
+  const i = param.indexOf(':');
+  if(i<1) return;
+  const type = param.slice(0, i), key = param.slice(i+1);
+  const map = {
+    class:    { fill: ()=>fillClassForm(key),   sel:'impEdit', anchor:'impName' },
+    species:  { fill: ()=>fillSpeciesForm(key), sel:'spEdit',  anchor:'spName' },
+    subclass: { fill: ()=>{
+        const j = key.indexOf('::');
+        if(j>0) fillSubclassForm(key.slice(0, j), key.slice(j+2));
+      }, sel:'subEdit', anchor:'subName' },
+    spell:    { fill: ()=>fillSpellForm(key),   sel:'splEdit', anchor:'splName' }
+  };
+  const m = map[type];
+  if(!m) return;
+  m.fill();
+  const sel = document.getElementById(m.sel);
+  if(sel && [...sel.options].some(o=>o.value===key)) sel.value = key;
+  const anchor = document.getElementById(m.anchor);
+  const panel = anchor && anchor.closest('.panel');
+  // Deferred: a smooth scroll started during initial page layout gets cancelled
+  // by the browser's own load-time scroll handling.
+  if(panel) setTimeout(()=> panel.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+}
+
+// The Library page: import forms, imported lists, and load-existing pickers.
+// Registries are already loaded when this runs; no character is loaded here.
+function initLibraryPage(){
+  bindClassImport();
+  renderImportedList();
+  bindSpeciesImport();
+  renderSpeciesImportedList();
+  bindSubclassImport();
+  renderSubclassImportedList();
+  bindSpellImport();
+  renderSpellImportedList();
+  buildLibraryEditSelects();
+  bindLibraryEditSelects();
+  buildSpellLevelSelects();
+  setTagPicker('splTagPicker', []);
+  openLibraryEditParam(); // honor ?edit= deep links from the Notes search
+}
+
+// The character sheet (index): loads a character and wires every tab.
+async function initSheetPage(){
   const list = await apiListCharacters();
   if(list.length>0){
     await loadCharacter(list[0].id);
@@ -2636,20 +3194,22 @@ async function init(){
   bindProfileBar();
   bindTabs();
   buildClassFilterBar();
-  bindClassImport();
-  renderImportedList();
-  bindSpeciesImport();
-  renderSpeciesImportedList();
-  bindSubclassImport();
-  renderSubclassImportedList();
-  bindSpellImport();
-  renderSpellImportedList();
-  buildLibraryEditSelects();
-  bindLibraryEditSelects();
   buildSpellLevelSelects();
-  setTagPicker('splTagPicker', []);
   setTagPicker('customSpellTagPicker', []);
   setSaveStatus('saved');
+}
+
+async function init(){
+  initTheme(); // apply the saved theme before any awaits so the page doesn't flash dark
+  bindOptionsMenu();
+  bindSidebar();
+  await loadCustomClasses(); // merge imported classes before any character renders
+  await loadCustomSpecies(); // merge imported species too
+  await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
+  await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)
+  if(PAGE==='library'){ initLibraryPage(); return; }
+  if(PAGE==='notes'){ initNotesPage(); return; } // search needs the registries loaded
+  await initSheetPage();
 }
 
 init();

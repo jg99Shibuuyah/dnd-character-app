@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Ledger — Notes</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="notes">
+<%- include('partials/sidebar.html') %>
+<div class="sheet">
+
+  <%- include('partials/page-bar.html', { title: 'Notes' }) %>
+
+  <%- include('partials/notes/search.html') %>
+
+  <!-- Static reference shown while the search box is empty; hidden during a search. -->
+  <div id="notesReference">
+    <%- include('partials/notes/alignment.html') %>
+  </div>
+
+  <div class="footer-note">Rules reference — nothing on this page is saved per character.</div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

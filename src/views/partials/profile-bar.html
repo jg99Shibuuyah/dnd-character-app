@@ -1,31 +1,12 @@
 <!-- Profile switcher + Options menu (theme picker). Wired in app.js:
      bindProfileBar() and bindOptionsMenu(). -->
 <div class="profile-bar">
+  <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="sidebar" title="Menu">☰</button>
   <label>Profile</label>
   <select id="profileSelect"></select>
   <button class="pbtn" id="newCharBtn">+ New</button>
   <button class="pbtn" id="dupCharBtn">Duplicate</button>
   <button class="pbtn danger" id="delCharBtn">Delete</button>
-  <div class="options-shell">
-    <button class="options-btn" id="optionsBtn" type="button" aria-expanded="false" aria-controls="optionsMenu">Options ▾</button>
-    <div class="options-menu" id="optionsMenu" role="menu" aria-hidden="true">
-      <div class="options-section">
-        <div class="options-label">Display</div>
-        <div class="options-grid">
-          <button class="option-chip theme-option active" data-theme="dark" type="button">Dark</button>
-          <button class="option-chip theme-option" data-theme="light" type="button">Light</button>
-          <button class="option-chip theme-option" data-theme="ember" type="button">Ember</button>
-          <button class="option-chip theme-option" data-theme="custom" type="button">Custom</button>
-        </div>
-        <div class="custom-theme-controls" id="customThemeControls">
-          <div class="custom-theme-row"><label for="customAccent">Accent</label><input id="customAccent" type="color" value="#00ffd5"></div>
-          <div class="custom-theme-row"><label for="customAccent2">Accent 2</label><input id="customAccent2" type="color" value="#ff2a6d"></div>
-          <div class="custom-theme-row"><label for="customSurface">Surface</label><input id="customSurface" type="color" value="#12141d"></div>
-          <div class="custom-theme-row"><label for="customText">Text</label><input id="customText" type="color" value="#c8c8d4"></div>
-          <div class="custom-theme-row"><label for="customBackground">Background</label><input id="customBackground" type="color" value="#0a0a0f"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <%- include('options-menu.html') %>
   <span class="save-status" id="saveStatus">Saved</span>
 </div>

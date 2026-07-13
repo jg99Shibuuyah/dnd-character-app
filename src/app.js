@@ -23,6 +23,14 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
+app.get('/library', (req, res) => {
+  res.render('library');
+});
+
+app.get('/notes', (req, res) => {
+  res.render('notes');
+});
+
 app.use('/api/characters', charactersRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/species', speciesRouter);
