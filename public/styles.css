@@ -302,11 +302,15 @@ textarea.trait{
 .custom-spell-row input{ font-family:'JetBrains Mono', monospace; font-size:13px; padding:5px 6px; border:1px solid var(--parchment-line); border-radius:3px; background: rgba(255,255,255,0.4); color:var(--ink); }
 .custom-spell-row input:first-child{ flex:1; }
 .custom-spell-row input.lv-input{ width:44px; text-align:center; }
+.custom-spell-row input.tag-input{ flex:0 0 170px; }
 .custom-spell-row .add-btn{ margin-top:0; white-space:nowrap; }
 .known-spell-group-label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--crimson); margin:8px 0 3px; }
 .known-spell-item{ display:flex; justify-content:space-between; align-items:center; padding:3px 2px; font-size:13px; border-bottom:1px dashed var(--parchment-line); }
-.known-spell-item .spell-remove{ cursor:pointer; color:var(--ink-soft); font-weight:700; }
-.known-spell-item .custom-tag{ font-size:9px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-left:6px; }
+.known-spell-item .spell-summary{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-width:0; }
+.known-spell-item .spell-remove{ cursor:pointer; color:var(--ink-soft); font-weight:700; margin-left:8px; flex-shrink:0; }
+.known-spell-item .custom-tag{ font-size:9px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; }
+.known-spell-item .spell-tags{ display:inline-flex; flex-wrap:wrap; gap:4px; }
+.known-spell-item .spell-tag{ font-size:9px; color:var(--gold); background:rgba(0,255,213,0.12); border:1px solid rgba(0,255,213,0.2); padding:1px 5px; border-radius:999px; text-transform:uppercase; letter-spacing:0.8px; }
 
 .footer-note{
   text-align:center; color: var(--parchment-2); font-family:'JetBrains Mono', monospace; font-style:italic;

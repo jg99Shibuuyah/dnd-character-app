@@ -346,7 +346,7 @@ function defaultCharacter(){
     pactSlots: {total:0, used:0, level:1}, // Warlock pact magic (tracked separately)
     autoSlots: true, // auto-fill slots from class levels (PHB multiclass rules)
     spellClass: 'Wizard',
-    knownSpells: [], // {name, level, custom:bool}
+    knownSpells: [], // {name, level, custom:bool, tags:[...]}
     // Worn/wielded gear with mechanical effects. Each item:
     // {name, description, equipped, attack:{bonus,dmg},
     //  abilities:{str,dex,con,int,wis,cha} (string "+2" or "=19"),
@@ -657,6 +657,14 @@ function buildSpellSlots(){
 
 function levelLabel(lvl){ return lvl===0 ? 'Cantrip' : 'Level '+lvl; }
 
+function parseSpellTags(raw){
+  return (raw || '')
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(Boolean)
+    .map(tag => tag.replace(/\s+/g, ' '));
+}
+
 function isKnown(name){
   return state.knownSpells.some(s=>s.name.toLowerCase()===name.toLowerCase());
 }
@@ -687,8 +695,8 @@ function buildSpellLibrary(){
     byLevel[lvl].forEach(s=>{
       const already = isKnown(s.name);
       html += `<div class="spell-lib-item">
-        <span>${s.name}</span>
-        <span class="spell-add-btn ${already?'added':''}" data-name="${s.name}" data-level="${lvl}">${already?'Added':'+ Add'}</span>
+        <span>${esc(s.name)}</span>
+        <span class="spell-add-btn ${already?'added':''}" data-name="${esc(s.name)}" data-level="${lvl}">${already?'Added':'+ Add'}</span>
       </div>`;
     });
   });
@@ -718,8 +726,13 @@ function buildKnownSpells(){
   levels.forEach(lvl=>{
     html += `<div class="known-spell-group-label">${levelLabel(lvl)}</div>`;
     byLevel[lvl].forEach(s=>{
+      const spellTags = Array.isArray(s.tags) ? s.tags : [];
       html += `<div class="known-spell-item">
-        <span>${s.name}${s.custom?'<span class="custom-tag">Homebrew</span>':''}</span>
+        <span class="spell-summary">
+          <span>${esc(s.name)}</span>
+          ${s.custom?'<span class="custom-tag">Homebrew</span>':''}
+          ${spellTags.length ? `<span class="spell-tags">${spellTags.map(tag=>`<span class="spell-tag">${esc(tag)}</span>`).join('')}</span>` : ''}
+        </span>
         <span class="spell-remove" data-idx="${s.idx}">✕</span>
       </div>`;
     });
@@ -739,6 +752,23 @@ function buildKnownSpells(){
       buildSpellLibrary(); buildKnownSpells(); save();
     });
   });
+}
+
+function addCustomSpellFromForm(){
+  const nameEl = document.getElementById('customSpellName');
+  const lvlEl = document.getElementById('customSpellLevel');
+  const tagEl = document.getElementById('customSpellTags');
+  const name = nameEl?.value.trim();
+  if(!name) return false;
+  const level = Math.max(0, Math.min(9, parseInt(lvlEl?.value, 10) || 0));
+  state.knownSpells.push({ name, level, custom:true, tags: parseSpellTags(tagEl?.value) });
+  if(nameEl) nameEl.value = '';
+  if(lvlEl) lvlEl.value = '';
+  if(tagEl) tagEl.value = '';
+  buildSpellLibrary();
+  buildKnownSpells();
+  save();
+  return true;
 }
 
 // ---------- Class & Settings (multiclass) ----------
@@ -2035,6 +2065,7 @@ const app = {
   buildSpellSlots,
   buildSpellLibrary,
   buildSpellClassSelect,
+  addCustomSpellFromForm,
   buildClassFilterBar,
   buildClassList,
   renderClassInfoStack,
