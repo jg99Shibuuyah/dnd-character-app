@@ -1,0 +1,7 @@
+node_modules
+characters.db
+characters.db-shm
+characters.db-wal
+Dockerfile
+docker-compose.yml
+.git

@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - dnd-data:/data
+    restart: unless-stopped
+
+volumes:
+  dnd-data:
