@@ -660,8 +660,7 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 
   <nav class="tab-bar">
     <button class="tab-btn active" data-tab="sheet">Character</button>
-    <button class="tab-btn" data-tab="inventory">Inventory</button>
-    <button class="tab-btn" data-tab="equipment">Equipment</button>
+    <button class="tab-btn" data-tab="inventory">Inventory &amp; Equipment</button>
     <button class="tab-btn" data-tab="spells">Spells</button>
     <button class="tab-btn" data-tab="features">Features &amp; Traits</button>
     <button class="tab-btn" data-tab="actions">Actions</button>
@@ -737,9 +736,16 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
   </div>
   </div>
 
-  <!-- TAB: Inventory -->
+  <!-- TAB: Inventory & Equipment -->
   <div class="tab-pane" id="tab-inventory">
     <div class="grid grid-two">
+      <div class="panel">
+        <h2><span>Equipment</span><span class="rune">⚙</span></h2>
+        <div class="picker-hint">Gear you're wearing or wielding. <span class="hl">Equipped</span> items feed your attacks, spellcasting, ability scores, and skill bonuses on the other tabs. Ability fields accept <span class="hl">+2</span> (bonus) or <span class="hl">=19</span> (set score).</div>
+        <div id="equipmentList"></div>
+        <button class="add-btn" id="addEquip">+ Add Equipment</button>
+      </div>
+
       <div class="panel">
         <h2><span>Currency</span><span class="rune">◆</span></h2>
         <div class="currency">
@@ -750,22 +756,12 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
           <div class="c"><label>PP</label><input id="cPP" type="number" value="0"></div>
         </div>
       </div>
-
-      <div class="panel">
-        <h2><span>Inventory</span><span class="rune">◆</span></h2>
-        <div id="inventoryList"></div>
-        <button class="add-btn" id="addItem">+ Add Item</button>
-      </div>
     </div>
-  </div>
 
-  <!-- TAB: Equipment (worn/wielded gear with mechanical effects) -->
-  <div class="tab-pane" id="tab-equipment">
-    <div class="panel">
-      <h2><span>Equipment</span><span class="rune">⚙</span></h2>
-      <div class="picker-hint">Gear you're wearing or wielding. <span class="hl">Equipped</span> items feed your attacks, spellcasting, ability scores, and skill bonuses on the other tabs. Ability fields accept <span class="hl">+2</span> (bonus) or <span class="hl">=19</span> (set score).</div>
-      <div id="equipmentList"></div>
-      <button class="add-btn" id="addEquip">+ Add Equipment</button>
+    <div class="panel" style="margin-top:16px;">
+      <h2><span>Inventory</span><span class="rune">◆</span></h2>
+      <div id="inventoryList"></div>
+      <button class="add-btn" id="addItem">+ Add Item</button>
     </div>
   </div>
 
