@@ -16,8 +16,37 @@
       </select>
     </div>
     <div class="set-field"><label>Level</label><select id="splLevel"></select></div>
-    <div class="set-field"><label>School</label><input id="splSchool" placeholder="Evocation"></div>
-    <div class="set-field"><label>Casting Time</label><input id="splCastTime" placeholder="1 action"></div>
+    <div class="set-field"><label>School</label>
+      <select id="splSchool">
+        <option value="">— school —</option>
+        <option>Abjuration</option>
+        <option>Conjuration</option>
+        <option>Divination</option>
+        <option>Enchantment</option>
+        <option>Evocation</option>
+        <option>Illusion</option>
+        <option>Necromancy</option>
+        <option>Transmutation</option>
+        <option value="__other">Other…</option>
+      </select>
+      <input id="splSchoolOther" placeholder="Custom school" style="display:none; margin-top:6px;">
+    </div>
+    <div class="set-field"><label>Casting Time</label>
+      <select id="splCastTime">
+        <option value="">— casting time —</option>
+        <option>1 Action</option>
+        <option>1 Bonus Action</option>
+        <option>1 Reaction</option>
+        <option>1 Minute</option>
+        <option>10 Minutes</option>
+        <option>1 Hour</option>
+        <option>8 Hours</option>
+        <option>12 Hours</option>
+        <option>24 Hours</option>
+        <option value="__other">Other…</option>
+      </select>
+      <input id="splCastTimeOther" placeholder="Custom casting time" style="display:none; margin-top:6px;">
+    </div>
     <div class="set-field"><label>Range</label><input id="splRange" placeholder="60 ft"></div>
     <div class="set-field"><label>Duration</label><input id="splDuration" placeholder="Instantaneous"></div>
     <div class="set-field full"><label>Components</label><input id="splComponents" placeholder="V, S, M (a shard of glass)"></div>

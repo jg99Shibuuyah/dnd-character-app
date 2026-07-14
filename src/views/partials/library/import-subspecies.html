@@ -1,0 +1,41 @@
+<div class="panel">
+  <h2><span>Import Subspecies</span><span class="rune">◈</span></h2>
+  <div class="picker-hint">Add a subspecies / subrace to an existing <span class="hl">parent species</span> (built-in or imported). It becomes selectable under the <span class="hl">Subspecies / Subrace</span> picker on that species in Settings, and its traits show on the Features &amp; Traits tab.</div>
+  <div class="import-grid">
+    <div class="set-field full"><label>Load Existing — Edit</label>
+      <select id="subspEdit"></select>
+      <div class="import-note">Pick any built-in or imported subspecies to load it into the form. Re-importing with the <span class="hl">same parent + name overwrites</span> it; a new name saves a copy.</div>
+    </div>
+    <div class="set-field"><label>Parent Species</label><select id="subspParent"></select></div>
+    <div class="set-field"><label>Source</label>
+      <select id="subspSource">
+        <option value="Homebrew">Homebrew</option>
+        <option value="5E">Official — 5E</option>
+        <option value="5E (legacy)">Official — 5E (legacy)</option>
+        <option value="5.5E">Official — 5.5E</option>
+      </select>
+    </div>
+    <div class="set-field"><label>Subspecies Name</label><input id="subspName" placeholder="e.g. Hill Dwarf"></div>
+    <div class="set-field"><label>Ability Score Increase</label>
+      <input id="subspAsi" placeholder="e.g. +1 WIS  (or leave blank)">
+    </div>
+    <div class="set-field full"><label>Description</label>
+      <textarea id="subspDesc" class="import-ta" style="min-height:60px;" placeholder="One-paragraph subspecies summary."></textarea>
+    </div>
+    <div class="set-field full"><label>Traits (one per line)</label>
+      <textarea id="subspTraits" class="import-ta" placeholder="name | description&#10;Dwarven Toughness | Your hit point maximum increases by 1, and by 1 every time you gain a level.&#10;Extra Cantrip | You know one cantrip of your choice."></textarea>
+      <div class="import-note">Format: <span class="hl">name | description</span>, one trait per line.</div>
+    </div>
+    <div class="full">
+      <button class="add-btn" id="subspSubmit">+ Import Subspecies</button>
+      <button class="pbtn" id="subspJsonToggle" style="margin-left:8px;">Paste JSON…</button>
+    </div>
+    <div class="set-field full" id="subspJsonWrap" style="display:none;">
+      <label>Advanced — Subspecies JSON</label>
+      <textarea id="subspJson" class="import-ta" placeholder='{ "parent":"Dwarf", "name":"Hill Dwarf", "source":"5E", "asi":"+1 WIS", "traits":[{"name":"Dwarven Toughness","desc":"+1 HP per level."}] }'></textarea>
+      <div class="import-note">Paste a full subspecies definition to import it directly. Overrides the form fields above.</div>
+    </div>
+  </div>
+  <div class="import-msg" id="subspMsg"></div>
+  <div id="subspeciesImportedList" style="margin-top:10px;"></div>
+</div>

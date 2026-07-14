@@ -1,0 +1,14 @@
+<!-- Shared detail popup used by the Notes search AND the sheet's Spells/Actions
+     tabs. Wired in app.js: openNotesModal()/bindNotesModal(). Include once per
+     page that opens a detail popup. -->
+<div class="nr-modal-backdrop" id="nrModalBackdrop" aria-hidden="true">
+  <div class="nr-modal panel" role="dialog" aria-modal="true" aria-labelledby="nrModalTitle">
+    <div class="nr-modal-head">
+      <span class="f-name" id="nrModalTitle"></span>
+      <span class="nr-modal-badges" id="nrModalBadges"></span>
+      <button class="nr-modal-close" id="nrModalClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="nr-modal-body" id="nrModalBody"></div>
+    <div class="nr-modal-foot" id="nrModalFoot"></div>
+  </div>
+</div>

@@ -9,17 +9,3 @@
   <div id="notesResults"></div>
   <div class="picker-hint" style="margin-bottom:0;">Looks up classes &amp; their features, subclasses, species &amp; traits, spells (built-in <span class="hl">and imported</span>), standard actions, and alignments. Click a result for full details and editing.</div>
 </div>
-
-<!-- Detail popup for search results: full info, subclass links, and the edit
-     action. Wired in app.js: openNotesModal()/bindNotesModal(). -->
-<div class="nr-modal-backdrop" id="nrModalBackdrop" aria-hidden="true">
-  <div class="nr-modal panel" role="dialog" aria-modal="true" aria-labelledby="nrModalTitle">
-    <div class="nr-modal-head">
-      <span class="f-name" id="nrModalTitle"></span>
-      <span class="nr-modal-badges" id="nrModalBadges"></span>
-      <button class="nr-modal-close" id="nrModalClose" type="button" aria-label="Close">✕</button>
-    </div>
-    <div class="nr-modal-body" id="nrModalBody"></div>
-    <div class="nr-modal-foot" id="nrModalFoot"></div>
-  </div>
-</div>

@@ -337,6 +337,21 @@ textarea.trait{
 .slot-level.pact-row .slot-pip{ border-color:var(--neon-magenta); }
 .slot-level.pact-row .slot-pip.filled{ background:var(--neon-magenta); }
 
+/* Actions-tab freeform point trackers (two-column: name | pips) */
+.res-table{ width:100%; border-collapse:collapse; font-size:13px; }
+.res-table th{ font-family:'Orbitron', sans-serif; font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); text-align:left; padding:4px 4px; border-bottom:1px solid var(--parchment-line); }
+.res-table td{ padding:5px 4px; border-bottom:1px dashed var(--parchment-line); vertical-align:middle; }
+.res-table input.res-name{ width:100%; background:transparent; border:none; font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--ink); }
+.res-pip-cell{ display:flex; align-items:center; gap:8px; }
+.res-pips{ display:flex; gap:4px; flex-wrap:wrap; flex:1; min-width:0; }
+.res-pip{ width:15px; height:15px; border-radius:50%; border:1.5px solid var(--gold); cursor:pointer; }
+.res-pip.filled{ background:var(--gold); }
+.res-none{ font-size:11px; color:var(--ink-dim); }
+.res-controls{ display:flex; align-items:center; gap:6px; margin-left:auto; flex-shrink:0; }
+.res-adj{ width:20px; height:20px; line-height:1; padding:0; border:1px solid var(--parchment-line); border-radius:3px; background:transparent; color:var(--ink-soft); cursor:pointer; font-family:'JetBrains Mono',monospace; }
+.res-adj:hover{ background:rgba(201,162,39,0.15); color:var(--ink); }
+.res-empty{ font-size:12px; color:var(--ink-dim); font-style:italic; padding:8px 4px; }
+
 .spell-lib-controls{ display:flex; gap:8px; margin-bottom:10px; }
 .spell-lib-controls select, .spell-lib-controls input{
   font-family:'JetBrains Mono', monospace; font-size:13px; padding:5px 6px;
@@ -379,6 +394,33 @@ textarea.trait{
 .known-spell-item .custom-tag{ font-size:9px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; }
 .known-spell-item .spell-tags{ display:inline-flex; flex-wrap:wrap; gap:4px; }
 .known-spell-item .spell-tag{ font-size:9px; color:var(--gold); background:rgba(0,255,213,0.12); border:1px solid rgba(0,255,213,0.2); padding:1px 5px; border-radius:999px; text-transform:uppercase; letter-spacing:0.8px; }
+
+/* Clickable spell rows open the shared detail popup (Spells & Actions tabs). */
+.spell-info{ cursor:pointer; }
+.spell-name-link{ border-bottom:1px dotted transparent; }
+.spell-info:hover .spell-name-link{ color: var(--neon-cyan); border-bottom-color: var(--neon-cyan); }
+.action-row.spell-info:hover{ background: rgba(0,255,213,0.05); }
+
+/* At-a-glance spell markers: concentration + components ("need"). */
+.spell-mark{
+  font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.5px;
+  padding:1px 5px; border-radius:3px; white-space:nowrap; margin-left:5px; cursor:help;
+}
+.spell-mark.conc{ color: var(--neon-cyan); border:1px solid rgba(0,255,213,0.4); background:rgba(0,255,213,0.08); }
+.spell-mark.comp{ color: var(--gold); border:1px solid var(--parchment-line); background:rgba(255,255,255,0.15); text-transform:uppercase; }
+
+/* Mini legend under each spell list explaining the markers. */
+.spell-legend{
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px;
+  margin-top:10px; padding-top:8px; border-top:1px dashed var(--parchment-line);
+  font-size:10.5px; color: var(--ink-dim);
+}
+.spell-legend-item{ display:inline-flex; align-items:center; gap:5px; }
+.spell-legend-item .spell-mark{ margin-left:0; cursor:default; }
+.spell-legend-tip{
+  font-family:'JetBrains Mono', monospace; font-size:9px; color: var(--neon-cyan);
+  border:1px dotted var(--neon-cyan); border-radius:3px; padding:1px 5px;
+}
 
 .footer-note{
   text-align:center; color: var(--parchment-2); font-family:'JetBrains Mono', monospace; font-style:italic;
@@ -613,6 +655,13 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 /* ---------- Class features list ---------- */
 .feat-item{ padding:7px 2px; border-bottom:1px dashed rgba(200,200,212,0.15); font-size:13px; }
 .feat-item:last-child{ border-bottom:none; }
+/* Divider before a selected subrace's traits on the Features & Traits tab. */
+.subrace-divider{
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  color: var(--neon-magenta); margin:12px 0 4px; padding-top:8px; border-top:1px solid var(--parchment-line);
+  display:flex; align-items:center; gap:8px;
+}
+.subrace-divider .chip-abbr{ color: var(--ink-dim); font-size:9px; }
 .feat-head{ display:flex; align-items:baseline; gap:8px; }
 .feat-head .f-lvl{
   font-family:'JetBrains Mono',monospace; font-size:10px; color: var(--neon-magenta);

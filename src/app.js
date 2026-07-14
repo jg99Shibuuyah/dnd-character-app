@@ -5,6 +5,7 @@ const charactersRouter = require('./routes/characters.routes');
 const classesRouter = require('./routes/classes.routes');
 const speciesRouter = require('./routes/species.routes');
 const subclassesRouter = require('./routes/subclasses.routes');
+const subspeciesRouter = require('./routes/subspecies.routes');
 const spellsRouter = require('./routes/spells.routes');
 const errorHandler = require('./middleware/error-handler');
 
@@ -35,6 +36,7 @@ app.use('/api/characters', charactersRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/species', speciesRouter);
 app.use('/api/subclasses', subclassesRouter);
+app.use('/api/subspecies', subspeciesRouter);
 app.use('/api/spells', spellsRouter);
 
 app.use(errorHandler);

@@ -356,15 +356,15 @@ const CLASS_LIKE_SOURCES = CLASS_SOURCES; // shared list, reused by species
 const SPECIES_DATA = {
   Human:{ source:'5E', size:'Medium', speed:30, darkvision:0, asi:'+1 to all abilities', languages:'Common + one', desc:'Ambitious and adaptable, humans are the most widespread of the common peoples.',
     traits:[{name:'Versatile', desc:'A +1 bonus to every ability score (or extra skill/feat in variant rules).'}] },
-  Elf:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX', languages:'Common, Elvish', desc:'Graceful, long-lived folk with a keen mind and an affinity for magic.',
+  Elf:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX', languages:'Common, Elvish', desc:'Graceful, long-lived folk with a keen mind and an affinity for magic.', subraces:['High Elf','Wood Elf','Drow (Dark Elf)'],
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft as if bright, and darkness as dim.'},{name:'Keen Senses', desc:'Proficiency in the Perception skill.'},{name:'Fey Ancestry', desc:'Advantage on saves against being charmed; magic can\'t put you to sleep.'},{name:'Trance', desc:'Meditate 4 hours instead of sleeping 8 for a long rest.'}] },
-  Dwarf:{ source:'5E', size:'Medium', speed:25, darkvision:60, asi:'+2 CON', languages:'Common, Dwarvish', desc:'Stout and hardy, dwarves are skilled warriors, miners, and workers of stone and metal.',
+  Dwarf:{ source:'5E', size:'Medium', speed:25, darkvision:60, asi:'+2 CON', languages:'Common, Dwarvish', desc:'Stout and hardy, dwarves are skilled warriors, miners, and workers of stone and metal.', subraces:['Hill Dwarf','Mountain Dwarf'],
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Dwarven Resilience', desc:'Advantage on saves vs poison and resistance to poison damage.'},{name:'Stonecunning', desc:'Add double proficiency on History checks about stonework.'}] },
-  Halfling:{ source:'5E', size:'Small', speed:25, darkvision:0, asi:'+2 DEX', languages:'Common, Halfling', desc:'Cheerful and practical, halflings value the comforts of home.',
+  Halfling:{ source:'5E', size:'Small', speed:25, darkvision:0, asi:'+2 DEX', languages:'Common, Halfling', desc:'Cheerful and practical, halflings value the comforts of home.', subraces:['Lightfoot','Stout'],
     traits:[{name:'Lucky', desc:'Reroll a 1 on an attack, check, or save; use the new roll.'},{name:'Brave', desc:'Advantage on saves against being frightened.'},{name:'Halfling Nimbleness', desc:'Move through the space of any creature a size larger.'}] },
   Dragonborn:{ source:'5E', size:'Medium', speed:30, darkvision:0, asi:'+2 STR, +1 CHA', languages:'Common, Draconic', desc:'Proud dragon-blooded warriors who breathe elemental power.',
     traits:[{name:'Draconic Ancestry', desc:'Choose a dragon type; sets your breath weapon and resistance.'},{name:'Breath Weapon', desc:'Exhale destructive energy in a line or cone (DEX/CON save for half).'},{name:'Damage Resistance', desc:'Resistance to the damage type of your ancestry.'}] },
-  Gnome:{ source:'5E', size:'Small', speed:25, darkvision:60, asi:'+2 INT', languages:'Common, Gnomish', desc:'Curious and inventive tinkerers with boundless enthusiasm.',
+  Gnome:{ source:'5E', size:'Small', speed:25, darkvision:60, asi:'+2 INT', languages:'Common, Gnomish', desc:'Curious and inventive tinkerers with boundless enthusiasm.', subraces:['Forest Gnome','Rock Gnome'],
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Gnome Cunning', desc:'Advantage on INT, WIS, and CHA saves against magic.'}] },
   'Half-Orc':{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 STR, +1 CON', languages:'Common, Orc', desc:'Fierce and enduring, half-orcs are shaped by strength and survival.',
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Relentless Endurance', desc:'Once per long rest, drop to 1 HP instead of 0.'},{name:'Savage Attacks', desc:'Roll one extra weapon damage die on a melee critical hit.'}] },
@@ -392,24 +392,19 @@ const SPECIES_DATA = {
   // ---- Steinhardt's Guide to the Eldritch Hunt (World Anvil) species ----
   // Luyarnha's playable races. Names that collide with the 5E built-ins carry
   // an "(Eldritch Hunt)" suffix so both versions stay selectable.
-  'Cursed-Blood':{ source:'Homebrew', size:'Small', speed:25, darkvision:0, asi:'+1 DEX, +1 any (+1 more from subrace)', languages:'Common + Draconic or Infernal', desc:'Born as conjoined twins of whom one must perish, the cursed-blood wear quiescent marble masks from birth and carry the remnant of their lost sibling in their chest. Shunned by Luyarnha, they guard their kin fiercely in the slums.',
+  'Cursed-Blood':{ source:'Homebrew', size:'Small', speed:25, darkvision:0, asi:'+1 DEX, +1 any (+1 more from subrace)', languages:'Common + Draconic or Infernal', desc:'Born as conjoined twins of whom one must perish, the cursed-blood wear quiescent marble masks from birth and carry the remnant of their lost sibling in their chest. Shunned by Luyarnha, they guard their kin fiercely in the slums.', subraces:['Doused','Hulking','Mirage'],
     traits:[
       {name:'Cursed Climber', desc:'25 ft walking speed and a 25 ft climbing speed (unusable in medium or heavy armor).'},
       {name:'Vigilant Nature', desc:'You can\'t be surprised. On a turn when you would have been surprised, you can\'t attack or cast spells that affect enemies.'},
       {name:'Conjoined Twin — Chest Maw', desc:'(Choose one manifestation.) A mouth on your abdomen stores up to 250 lb / 32 cu ft in a pocket dimension; unconsciousness or death regurgitates it. Creatures inside can breathe for 1 minute. At 5th level, capacity doubles and storage is indefinite.'},
       {name:'Conjoined Twin — Heedful Eye', desc:'While the chest eye is open (bonus action to open): darkvision 120 ft and one casting of Detect Magic per short/long rest. At 5th level, also See Invisibility 1/long rest.'},
-      {name:'Conjoined Twin — Gaping Remain', desc:'Speak telepathically (your twin\'s voice) to a creature you can see within 5 ft × your level; at 5th level it can respond. You also know Mage Hand (no somatic/verbal components, the hand looks like your twin\'s; CHA is the ability).'},
-      {name:'Subrace — Doused', desc:'+1 STR or WIS. Insulated Skin: choose two of acid/cold/fire/lightning/poison; reduce damage of those types by your proficiency bonus.'},
-      {name:'Subrace — Hulking', desc:'+1 CON. Stone Skin: critical hits with piercing attacks deal no extra critical damage to you.'},
-      {name:'Subrace — Mirage', desc:'+1 INT or CHA. Shadowveil Skin: hide while only lightly obscured by shadow, smog, or urban phenomena; move through the space of creatures one size larger.'}
+      {name:'Conjoined Twin — Gaping Remain', desc:'Speak telepathically (your twin\'s voice) to a creature you can see within 5 ft × your level; at 5th level it can respond. You also know Mage Hand (no somatic/verbal components, the hand looks like your twin\'s; CHA is the ability).'}
     ] },
-  Demidritch:{ source:'Homebrew', size:'Medium', speed:30, darkvision:120, asi:'+2 CHA (+1 CON Oculare / +1 STR Nebulare)', languages:'Common, Deep Speech', desc:'Born of a union between humanoids and eldritch beings, "half-angels" bear galaxy-swirl eyes in jet-black sclera. Equal parts revered and abhorred in Luyarnha, their alignment is a product of upbringing, not origin.',
+  Demidritch:{ source:'Homebrew', size:'Medium', speed:30, darkvision:120, asi:'+2 CHA (+1 CON Oculare / +1 STR Nebulare)', languages:'Common, Deep Speech', desc:'Born of a union between humanoids and eldritch beings, "half-angels" bear galaxy-swirl eyes in jet-black sclera. Equal parts revered and abhorred in Luyarnha, their alignment is a product of upbringing, not origin.', subraces:['Oculare','Nebulare'],
     traits:[
       {name:'Darkvision (120 ft)', desc:'Your many eyes were made for the darkness of space: dim light within 120 ft counts as bright, darkness as dim (grayscale).'},
       {name:'Shard of Infinity', desc:'You have resistance to cold damage.'},
-      {name:'Astral Being', desc:'Advantage on saving throws against being blinded.'},
-      {name:'Subrace — Oculare', desc:'+1 CON. Watchers: Perception proficiency. All Seeing Eyes (3rd level, 1/long rest): action, for 1 minute creatures within 60 ft gain no advantage on attacks against you from being unseen; at 12th level also grow eye-covered wings (fly 30 ft, see invisibility 60 ft). Subrace DC = 8 + 2×PB.'},
-      {name:'Subrace — Nebulare', desc:'+1 STR. Glow: cast Light on your own body at will. Astral Attraction (3rd level, 1/long rest): action, transform 1 minute — burst PB d6 radiant (DEX save) in 10 ft, shed light, and a 20 ft gravitational field is difficult terrain for creatures you choose; at 12th level 60 ft field and fly/hover 30 ft.'}
+      {name:'Astral Being', desc:'Advantage on saving throws against being blinded.'}
     ] },
   'Deep One Dwarf':{ source:'Homebrew', size:'Medium', speed:25, darkvision:0, asi:'+2 CON, +1 CHA', languages:'Common, Deep Speech, Dwarvish', desc:'Y\'ha-nthlei — Luyarnha\'s dwarves, cursed for their avarice into eternal service of He Who Lies Dreaming. Tentacled and warped beneath an illusion of ordinary dwarvenhood, they cannot die of old age; their minds slip to Him at ~50 years.',
     traits:[
@@ -427,26 +422,19 @@ const SPECIES_DATA = {
       {name:'Fathomless Limb — Mucoid Extremities', desc:'Swimming speed becomes 30 ft and you gain a 20 ft climbing speed.'},
       {name:'The Dreamer\'s Gifts (optional, GM)', desc:'From 5th level: when you fail an ability check or save, succeed instead — unusable again until the Dreamer replaces one of your d20 rolls with a 1 (GM decides). You are immune to the curse of the Slumbering Moon.'}
     ] },
-  Manikin:{ source:'Homebrew', size:'Medium or Small', speed:30, darkvision:0, asi:'+2 CON (+1 STR/DEX/CHA by subrace)', languages:'Common', desc:'Marionettes "born" of gold, lightning, and meticulous welding by the Scions. Golden stitching joins the plates of their artificial skin; their obedience is inscribed on human eyes inside their skulls.',
+  Manikin:{ source:'Homebrew', size:'Medium or Small', speed:30, darkvision:0, asi:'+2 CON (+1 STR/DEX/CHA by subrace)', languages:'Common', desc:'Marionettes "born" of gold, lightning, and meticulous welding by the Scions. Golden stitching joins the plates of their artificial skin; their obedience is inscribed on human eyes inside their skulls.', subraces:['Custodian','Handler','Thespian'],
     traits:[
       {name:'Construct Nature', desc:'You are a Humanoid, but count as a Construct for any prerequisite or effect.'},
       {name:'Born to Serve', desc:'Made unable to hate or resent: disadvantage on Insight checks.'},
       {name:'Lightning Heart', desc:'Resistance to lightning damage.'},
       {name:'Living Material', desc:'No need to eat, drink, or breathe; immune to the poisoned condition; advantage on saves against madness.'},
-      {name:'Modular Gold Plating', desc:'Built-in armor (no benefit from worn armor; shields fine). Unarmored: AC 11 + DEX. Medium (needs prof): 13 + DEX (max 2) or STR (max 3). Heavy (needs prof): 16 + STR (max 2). STR-based AC gives disadvantage on Stealth. 8 hours in a workshop to switch.'},
-      {name:'Subrace — Custodian', desc:'+1 STR. Careful Defender: reaction to swap places with a willing creature within 5 ft targeted by an attack, PB/long rest. Powerful Build: count one size larger for carrying.'},
-      {name:'Subrace — Handler', desc:'+1 DEX. Inconspicuous Appearance: Stealth and disguise kit proficiency. Embedded Armament: up to two finesse/light melee weapons in your body; draw/stow as bonus action; can\'t be disarmed.'},
-      {name:'Subrace — Thespian', desc:'+1 CHA. Artist\'s Puppet: Performance proficiency. Ethereal Strings: bonus action, attach to a willing creature within 30 ft for 1 hour; reaction at end of its turn to move up to its unused movement. 1/short rest.'}
+      {name:'Modular Gold Plating', desc:'Built-in armor (no benefit from worn armor; shields fine). Unarmored: AC 11 + DEX. Medium (needs prof): 13 + DEX (max 2) or STR (max 3). Heavy (needs prof): 16 + STR (max 2). STR-based AC gives disadvantage on Stealth. 8 hours in a workshop to switch.'}
     ] },
-  Scourgeborne:{ source:'Homebrew', size:'Medium', speed:30, darkvision:0, asi:'+1 CON (+ subrace)', languages:'Common + one', desc:'Made, not born — a curse on those who peered beyond the veil, laying their innermost darkness bare as a monstrous form. Those who accept the inner monster without letting it rule often become Luyarnha\'s messianic heroes.',
+  Scourgeborne:{ source:'Homebrew', size:'Medium', speed:30, darkvision:0, asi:'+1 CON (+ subrace)', languages:'Common + one', desc:'Made, not born — a curse on those who peered beyond the veil, laying their innermost darkness bare as a monstrous form. Those who accept the inner monster without letting it rule often become Luyarnha\'s messianic heroes.', subraces:['Aranea','Belua','Cervus','Vespertilio'],
     traits:[
       {name:'Feral Limbs', desc:'Horns, claws, or fangs: unarmed strikes deal 1d6 + STR piercing (d8 if your alignment is Evil).'},
       {name:'Eldritch Curse', desc:'Immune to any spell that would alter your form (Alter Self, Polymorph, etc.).'},
-      {name:'Born of Madness', desc:'Good alignment: advantage on saves against madness. Evil: disadvantage on madness saves but +PB to DEX saving throws.'},
-      {name:'Subrace — Aranea', desc:'+1 INT, +1 any. Spider Climb: 30 ft climb (walls/ceilings) for PB minutes per long rest. Web Spit (1/long rest): bonus action, DEX save (8+PB+CON) or restrained; escape via STR check or destroy the web (AC 10, HP 3×PB, vulnerable fire).'},
-      {name:'Subrace — Belua', desc:'+1 STR, +1 any. Keen Hearing and Smell: advantage on Perception by hearing/smell. Hungry Jaws: bonus-action unarmed strike that heals you for the damage dealt, PB uses/long rest.'},
-      {name:'Subrace — Cervus', desc:'+1 WIS or STR, +1 any. Goring Charge: move 20 ft straight then hit melee → STR save (8+PB+STR) or prone, and you may bonus-action attack a prone target; PB uses/long rest. Nimble Build: +10 ft speed.'},
-      {name:'Subrace — Vespertilio', desc:'+1 DEX, +1 any. Echolocative Sight: blindsight 30 ft, disadvantage on sight checks/attacks beyond it. Tattered Wings: bonus action to fly 30 ft until end of turn (fall if aloft), PB uses/short or long rest.'}
+      {name:'Born of Madness', desc:'Good alignment: advantage on saves against madness. Evil: disadvantage on madness saves but +PB to DEX saving throws.'}
     ] },
   'Elf (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX (not CON w/ optional rule)', languages:'Common, Elvish', desc:'Luyarnha\'s founding elves — wood elves whose skins turned stone-gray and obsidian with urbanization, first acolytes of the Radiant One, driven above all to stave off their race\'s extinction. Uses the standard 5E elf mechanics.',
     traits:[
@@ -479,6 +467,119 @@ function subKey(parent, name){ return parent + '::' + name; }
 function subclassNamesForClass(className){
   const own = (CLASS_DATA[className] && CLASS_DATA[className].subclasses) || [];
   const imported = Object.values(SUBCLASS_DATA).filter(s=>s.parent===className).map(s=>s.name);
+  return [...new Set([...own, ...imported])];
+}
+
+// ---------- Subspecies (subraces) ----------
+// Detailed subspecies keyed by "Parent::Name" (same model as subclasses). Each
+// species lists its subrace *names* in SPECIES_DATA[name].subraces; entries here
+// carry the ability bump and traits. Built-in entries seed the common SRD and
+// Steinhardt subraces; imported ones merge in from the database at startup.
+// `subspeciesNamesForSpecies` unions the name list with any imported records so
+// the Settings picker and the Features tab see every option for a species.
+function subspKey(parent, name){ return parent + '::' + name; }
+const SUBSPECIES_DATA = {
+  // --- Elf ---
+  'Elf::High Elf':{ parent:'Elf', name:'High Elf', source:'5E', asi:'+1 INT',
+    traits:[
+      {name:'Elf Weapon Training', desc:'Proficiency with the longsword, shortsword, shortbow, and longbow.'},
+      {name:'Cantrip', desc:'You know one cantrip of your choice from the wizard spell list; INT is your spellcasting ability for it.'},
+      {name:'Extra Language', desc:'You can speak, read, and write one extra language of your choice.'}
+    ] },
+  'Elf::Wood Elf':{ parent:'Elf', name:'Wood Elf', source:'5E', asi:'+1 WIS',
+    traits:[
+      {name:'Elf Weapon Training', desc:'Proficiency with the longsword, shortsword, shortbow, and longbow.'},
+      {name:'Fleet of Foot', desc:'Your base walking speed increases to 35 feet.'},
+      {name:'Mask of the Wild', desc:'You can attempt to hide even when only lightly obscured by foliage, rain, snow, mist, or other natural phenomena.'}
+    ] },
+  'Elf::Drow (Dark Elf)':{ parent:'Elf', name:'Drow (Dark Elf)', source:'5E', asi:'+1 CHA',
+    traits:[
+      {name:'Superior Darkvision', desc:'Your darkvision has a radius of 120 feet.'},
+      {name:'Sunlight Sensitivity', desc:'Disadvantage on attack rolls and Perception checks that rely on sight when you, the target, or what you\'re looking at is in direct sunlight.'},
+      {name:'Drow Magic', desc:'You know Dancing Lights. At 3rd level you can cast Faerie Fire once per long rest; at 5th level, Darkness once per long rest. CHA is your spellcasting ability.'},
+      {name:'Drow Weapon Training', desc:'Proficiency with rapiers, shortswords, and hand crossbows.'}
+    ] },
+  // --- Dwarf ---
+  'Dwarf::Hill Dwarf':{ parent:'Dwarf', name:'Hill Dwarf', source:'5E', asi:'+1 WIS',
+    traits:[{name:'Dwarven Toughness', desc:'Your hit point maximum increases by 1, and by 1 every time you gain a level.'}] },
+  'Dwarf::Mountain Dwarf':{ parent:'Dwarf', name:'Mountain Dwarf', source:'5E', asi:'+2 STR',
+    traits:[{name:'Dwarven Armor Training', desc:'Proficiency with light and medium armor.'}] },
+  // --- Halfling ---
+  'Halfling::Lightfoot':{ parent:'Halfling', name:'Lightfoot', source:'5E', asi:'+1 CHA',
+    traits:[{name:'Naturally Stealthy', desc:'You can attempt to hide even when obscured only by a creature at least one size larger than you.'}] },
+  'Halfling::Stout':{ parent:'Halfling', name:'Stout', source:'5E', asi:'+1 CON',
+    traits:[{name:'Stout Resilience', desc:'Advantage on saving throws against poison, and resistance to poison damage.'}] },
+  // --- Gnome ---
+  'Gnome::Forest Gnome':{ parent:'Gnome', name:'Forest Gnome', source:'5E', asi:'+1 DEX',
+    traits:[
+      {name:'Natural Illusionist', desc:'You know the Minor Illusion cantrip; INT is your spellcasting ability for it.'},
+      {name:'Speak with Small Beasts', desc:'Through sounds and gestures you can communicate simple ideas with Small or smaller beasts.'}
+    ] },
+  'Gnome::Rock Gnome':{ parent:'Gnome', name:'Rock Gnome', source:'5E', asi:'+1 CON',
+    traits:[
+      {name:"Artificer's Lore", desc:'Add double your proficiency bonus to History checks about magic items, alchemical objects, or technological devices.'},
+      {name:'Tinker', desc:'Using artisan\'s tools you can construct a Tiny clockwork device (a toy, fire starter, or music box).'}
+    ] },
+  // --- Cursed-Blood (Steinhardt's Guide to the Eldritch Hunt) ---
+  'Cursed-Blood::Doused':{ parent:'Cursed-Blood', name:'Doused', source:'Homebrew', asi:'+1 STR or WIS',
+    traits:[{name:'Insulated Skin', desc:'Choose two damage types from acid, cold, fire, lightning, and poison. When you take damage of one of those types, reduce it by an amount equal to your proficiency bonus.'}] },
+  'Cursed-Blood::Hulking':{ parent:'Cursed-Blood', name:'Hulking', source:'Homebrew', asi:'+1 CON',
+    traits:[{name:'Stone Skin', desc:'When you suffer a critical hit from a piercing attack, it deals no extra piercing damage from being a critical hit.'}] },
+  'Cursed-Blood::Mirage':{ parent:'Cursed-Blood', name:'Mirage', source:'Homebrew', asi:'+1 INT or CHA',
+    traits:[{name:'Shadowveil Skin', desc:'You can attempt to hide when only lightly obscured by shadows, smog, acid rain, or other urban phenomena, and you can move through the space of a creature one size larger than you.'}] },
+  // --- Demidritch ---
+  'Demidritch::Oculare':{ parent:'Demidritch', name:'Oculare', source:'Homebrew', asi:'+1 CON',
+    traits:[
+      {name:'Watchers', desc:'You are proficient in the Perception skill.'},
+      {name:'All Seeing Eyes', desc:'From 3rd level, as an action, eyes open across your body for 1 minute: creatures within 60 ft gain no advantage on attacks against you from being invisible or unseen. At 12th level you also grow eye-covered wings (fly 30 ft, see invisibility 60 ft). 1/long rest. Subrace DC = 8 + 2× proficiency bonus.'}
+    ] },
+  'Demidritch::Nebulare':{ parent:'Demidritch', name:'Nebulare', source:'Homebrew', asi:'+1 STR',
+    traits:[
+      {name:'Glow', desc:'You can cast the Light cantrip on your own body at will.'},
+      {name:'Astral Attraction', desc:'From 3rd level, as an action, transform for 1 minute: creatures within 10 ft take proficiency-bonus d6 radiant (DEX save) on the first turn; you shed light and create a 20 ft difficult-terrain gravity field for chosen creatures. At 12th level the field is 60 ft and you can hover/fly 30 ft. 1/long rest.'}
+    ] },
+  // --- Manikin ---
+  'Manikin::Custodian':{ parent:'Manikin', name:'Custodian', source:'Homebrew', asi:'+1 STR',
+    traits:[
+      {name:'Careful Defender', desc:'When a creature within 5 ft is targeted by an attack, use your reaction to switch places with it (if willing) and become the target instead. Uses equal to your proficiency bonus per long rest.'},
+      {name:'Powerful Build', desc:'You count as one size larger for carrying capacity and the weight you can push, drag, or lift.'}
+    ] },
+  'Manikin::Handler':{ parent:'Manikin', name:'Handler', source:'Homebrew', asi:'+1 DEX',
+    traits:[
+      {name:'Inconspicuous Appearance', desc:'Proficiency in the Stealth skill and with disguise kits.'},
+      {name:'Embedded Armament', desc:'Up to two finesse or light melee weapons can be embedded in your body; draw or stow them as a bonus action, swap them on a short rest, and you can\'t be disarmed of them.'}
+    ] },
+  'Manikin::Thespian':{ parent:'Manikin', name:'Thespian', source:'Homebrew', asi:'+1 CHA',
+    traits:[
+      {name:"Artist's Puppet", desc:'Proficiency in the Performance skill.'},
+      {name:'Ethereal Strings', desc:'As a bonus action, attach to a willing creature within 30 ft for 1 hour. If it doesn\'t use all its movement, use your reaction at the end of its turn to move up to the remainder. 1/short or long rest.'}
+    ] },
+  // --- Scourgeborne ---
+  'Scourgeborne::Aranea':{ parent:'Scourgeborne', name:'Aranea', source:'Homebrew', asi:'+1 INT, +1 any',
+    traits:[
+      {name:'Spider Climb', desc:'You have a 30 ft climbing speed and can climb difficult surfaces, including upside down, for a number of minutes equal to your proficiency bonus per long rest.'},
+      {name:'Web Spit', desc:'Bonus action, one creature within 60 ft: DEX save (8 + PB + CON mod) or restrained. Escape via STR check, or attack the web (AC 10, HP 3× PB, vulnerable fire). 1/long rest.'}
+    ] },
+  'Scourgeborne::Belua':{ parent:'Scourgeborne', name:'Belua', source:'Homebrew', asi:'+1 STR, +1 any',
+    traits:[
+      {name:'Keen Hearing and Smell', desc:'Advantage on Perception checks that rely on hearing or smell.'},
+      {name:'Hungry Jaws', desc:'Bonus-action unarmed strike; on a hit, regain hit points equal to the damage dealt. Uses equal to your proficiency bonus per long rest.'}
+    ] },
+  'Scourgeborne::Cervus':{ parent:'Scourgeborne', name:'Cervus', source:'Homebrew', asi:'+1 WIS or STR, +1 any',
+    traits:[
+      {name:'Goring Charge', desc:'Move 20 ft straight toward a creature then hit it in melee: STR save (8 + PB + STR mod) or knocked prone, and you may make one bonus-action melee attack against a prone target. Uses equal to your proficiency bonus per long rest.'},
+      {name:'Nimble Build', desc:'Your walking speed increases by 10 feet.'}
+    ] },
+  'Scourgeborne::Vespertilio':{ parent:'Scourgeborne', name:'Vespertilio', source:'Homebrew', asi:'+1 DEX, +1 any',
+    traits:[
+      {name:'Echolocative Sight', desc:'Blindsight out to 30 ft; disadvantage on ability checks and attack rolls that rely on sight beyond that radius.'},
+      {name:'Tattered Wings', desc:'Bonus action to gain a 30 ft flying speed until the end of your turn (you fall if still aloft). Uses equal to your proficiency bonus per short or long rest.'}
+    ] }
+};
+Object.values(SUBSPECIES_DATA).forEach(ss=>{ ss.builtin = true; });
+function subspeciesNamesForSpecies(speciesName){
+  const own = (SPECIES_DATA[speciesName] && SPECIES_DATA[speciesName].subraces) || [];
+  const imported = Object.values(SUBSPECIES_DATA).filter(s=>s.parent===speciesName && s.custom).map(s=>s.name);
   return [...new Set([...own, ...imported])];
 }
 
@@ -546,6 +647,7 @@ Object.values(CLASS_DATA).forEach(cd=>{
 // (same name) and is later deleted, the original is restored from here.
 const BUILTIN_CLASSES = JSON.parse(JSON.stringify(CLASS_DATA));
 const BUILTIN_SPECIES = JSON.parse(JSON.stringify(SPECIES_DATA));
+const BUILTIN_SUBSPECIES = JSON.parse(JSON.stringify(SUBSPECIES_DATA));
 
 // Imported spells (global, DB-backed), keyed by name. A custom spell with the
 // same name as a built-in SPELL_DATA entry shadows it in the Spell Library.
@@ -563,7 +665,7 @@ const MC_REQS = {
 function defaultCharacter(){
   return {
     id: null,
-    name:'Unnamed Adventurer', class:'', level:1, race:'', background:'', alignment:'', xp:0,
+    name:'Unnamed Adventurer', class:'', level:1, race:'', subrace:'', background:'', alignment:'', xp:0,
     classes: [], // multiclass list: [{name, level}]; first entry is the primary class
     abilities:{str:10,dex:10,con:10,int:10,wis:10,cha:10},
     saveProf:{str:false,dex:false,con:false,int:false,wis:false,cha:false},
@@ -584,6 +686,9 @@ function defaultCharacter(){
     //  abilities:{str,dex,con,int,wis,cha} (string "+2" or "=19"),
     //  skills:[{name,bonus}], spells:[{name,level}]}
     equipment: [],
+    // Freeform point trackers on the Actions tab: each is a named pool of pips
+    // (a spell slot, Focus Point, Ki, etc.) that the player fills in as used.
+    actionResources: [], // {name, total, used}
     journal: [] // character journal entries: {id, title, text, created, updated}
   };
 }
@@ -969,6 +1074,61 @@ function buildSpellClassSelect(){
   };
 }
 
+// Resolve a spell's detail from imported data first, then the built-in
+// reference (SPELL_DETAILS + SPELL_DATA). Used by both the row markers and the
+// detail popup so the Spells and Actions tabs describe a spell identically.
+function spellInfo(name){
+  const imp = CUSTOM_SPELLS[name];
+  const bi = imp ? null : builtinSpellInfo(name);
+  return { imp, bi, det: imp || bi || {}, kind: imp ? 'imported' : (bi ? 'built-in' : 'homebrew') };
+}
+
+// Concentration isn't a structured field on built-ins, so sniff the duration
+// and description text (imported spells often say "Concentration, up to …").
+function spellNeedsConcentration(det){
+  return /concentration/i.test([det.duration, det.desc].filter(Boolean).join(' '));
+}
+
+// Small at-a-glance markers on a spell row: concentration and the components
+// ("need") you have to supply. The mini legend under each list explains them.
+function spellRowMarkers(name){
+  const { det } = spellInfo(name);
+  let out = '';
+  if(spellNeedsConcentration(det))
+    out += '<span class="spell-mark conc" title="Concentration — you must keep concentration or the spell ends">◈ Conc</span>';
+  if(det.components)
+    out += `<span class="spell-mark comp" title="Components you need to cast this spell">${esc(det.components)}</span>`;
+  return out;
+}
+
+// Build a Notes-search-style popup entry for a single spell so the Spells and
+// Actions tabs can open the exact same detail popup as the reference search.
+function spellDetailEntry(name, fallbackLevel){
+  const { imp, bi, det, kind } = spellInfo(name);
+  const level = imp ? (Number(imp.level)||0) : (bi ? bi.level : (Number(fallbackLevel)||0));
+  const classes = imp
+    ? (Array.isArray(imp.classes) && imp.classes.length ? imp.classes : ['every class'])
+    : (bi ? bi.classes : []);
+  const bits = [det.school, det.castingTime&&'cast '+det.castingTime, det.range&&'range '+det.range,
+    det.components&&'needs '+det.components, det.duration&&'duration '+det.duration].filter(Boolean).join(' · ');
+  const conc = spellNeedsConcentration(det);
+  return {
+    name,
+    badges: [levelLabel(level), imp?imp.source:null, kind, conc?'concentration':null].filter(Boolean),
+    full: `<div class="nr-meta">${esc(levelLabel(level))}${classes.length?' · '+esc(classes.join(', ')):''}</div>
+       ${bits?`<div class="nr-meta">${esc(bits)}</div>`:''}
+       ${(det.tags||[]).length?`<div class="nr-meta">tags: ${esc(det.tags.join(', '))}</div>`:''}
+       ${det.desc
+         ? `<div class="feat-desc">${esc(det.desc)}</div>`
+         : '<div class="feat-desc">No description on file — this is a name-only spell. Import it in the Library to add details.</div>'}`,
+    edit: editLink('spell', name, 'Edit spell in Library')
+  };
+}
+
+function openSpellDetail(name, level){
+  openNotesModal(spellDetailEntry(name, level));
+}
+
 function buildSpellLibrary(){
   const container = document.getElementById('spellLibraryList');
   if(!container) return;
@@ -991,15 +1151,20 @@ function buildSpellLibrary(){
     byLevel[lvl].sort((a,b)=>a.name.localeCompare(b.name)).forEach(s=>{
       const already = isKnown(s.name);
       const meta = s.imported
-        ? ` <span class="custom-tag" title="${esc([s.spell.school, s.spell.castingTime, s.spell.range, s.spell.duration, s.spell.desc].filter(Boolean).join(' · '))}">${esc(s.spell.source||'Imported')}</span>`
+        ? ` <span class="custom-tag">${esc(s.spell.source||'Imported')}</span>`
         : '';
       html += `<div class="spell-lib-item">
-        <span>${esc(s.name)}${meta}</span>
+        <span class="spell-info" data-name="${esc(s.name)}" data-level="${lvl}" title="Click for full details">
+          <span class="spell-name-link">${esc(s.name)}</span>${meta}${spellRowMarkers(s.name)}
+        </span>
         <span class="spell-add-btn ${already?'added':''}" data-name="${esc(s.name)}" data-level="${lvl}">${already?'Added':'+ Add'}</span>
       </div>`;
     });
   });
-  container.innerHTML = html;
+  container.innerHTML = html + spellLegendHtml();
+  container.querySelectorAll('.spell-info').forEach(el=>{
+    el.addEventListener('click', ()=> openSpellDetail(el.dataset.name, parseInt(el.dataset.level)));
+  });
   container.querySelectorAll('.spell-add-btn:not(.added)').forEach(btn=>{
     btn.addEventListener('click', e=>{
       const name = e.target.dataset.name, level = parseInt(e.target.dataset.level);
@@ -1010,6 +1175,16 @@ function buildSpellLibrary(){
       }
     });
   });
+}
+
+// Shared mini legend appended under each spell list, explaining the row markers
+// and that a click opens the full "what it does" description.
+function spellLegendHtml(){
+  return `<div class="spell-legend">
+    <span class="spell-legend-item"><span class="spell-mark conc">◈ Conc</span> needs concentration</span>
+    <span class="spell-legend-item"><span class="spell-mark comp">V·S·M</span> components you need</span>
+    <span class="spell-legend-item"><span class="spell-legend-tip">click a spell</span> what it does</span>
+  </div>`;
 }
 
 function buildKnownSpells(){
@@ -1028,9 +1203,10 @@ function buildKnownSpells(){
     byLevel[lvl].forEach(s=>{
       const spellTags = Array.isArray(s.tags) ? s.tags : [];
       html += `<div class="known-spell-item">
-        <span class="spell-summary">
-          <span>${esc(s.name)}</span>
+        <span class="spell-summary spell-info" data-name="${esc(s.name)}" data-level="${s.level}" title="Click for full details">
+          <span class="spell-name-link">${esc(s.name)}</span>
           ${s.custom?'<span class="custom-tag">Homebrew</span>':''}
+          ${spellRowMarkers(s.name)}
           ${spellTags.length ? `<span class="spell-tags">${spellTags.map(tag=>`<span class="spell-tag">${esc(tag)}</span>`).join('')}</span>` : ''}
         </span>
         <span class="spell-remove" data-idx="${s.idx}">✕</span>
@@ -1041,11 +1217,16 @@ function buildKnownSpells(){
     html += `<div class="known-spell-group-label">From Equipment</div>`;
     granted.sort((a,b)=>a.level-b.level || a.name.localeCompare(b.name)).forEach(s=>{
       html += `<div class="known-spell-item">
-        <span>${esc(s.name)} <span class="custom-tag">${levelLabel(s.level)} · ${esc(s.from)}</span></span>
+        <span class="spell-info" data-name="${esc(s.name)}" data-level="${s.level}" title="Click for full details">
+          <span class="spell-name-link">${esc(s.name)}</span> <span class="custom-tag">${levelLabel(s.level)} · ${esc(s.from)}</span>${spellRowMarkers(s.name)}
+        </span>
       </div>`;
     });
   }
-  container.innerHTML = html;
+  container.innerHTML = html + spellLegendHtml();
+  container.querySelectorAll('.spell-info').forEach(el=>{
+    el.addEventListener('click', ()=> openSpellDetail(el.dataset.name, parseInt(el.dataset.level)));
+  });
   container.querySelectorAll('.spell-remove').forEach(btn=>{
     btn.addEventListener('click', e=>{
       state.knownSpells.splice(parseInt(e.target.dataset.idx),1);
@@ -1519,6 +1700,16 @@ function buildEquipAttackList(){
     : '';
 }
 
+// A spell casts as a reaction if its imported casting time or tags say so, or
+// (for built-ins) its SPELL_DETAILS summary leads with "Reaction".
+function isReactionSpell(s){
+  if(Array.isArray(s.tags) && s.tags.some(t=>/^reaction$/i.test(t))) return true;
+  const imp = CUSTOM_SPELLS[s.name];
+  if(imp) return /reaction/i.test(imp.castingTime||'') || (imp.tags||[]).some(t=>/^reaction$/i.test(t));
+  const det = SPELL_DETAILS[s.name];
+  return !!(det && /^reaction\b/i.test(det.desc||''));
+}
+
 function buildActions(){
   const attacksEl = document.getElementById('actAttacks');
   if(!attacksEl) return;
@@ -1533,37 +1724,53 @@ function buildActions(){
     </div>`).join('')
     : '<div class="action-empty">No attacks yet — add them on the Character tab or equip a weapon.</div>';
 
+  // Reaction spells & class abilities are pulled out of their parent panels
+  // and gathered under the Reactions sub-category below.
+  const reactions = [];
+
   const spellsEl = document.getElementById('actSpells');
-  const known = state.knownSpells.map(s=>({name:s.name, level:s.level, from:null}));
+  const known = state.knownSpells.map(s=>({name:s.name, level:s.level, tags:s.tags, from:null}));
   const combined = [...known, ...equipmentGrantedSpells()];
-  if(combined.length===0){
+  const reactionSpells = combined.filter(isReactionSpell);
+  const actionSpells = combined.filter(s=>!isReactionSpell(s));
+  reactionSpells.forEach(s=> reactions.push({
+    name: s.name,
+    level: s.level,
+    detail: s.level===0 ? 'Cantrip' : levelLabel(s.level),
+    badge: s.from ? 'Item spell' : 'Spell',
+    kind: 'spell',
+    from: s.from
+  }));
+  if(actionSpells.length===0){
     spellsEl.innerHTML = '<div class="action-empty">No known spells — add some on the Spells tab or equip an item that grants spells.</div>';
   } else {
-    const sorted = combined.sort((a,b)=> a.level-b.level || a.name.localeCompare(b.name));
+    const sorted = actionSpells.sort((a,b)=> a.level-b.level || a.name.localeCompare(b.name));
     spellsEl.innerHTML = sorted.map(s=>{
       const src = s.from ? ` <span class="chip-abbr">${esc(s.from)}</span>` : '';
+      const attrs = `class="action-row spell-info" data-name="${esc(s.name)}" data-level="${s.level}" title="Click for full details"`;
+      const marks = spellRowMarkers(s.name);
       if(s.from){
-        return `<div class="action-row">
-          <span class="a-name">${esc(s.name)}${src}</span>
+        return `<div ${attrs}>
+          <span class="a-name spell-name-link">${esc(s.name)}${src}${marks}</span>
           <span class="a-detail">${s.level===0?'Cantrip':levelLabel(s.level)}</span>
           <span class="action-badge">Item</span>
         </div>`;
       }
       if(s.level===0){
-        return `<div class="action-row">
-          <span class="a-name">${esc(s.name)}</span>
+        return `<div ${attrs}>
+          <span class="a-name spell-name-link">${esc(s.name)}${marks}</span>
           <span class="a-detail">Cantrip</span>
           <span class="action-badge">At will</span>
         </div>`;
       }
       const remaining = slotsRemainingAtOrAbove(s.level);
       const ok = remaining>0;
-      return `<div class="action-row">
-        <span class="a-name">${esc(s.name)}</span>
+      return `<div ${attrs}>
+        <span class="a-name spell-name-link">${esc(s.name)}${marks}</span>
         <span class="a-detail">${levelLabel(s.level)}${ok ? ` — ${remaining} slot${remaining===1?'':'s'} usable` : ''}</span>
         <span class="action-badge ${ok?'':'dim'}">${ok?'Castable':'No slots'}</span>
       </div>`;
-    }).join('');
+    }).join('') + spellLegendHtml();
   }
 
   const classEl = document.getElementById('actClassAbilities');
@@ -1579,9 +1786,19 @@ function buildActions(){
       .map(f=>({...f, cls:entry.subclass}));
     return [...fromClass, ...fromSub];
   });
-  classEl.innerHTML = abilities.length ? abilities.map(f=>`
+  const showCls = f => picked.length>1 || f.cls!==picked[0].name;
+  const reactionAbilities = abilities.filter(f=>f.use==='reaction');
+  const actionAbilities = abilities.filter(f=>f.use!=='reaction');
+  reactionAbilities.forEach(f=> reactions.push({
+    name: f.name,
+    cls: showCls(f) ? f.cls : null,
+    detail: f.desc||'',
+    badge: f.cost || 'Reaction',
+    kind: 'ability'
+  }));
+  classEl.innerHTML = actionAbilities.length ? actionAbilities.map(f=>`
     <div class="action-row">
-      <span class="a-name">${esc(f.name)}${picked.length>1||f.cls!==picked[0].name?` <span class="chip-abbr">${esc(f.cls)}</span>`:''}</span>
+      <span class="a-name">${esc(f.name)}${showCls(f)?` <span class="chip-abbr">${esc(f.cls)}</span>`:''}</span>
       <span class="a-detail">${esc(f.desc||'')}</span>
       <span class="action-badge">${esc(f.use)}${f.cost?' · '+esc(f.cost):''}</span>
     </div>`).join('')
@@ -1606,6 +1823,77 @@ function buildActions(){
       <span class="a-name">${a.name}</span>
       <span class="a-detail">${a.desc}</span>
     </div>`).join('');
+
+  const reactionsEl = document.getElementById('actReactions');
+  if(reactionsEl){
+    reactions.sort((a,b)=> a.name.localeCompare(b.name));
+    reactionsEl.innerHTML = reactions.length ? reactions.map(r=>{
+      const isSpell = r.kind==='spell';
+      const attrs = isSpell
+        ? `class="action-row spell-info" data-name="${esc(r.name)}" data-level="${r.level}" title="Click for full details"`
+        : 'class="action-row"';
+      return `
+      <div ${attrs}>
+        <span class="a-name${isSpell?' spell-name-link':''}">${esc(r.name)}${r.cls?` <span class="chip-abbr">${esc(r.cls)}</span>`:''}${isSpell?spellRowMarkers(r.name):''}</span>
+        <span class="a-detail">${esc(r.detail||'')}</span>
+        <span class="action-badge">${esc(r.badge)}</span>
+      </div>`;
+    }).join('')
+      : '<div class="action-empty">No reactions — reaction spells (e.g. Shield, Counterspell) and reaction class abilities appear here.</div>';
+  }
+
+  // Whole-row click opens the shared spell detail popup (Spells-tab parity).
+  document.querySelectorAll('#actSpells .spell-info, #actReactions .spell-info').forEach(el=>{
+    el.addEventListener('click', ()=> openSpellDetail(el.dataset.name, parseInt(el.dataset.level)));
+  });
+
+  buildActionResources();
+}
+
+// Freeform point trackers on the Actions tab. Each row is a named pool (a spell
+// slot, a Jaeger Focus Point, Ki, etc.); clicking a pip toggles it used, and the
+// −/+ buttons resize the pool. Independent of the derived lists above.
+function buildActionResources(){
+  const body = document.getElementById('actResources');
+  if(!body) return;
+  const list = state.actionResources || (state.actionResources = []);
+  body.innerHTML = list.length ? list.map((r,i)=>{
+    let pips='';
+    for(let p=0;p<r.total;p++) pips += `<span class="res-pip ${p<r.used?'filled':''}" data-i="${i}" data-p="${p}"></span>`;
+    return `<tr class="res-row">
+      <td><input class="res-name" data-i="${i}" value="${esc(r.name)}" placeholder="Focus Points, 1st-level slots…"></td>
+      <td>
+        <div class="res-pip-cell">
+          <div class="res-pips">${pips || '<span class="res-none">— no points —</span>'}</div>
+          <div class="res-controls">
+            <button class="res-adj" data-i="${i}" data-d="-1" title="Remove a point" aria-label="Remove a point">−</button>
+            <button class="res-adj" data-i="${i}" data-d="1" title="Add a point" aria-label="Add a point">+</button>
+            <span class="row-del res-del" data-i="${i}" title="Delete row">✕</span>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="2" class="res-empty">No trackers yet — add one (e.g. Jaeger Focus Points, Ki, Sorcery Points, or a spell-slot row) with the button below.</td></tr>`;
+
+  body.querySelectorAll('.res-name').forEach(inp=> inp.addEventListener('input', e=>{
+    list[e.target.dataset.i].name = e.target.value; save();
+  }));
+  body.querySelectorAll('.res-pip').forEach(pip=> pip.addEventListener('click', e=>{
+    const i = +e.target.dataset.i, p = +e.target.dataset.p, r = list[i];
+    // Click a filled pip to free it and everything after; an empty pip fills up to it.
+    r.used = (p < r.used) ? p : p+1;
+    buildActionResources(); save();
+  }));
+  body.querySelectorAll('.res-adj').forEach(btn=> btn.addEventListener('click', e=>{
+    const i = +e.currentTarget.dataset.i, d = +e.currentTarget.dataset.d, r = list[i];
+    r.total = Math.max(0, Math.min(30, r.total + d));
+    if(r.used > r.total) r.used = r.total;
+    buildActionResources(); save();
+  }));
+  body.querySelectorAll('.res-del').forEach(x=> x.addEventListener('click', e=>{
+    list.splice(+e.currentTarget.dataset.i, 1);
+    buildActionResources(); save();
+  }));
 }
 
 function bindTabs(){
@@ -1991,6 +2279,22 @@ async function apiDeleteSubclass(id){
   const r = await fetch('/api/subclasses/'+id, { method:'DELETE' });
   return r.json();
 }
+async function apiListSubspecies(){
+  const r = await fetch('/api/subspecies');
+  return r.json();
+}
+async function apiImportSubspecies(payload){
+  const r = await fetch('/api/subspecies', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error||('HTTP '+r.status)); }
+  return r.json();
+}
+async function apiDeleteSubspecies(id){
+  const r = await fetch('/api/subspecies/'+id, { method:'DELETE' });
+  return r.json();
+}
 async function apiListSpells(){
   const r = await fetch('/api/spells');
   return r.json();
@@ -2170,11 +2474,38 @@ function buildSpeciesSelect(){
   }
   sel.onchange = ()=>{
     state.race = sel.value;
+    state.subrace = ''; // a new species has its own subraces; clear the old pick
     const sd = SPECIES_DATA[state.race];
     if(sd && sd.speed){ state.speed = sd.speed; const sp = document.getElementById('statSpeed'); if(sp) sp.value = sd.speed; }
+    buildSubraceSelect();
     renderSpeciesInfo();
     buildSpeciesTraits();
     updateHero(); recalc(); save();
+  };
+}
+
+// Subrace picker: shown only when the selected species has subraces (built-in
+// names on the species plus any imported subspecies for it).
+function buildSubraceSelect(){
+  const field = document.getElementById('charSubraceField');
+  const sel = document.getElementById('charSubrace');
+  if(!field || !sel) return;
+  const names = subspeciesNamesForSpecies(state.race);
+  if(!names.length){ field.style.display='none'; sel.innerHTML=''; return; }
+  field.style.display='';
+  sel.innerHTML = '<option value="">— none —</option>' + names.map(n=>{
+    const ss = SUBSPECIES_DATA[subspKey(state.race, n)];
+    return `<option value="${esc(n)}" ${state.subrace===n?'selected':''}>${esc(n)}${ss&&ss.custom?' ✦':''}</option>`;
+  }).join('');
+  // Preserve a pre-existing freeform subrace not in the library.
+  if(state.subrace && !names.includes(state.subrace)){
+    sel.insertAdjacentHTML('beforeend', `<option value="${esc(state.subrace)}" selected>${esc(state.subrace)} (custom)</option>`);
+  }
+  sel.onchange = ()=>{
+    state.subrace = sel.value;
+    renderSpeciesInfo();
+    buildSpeciesTraits();
+    recalc(); save();
   };
 }
 
@@ -2188,30 +2519,39 @@ function renderSpeciesInfo(){
       : '<div class="ci-desc">// no species selected</div>';
     return;
   }
+  const ss = state.subrace ? SUBSPECIES_DATA[subspKey(state.race, state.subrace)] : null;
   box.innerHTML = `
     <div class="ci-title">${state.race}${sourceTag(sd.source)}</div>
     <div class="ci-row"><span class="ci-key">size</span><span>${sd.size||'—'}</span></div>
     <div class="ci-row"><span class="ci-key">speed</span><span>${sd.speed||0} ft${sd.darkvision?` · darkvision ${sd.darkvision} ft`:''}</span></div>
     ${sd.asi?`<div class="ci-row"><span class="ci-key">asi</span><span>${sd.asi}</span></div>`:''}
     ${sd.languages?`<div class="ci-row"><span class="ci-key">languages</span><span>${sd.languages}</span></div>`:''}
+    ${state.subrace?`<div class="ci-row"><span class="ci-key">subrace</span><span>${esc(state.subrace)}${ss&&ss.asi?` · ${esc(ss.asi)}`:''}</span></div>`:''}
     <div class="ci-row"><span class="ci-key">source</span><span>${sd.custom?'Imported · '+sd.source:'Official · '+sd.source}</span></div>
-    ${sd.desc?`<div class="ci-desc">${sd.desc}</div>`:''}`;
+    ${sd.desc?`<div class="ci-desc">${sd.desc}</div>`:''}
+    ${ss&&ss.desc?`<div class="ci-desc">${ss.desc}</div>`:''}`;
 }
 
 function buildSpeciesTraits(){
   const box = document.getElementById('speciesTraitsList');
   if(!box) return;
   const sd = SPECIES_DATA[state.race];
-  const traits = (sd && sd.traits) || [];
   if(!sd){
     box.innerHTML = `<div class="action-empty">${state.race ? 'Custom species — import "'+state.race+'" on the Library tab to list its traits here.' : 'Pick a species in Settings to see its traits here.'}</div>`;
     return;
   }
-  box.innerHTML = traits.length ? traits.map(t=>`
+  const traitRow = t=>`
     <div class="feat-item">
       <div class="feat-head"><span class="f-name">${t.name}</span></div>
       ${t.desc?`<div class="feat-desc">${t.desc}</div>`:''}
-    </div>`).join('') : '<div class="action-empty">No traits listed for this species.</div>';
+    </div>`;
+  let html = (sd.traits||[]).map(traitRow).join('');
+  // Append the selected subrace's traits under a labelled divider.
+  const ss = state.subrace ? SUBSPECIES_DATA[subspKey(state.race, state.subrace)] : null;
+  if(ss && Array.isArray(ss.traits) && ss.traits.length){
+    html += `<div class="subrace-divider">${esc(state.subrace)} <span class="chip-abbr">subrace</span></div>` + ss.traits.map(traitRow).join('');
+  }
+  box.innerHTML = html || '<div class="action-empty">No traits listed for this species.</div>';
 }
 
 // ---------- Species import (Library tab) ----------
@@ -2428,6 +2768,118 @@ function bindSubclassImport(){
   });
 }
 
+// ---------- Subspecies import (Library tab) ----------
+async function loadCustomSubspecies(){
+  let list = [];
+  try { list = await apiListSubspecies(); } catch(e){ return; }
+  // Drop previously-merged imports, restoring any built-in they shadowed.
+  Object.keys(SUBSPECIES_DATA).forEach(k=>{ if(SUBSPECIES_DATA[k].custom) restoreOrDelete(SUBSPECIES_DATA, BUILTIN_SUBSPECIES, k); });
+  list.forEach(rec=>{
+    SUBSPECIES_DATA[subspKey(rec.parent, rec.name)] = Object.assign(
+      { parent: rec.parent, name: rec.name }, rec.data,
+      { source: rec.source, custom:true, customId: rec.id });
+  });
+}
+
+// Parent-species dropdown for the import form (every species can be a parent).
+function buildSubspeciesParentSelect(){
+  const sel = document.getElementById('subspParent');
+  if(!sel) return;
+  const cur = sel.value;
+  const names = Object.keys(SPECIES_DATA).sort();
+  sel.innerHTML = '<option value="">— pick parent species —</option>' + names.map(n=>
+    `<option value="${esc(n)}">${esc(n)} · ${SPECIES_DATA[n].source}</option>`).join('');
+  if(cur && SPECIES_DATA[cur]) sel.value = cur;
+}
+
+function buildSubspeciesFromForm(){
+  const parent = document.getElementById('subspParent').value;
+  if(!parent) throw new Error('Pick a parent species.');
+  if(!SPECIES_DATA[parent]) throw new Error('Unknown parent species.');
+  const name = document.getElementById('subspName').value.trim();
+  if(!name) throw new Error('Subspecies name is required.');
+  const source = document.getElementById('subspSource').value;
+  const data = { traits: parseTraitLines(document.getElementById('subspTraits').value) };
+  const asi = document.getElementById('subspAsi').value.trim();
+  const desc = document.getElementById('subspDesc').value.trim();
+  if(asi) data.asi = asi;
+  if(desc) data.desc = desc;
+  return { parent, name, source, data };
+}
+
+async function submitSubspeciesImport(payload){
+  const msg = document.getElementById('subspMsg');
+  try{
+    if(!payload) payload = buildSubspeciesFromForm();
+    if(!payload.parent || !SPECIES_DATA[payload.parent]) throw new Error('A valid parent species is required.');
+    if(!payload.name) throw new Error('Subspecies name is required.');
+    if(!payload.data || typeof payload.data!=='object') throw new Error('Subspecies data is required.');
+    const source = CLASS_SOURCES.includes(payload.source) ? payload.source : 'Homebrew';
+    const res = await apiImportSubspecies({ parent: payload.parent, name: payload.name, source, data: payload.data });
+    SUBSPECIES_DATA[subspKey(payload.parent, payload.name)] = Object.assign(
+      { parent: payload.parent, name: payload.name }, payload.data,
+      { source, custom:true, customId: res.id });
+    msg.className = 'import-msg ok';
+    msg.textContent = `Imported "${payload.name}" under ${payload.parent} (${source}) — now selectable as a subrace on that species in Settings.`;
+    // Reflect the new subspecies everywhere it's listed.
+    buildSubraceSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSubspeciesImportedList(); buildLibraryEditSelects();
+  }catch(err){
+    msg.className = 'import-msg err';
+    msg.textContent = 'Import failed: ' + err.message;
+  }
+}
+
+function renderSubspeciesImportedList(){
+  const box = document.getElementById('subspeciesImportedList');
+  if(!box) return;
+  const customs = Object.values(SUBSPECIES_DATA).filter(s=>s.custom);
+  if(!customs.length){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="picker-hint" style="margin-bottom:6px;">Imported subspecies</div>' + customs.map(s=>`
+    <div class="imported-item">
+      <span class="ii-name">${esc(s.name)} <span class="chip-abbr">${esc(s.parent)}</span></span>
+      ${sourceTag(s.source)}
+      <span class="ii-edit" data-parent="${esc(s.parent)}" data-name="${esc(s.name)}" title="Load into the form to edit">✎</span>
+      <span class="row-del" data-id="${s.customId}" data-parent="${esc(s.parent)}" data-name="${esc(s.name)}">✕</span>
+    </div>`).join('');
+  box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
+    fillSubspeciesForm(e.target.dataset.parent, e.target.dataset.name);
+  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
+    const id = e.target.dataset.id, parent = e.target.dataset.parent, name = e.target.dataset.name;
+    if(!confirm(`Remove imported subspecies "${name}" (${parent})?${BUILTIN_SUBSPECIES[subspKey(parent,name)]?' The built-in version is restored.':''}`)) return;
+    await apiDeleteSubspecies(id);
+    restoreOrDelete(SUBSPECIES_DATA, BUILTIN_SUBSPECIES, subspKey(parent, name));
+    // Clear it from the character if it was the selected subrace.
+    if(state.race===parent && state.subrace===name) state.subrace='';
+    buildSubraceSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSubspeciesImportedList(); buildLibraryEditSelects(); save();
+  }));
+}
+
+function bindSubspeciesImport(){
+  buildSubspeciesParentSelect();
+  document.getElementById('subspJsonToggle').addEventListener('click', ()=>{
+    const w = document.getElementById('subspJsonWrap');
+    w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+  document.getElementById('subspSubmit').addEventListener('click', ()=>{
+    const jsonWrap = document.getElementById('subspJsonWrap');
+    const jsonText = document.getElementById('subspJson').value.trim();
+    if(jsonWrap.style.display!=='none' && jsonText){
+      let obj;
+      try { obj = JSON.parse(jsonText); }
+      catch(e){
+        const m = document.getElementById('subspMsg');
+        m.className = 'import-msg err'; m.textContent = 'Invalid JSON: ' + e.message;
+        return;
+      }
+      const { parent, name, source, data, ...rest } = obj;
+      submitSubspeciesImport({ parent, name, source, data: data || rest });
+    } else {
+      submitSubspeciesImport();
+    }
+  });
+}
+
 // ---------- Spell import (Library tab) ----------
 async function loadCustomSpells(){
   let list = [];
@@ -2444,6 +2896,42 @@ function parseNameList(raw){
   return (raw||'').split(',').map(s=>s.trim()).filter(Boolean);
 }
 
+// A "select with an Other… escape hatch": read the picked option, or the
+// free-text box when Other is selected.
+function readSelectOther(selectId, otherId){
+  const sel = document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value === '__other') return (document.getElementById(otherId)?.value || '').trim();
+  return sel.value.trim();
+}
+
+// Load a stored value back into a select-or-other pair: match an existing
+// option, else fall back to Other with the value in the text box.
+function setSelectOther(selectId, otherId, value){
+  const sel = document.getElementById(selectId);
+  const other = document.getElementById(otherId);
+  if(!sel) return;
+  const v = value || '';
+  const known = [...sel.options].some(o=> o.value===v && o.value!=='__other');
+  if(v && !known){
+    sel.value = '__other';
+    if(other){ other.value = v; other.style.display = ''; }
+  } else {
+    sel.value = v;
+    if(other){ other.value = ''; other.style.display = 'none'; }
+  }
+}
+
+// Show the free-text box only while Other is the current selection.
+function toggleSelectOther(selectId, otherId){
+  const sel = document.getElementById(selectId);
+  const other = document.getElementById(otherId);
+  if(!sel || !other) return;
+  const isOther = sel.value === '__other';
+  other.style.display = isOther ? '' : 'none';
+  if(isOther) other.focus(); else other.value = '';
+}
+
 function buildSpellFromForm(){
   const name = document.getElementById('splName').value.trim();
   if(!name) throw new Error('Spell name is required.');
@@ -2453,8 +2941,11 @@ function buildSpellFromForm(){
     classes: parseNameList(document.getElementById('splClasses').value),
     tags: getTagPicker('splTagPicker')
   };
-  [['school','splSchool'],['castingTime','splCastTime'],['range','splRange'],
-   ['components','splComponents'],['duration','splDuration'],['desc','splDesc']].forEach(([key,id])=>{
+  const school = readSelectOther('splSchool', 'splSchoolOther');
+  if(school) data.school = school;
+  const castingTime = readSelectOther('splCastTime', 'splCastTimeOther');
+  if(castingTime) data.castingTime = castingTime;
+  [['range','splRange'],['components','splComponents'],['duration','splDuration'],['desc','splDesc']].forEach(([key,id])=>{
     const v = document.getElementById(id).value.trim();
     if(v) data[key] = v;
   });
@@ -2508,6 +2999,17 @@ function bindSpellImport(){
   document.getElementById('splJsonToggle').addEventListener('click', ()=>{
     const w = document.getElementById('splJsonWrap');
     w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+  document.getElementById('splSchool')?.addEventListener('change', ()=>
+    toggleSelectOther('splSchool', 'splSchoolOther'));
+  document.getElementById('splCastTime')?.addEventListener('change', e=>{
+    toggleSelectOther('splCastTime', 'splCastTimeOther');
+    // A reaction casting time also carries the Reaction tag, so the spell
+    // surfaces under the Actions tab's Reactions list.
+    if(e.target.value === '1 Reaction'){
+      const tags = getTagPicker('splTagPicker');
+      if(!tags.some(t=>/^reaction$/i.test(t))) setTagPicker('splTagPicker', [...tags, 'Reaction']);
+    }
   });
   document.getElementById('splSubmit').addEventListener('click', ()=>{
     const jsonWrap = document.getElementById('splJsonWrap');
@@ -2602,6 +3104,21 @@ function fillSubclassForm(parent, name){
   setImportMsg('subMsg', `${name} (${parent})`);
 }
 
+function fillSubspeciesForm(parent, name){
+  const sd = SPECIES_DATA[parent];
+  if(!sd) return;
+  const ss = SUBSPECIES_DATA[subspKey(parent, name)];
+  buildSubspeciesParentSelect();
+  document.getElementById('subspParent').value = parent;
+  document.getElementById('subspName').value = name;
+  const source = ss ? ss.source : sd.source;
+  document.getElementById('subspSource').value = CLASS_SOURCES.includes(source) ? source : 'Homebrew';
+  document.getElementById('subspAsi').value = (ss && ss.asi)||'';
+  document.getElementById('subspDesc').value = (ss && ss.desc)||'';
+  document.getElementById('subspTraits').value = traitsToLines(ss && ss.traits);
+  setImportMsg('subspMsg', `${name} (${parent})`);
+}
+
 // Which built-in class lists carry a spell — used to prefill its class list.
 // Folds in school + description from SPELL_DETAILS so editing a built-in
 // spell in the Library starts from its reference data.
@@ -2623,8 +3140,8 @@ function fillSpellForm(name){
   document.getElementById('splSource').value = CLASS_SOURCES.includes(info.source) ? info.source : (imp ? 'Homebrew' : '5E');
   document.getElementById('splLevel').value = Number(info.level)||0;
   document.getElementById('splClasses').value = (info.classes||[]).join(', ');
-  document.getElementById('splSchool').value = info.school||'';
-  document.getElementById('splCastTime').value = info.castingTime||'';
+  setSelectOther('splSchool', 'splSchoolOther', info.school||'');
+  setSelectOther('splCastTime', 'splCastTimeOther', info.castingTime||'');
   document.getElementById('splRange').value = info.range||'';
   document.getElementById('splComponents').value = info.components||'';
   document.getElementById('splDuration').value = info.duration||'';
@@ -2653,6 +3170,15 @@ function buildLibraryEditSelects(){
     }));
   fill('subEdit', subEntries.sort((a,b)=>a.label.localeCompare(b.label)).map(s=>
     `<option value="${esc(subKey(s.parent, s.name))}">${esc(s.label)}</option>`).join(''));
+  // Subspecies: built-in subrace name lists on each species plus imported records.
+  const subspEntries = [];
+  Object.keys(SPECIES_DATA).forEach(parent=>
+    subspeciesNamesForSpecies(parent).forEach(n=>{
+      const ss = SUBSPECIES_DATA[subspKey(parent, n)];
+      subspEntries.push({ parent, name:n, label:`${n} — ${parent} · ${ss?(ss.custom?ss.source+' · imported':ss.source):'built-in'}` });
+    }));
+  fill('subspEdit', subspEntries.sort((a,b)=>a.label.localeCompare(b.label)).map(s=>
+    `<option value="${esc(subspKey(s.parent, s.name))}">${esc(s.label)}</option>`).join(''));
   // Spells: unique built-in names plus imported ones (imported shadow built-ins).
   const spellNames = new Set(Object.keys(CUSTOM_SPELLS));
   SPELL_CLASSES.forEach(c=> SPELL_DATA[c].forEach(s=> spellNames.add(s.name)));
@@ -2673,6 +3199,10 @@ function bindLibraryEditSelects(){
   wire('subEdit', key=>{
     const i = key.indexOf('::');
     if(i>0) fillSubclassForm(key.slice(0,i), key.slice(i+2));
+  });
+  wire('subspEdit', key=>{
+    const i = key.indexOf('::');
+    if(i>0) fillSubspeciesForm(key.slice(0,i), key.slice(i+2));
   });
   wire('splEdit', fillSpellForm);
 }
@@ -3006,6 +3536,7 @@ function renderCharacter(){
   applyClassesToState();
   buildAlignmentSelect();
   buildSpeciesSelect();
+  buildSubraceSelect();
   renderSpeciesInfo();
   buildSpeciesTraits();
   buildAbilities();
@@ -3081,6 +3612,7 @@ const app = {
   refreshEffects,
   newEquipItem,
   buildActions,
+  buildActionResources,
   buildKnownSpells,
   buildAttacks,
   buildSaves,
@@ -3098,24 +3630,30 @@ const app = {
   buildSkillPicker,
   buildClassFeatures,
   buildSpeciesSelect,
+  buildSubraceSelect,
   renderSpeciesInfo,
   buildSpeciesTraits,
   buildClassFromForm,
   buildSpeciesFromForm,
   buildSubclassFromForm,
+  buildSubspeciesFromForm,
   buildSpellFromForm,
   renderImportedList,
   renderSpeciesImportedList,
   renderSubclassImportedList,
+  renderSubspeciesImportedList,
   renderSpellImportedList,
   buildSubclassParentSelect,
+  buildSubspeciesParentSelect,
   bindClassImport,
   bindSpeciesImport,
   bindSubclassImport,
+  bindSubspeciesImport,
   bindSpellImport,
   fillClassForm,
   fillSpeciesForm,
   fillSubclassForm,
+  fillSubspeciesForm,
   fillSpellForm,
   buildLibraryEditSelects,
   bindLibraryEditSelects,
@@ -3147,6 +3685,10 @@ function openLibraryEditParam(){
         const j = key.indexOf('::');
         if(j>0) fillSubclassForm(key.slice(0, j), key.slice(j+2));
       }, sel:'subEdit', anchor:'subName' },
+    subspecies: { fill: ()=>{
+        const j = key.indexOf('::');
+        if(j>0) fillSubspeciesForm(key.slice(0, j), key.slice(j+2));
+      }, sel:'subspEdit', anchor:'subspName' },
     spell:    { fill: ()=>fillSpellForm(key),   sel:'splEdit', anchor:'splName' }
   };
   const m = map[type];
@@ -3170,6 +3712,8 @@ function initLibraryPage(){
   renderSpeciesImportedList();
   bindSubclassImport();
   renderSubclassImportedList();
+  bindSubspeciesImport();
+  renderSubspeciesImportedList();
   bindSpellImport();
   renderSpellImportedList();
   buildLibraryEditSelects();
@@ -3193,6 +3737,7 @@ async function initSheetPage(){
   bindStaticInputs();
   bindProfileBar();
   bindTabs();
+  bindNotesModal(); // shared spell-detail popup, used by the Spells & Actions tabs
   buildClassFilterBar();
   buildSpellLevelSelects();
   setTagPicker('customSpellTagPicker', []);
@@ -3206,6 +3751,7 @@ async function init(){
   await loadCustomClasses(); // merge imported classes before any character renders
   await loadCustomSpecies(); // merge imported species too
   await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
+  await loadCustomSubspecies(); // ...and imported subspecies (attach to parent species)
   await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)
   if(PAGE==='library'){ initLibraryPage(); return; }
   if(PAGE==='notes'){ initNotesPage(); return; } // search needs the registries loaded
