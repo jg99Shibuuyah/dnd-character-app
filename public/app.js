@@ -689,7 +689,8 @@ function defaultCharacter(){
     // Freeform point trackers on the Actions tab: each is a named pool of pips
     // (a spell slot, Focus Point, Ki, etc.) that the player fills in as used.
     actionResources: [], // {name, total, used}
-    journal: [] // character journal entries: {id, title, text, created, updated}
+    journal: [], // character journal entries: {id, title, text, created, updated}
+    rollLog: [] // dice roller history: {id, formula, detail, total, time}
   };
 }
 
@@ -1850,18 +1851,49 @@ function buildActions(){
   buildActionResources();
 }
 
-// Freeform point trackers on the Actions tab. Each row is a named pool (a spell
-// slot, a Jaeger Focus Point, Ki, etc.); clicking a pip toggles it used, and the
-// −/+ buttons resize the pool. Independent of the derived lists above.
+// Spell slots surface as auto trackers at the top of Resource Points, synced
+// with the Spells tab: totals are managed there (auto-filled from class levels
+// or manual), and clicking a pip here spends or restores that actual slot.
+function spellSlotResourceRows(){
+  const rows = [];
+  (state.spellSlots||[]).forEach((s,i)=>{
+    if(s && s.total>0) rows.push({ key:String(i), label:'Level '+(i+1)+' Slots', total:s.total, used:s.used });
+  });
+  if(state.pactSlots && state.pactSlots.total>0){
+    rows.push({ key:'pact', label:'Pact Slots · Lv '+state.pactSlots.level, total:state.pactSlots.total, used:state.pactSlots.used });
+  }
+  return rows;
+}
+
+// Resource Points on the Actions tab: auto spell-slot rows (above) plus the
+// player's freeform pools. Each freeform row is a named pool (Focus Points, Ki,
+// Sorcery Points, etc.); clicking a pip toggles it used and the −/+ buttons
+// resize the pool.
 function buildActionResources(){
   const body = document.getElementById('actResources');
   if(!body) return;
   const list = state.actionResources || (state.actionResources = []);
-  body.innerHTML = list.length ? list.map((r,i)=>{
+  const slotRows = spellSlotResourceRows();
+
+  const autoHtml = slotRows.map(r=>{
+    let pips='';
+    for(let p=0;p<r.total;p++) pips += `<span class="res-slot-pip ${p<r.used?'filled':''}" data-key="${r.key}" data-p="${p}"></span>`;
+    return `<tr class="res-row res-row-auto">
+      <td><span class="res-auto-name">${esc(r.label)}</span><span class="res-auto-tag" title="Auto from your spell slots — set totals on the Spells tab">auto</span></td>
+      <td>
+        <div class="res-pip-cell">
+          <div class="res-pips">${pips}</div>
+          <div class="res-controls"><span class="res-count">${r.total-r.used} left</span></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const manualHtml = list.map((r,i)=>{
     let pips='';
     for(let p=0;p<r.total;p++) pips += `<span class="res-pip ${p<r.used?'filled':''}" data-i="${i}" data-p="${p}"></span>`;
     return `<tr class="res-row">
-      <td><input class="res-name" data-i="${i}" value="${esc(r.name)}" placeholder="Focus Points, 1st-level slots…"></td>
+      <td><input class="res-name" data-i="${i}" value="${esc(r.name)}" placeholder="Focus Points, Ki, Sorcery Points…"></td>
       <td>
         <div class="res-pip-cell">
           <div class="res-pips">${pips || '<span class="res-none">— no points —</span>'}</div>
@@ -1873,7 +1905,21 @@ function buildActionResources(){
         </div>
       </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="2" class="res-empty">No trackers yet — add one (e.g. Jaeger Focus Points, Ki, Sorcery Points, or a spell-slot row) with the button below.</td></tr>`;
+  }).join('');
+
+  body.innerHTML = (slotRows.length || list.length)
+    ? autoHtml + manualHtml
+    : `<tr><td colspan="2" class="res-empty">No trackers yet — spell slots appear here automatically once you have them; add other pools (Ki, Sorcery Points…) with the button below.</td></tr>`;
+
+  // Auto spell-slot pips write straight back to the real slot state and keep the
+  // Spells tab in sync.
+  body.querySelectorAll('.res-slot-pip').forEach(pip=> pip.addEventListener('click', e=>{
+    const key = e.target.dataset.key, p = +e.target.dataset.p;
+    const slot = key==='pact' ? state.pactSlots : state.spellSlots[key];
+    if(!slot) return;
+    slot.used = (p < slot.used) ? p : p+1;
+    buildActionResources(); buildSpellSlots(); save();
+  }));
 
   body.querySelectorAll('.res-name').forEach(inp=> inp.addEventListener('input', e=>{
     list[e.target.dataset.i].name = e.target.value; save();
@@ -1903,6 +1949,7 @@ function bindTabs(){
       document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
       // Rebuild on entry so the list reflects edits made on the other tabs.
       if(btn.dataset.tab==='actions') buildActions();
+      if(btn.dataset.tab==='journal' && window.characterSheetApp.buildJournal) window.characterSheetApp.buildJournal();
     });
   });
 }
@@ -2409,16 +2456,22 @@ function renderImportedList(){
   box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
     fillClassForm(e.target.dataset.name);
   }));
-  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
-    const id = e.target.dataset.id, name = e.target.dataset.name;
-    if(!confirm(`Remove imported class "${name}"? Characters using it will lose it${BUILTIN_CLASSES[name]?' (the built-in version is restored)':''}.`)) return;
-    await apiDeleteClass(id);
-    restoreOrDelete(CLASS_DATA, BUILTIN_CLASSES, name);
-    if(!CLASS_DATA[name]) state.classes = (state.classes||[]).filter(c=>c.name!==name);
-    afterClassChange();
-    renderImportedList();
-    buildLibraryEditSelects();
-  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', e=>
+    deleteClassEntry(e.target.dataset.id, e.target.dataset.name)));
+}
+
+// Fully remove an imported class from the shared database. If it shadowed a
+// built-in of the same name, that built-in is restored. Shared by the imported
+// list's ✕ and the edit form's Delete button.
+async function deleteClassEntry(id, name){
+  if(!confirm(`Remove imported class "${name}"? Characters using it will lose it${BUILTIN_CLASSES[name]?' (the built-in version is restored)':''}.`)) return false;
+  await apiDeleteClass(id);
+  restoreOrDelete(CLASS_DATA, BUILTIN_CLASSES, name);
+  if(!CLASS_DATA[name]) state.classes = (state.classes||[]).filter(c=>c.name!==name);
+  afterClassChange();
+  renderImportedList();
+  buildLibraryEditSelects();
+  return true;
 }
 
 function bindClassImport(){
@@ -2616,14 +2669,17 @@ function renderSpeciesImportedList(){
   box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
     fillSpeciesForm(e.target.dataset.name);
   }));
-  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
-    const id = e.target.dataset.id, name = e.target.dataset.name;
-    if(!confirm(`Remove imported species "${name}"?${BUILTIN_SPECIES[name]?' The built-in version is restored.':''}`)) return;
-    await apiDeleteSpecies(id);
-    restoreOrDelete(SPECIES_DATA, BUILTIN_SPECIES, name);
-    buildSpeciesSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSpeciesImportedList();
-    buildLibraryEditSelects();
-  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', e=>
+    deleteSpeciesEntry(e.target.dataset.id, e.target.dataset.name)));
+}
+
+async function deleteSpeciesEntry(id, name){
+  if(!confirm(`Remove imported species "${name}"?${BUILTIN_SPECIES[name]?' The built-in version is restored.':''}`)) return false;
+  await apiDeleteSpecies(id);
+  restoreOrDelete(SPECIES_DATA, BUILTIN_SPECIES, name);
+  buildSpeciesSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSpeciesImportedList();
+  buildLibraryEditSelects();
+  return true;
 }
 
 function bindSpeciesImport(){
@@ -2726,15 +2782,18 @@ function renderSubclassImportedList(){
   box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
     fillSubclassForm(e.target.dataset.parent, e.target.dataset.name);
   }));
-  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
-    const id = e.target.dataset.id, parent = e.target.dataset.parent, name = e.target.dataset.name;
-    if(!confirm(`Remove imported subclass "${name}" (${parent})?`)) return;
-    await apiDeleteSubclass(id);
-    delete SUBCLASS_DATA[subKey(parent, name)];
-    // Clear it from any character rows that had it selected.
-    (state.classes||[]).forEach(c=>{ if(c.name===parent && c.subclass===name) c.subclass=''; });
-    buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList(); buildLibraryEditSelects(); save();
-  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', e=>
+    deleteSubclassEntry(e.target.dataset.id, e.target.dataset.parent, e.target.dataset.name)));
+}
+
+async function deleteSubclassEntry(id, parent, name){
+  if(!confirm(`Remove imported subclass "${name}" (${parent})?`)) return false;
+  await apiDeleteSubclass(id);
+  delete SUBCLASS_DATA[subKey(parent, name)];
+  // Clear it from any character rows that had it selected.
+  (state.classes||[]).forEach(c=>{ if(c.name===parent && c.subclass===name) c.subclass=''; });
+  buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions(); renderSubclassImportedList(); buildLibraryEditSelects(); save();
+  return true;
 }
 
 function bindSubclassImport(){
@@ -2844,15 +2903,18 @@ function renderSubspeciesImportedList(){
   box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
     fillSubspeciesForm(e.target.dataset.parent, e.target.dataset.name);
   }));
-  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
-    const id = e.target.dataset.id, parent = e.target.dataset.parent, name = e.target.dataset.name;
-    if(!confirm(`Remove imported subspecies "${name}" (${parent})?${BUILTIN_SUBSPECIES[subspKey(parent,name)]?' The built-in version is restored.':''}`)) return;
-    await apiDeleteSubspecies(id);
-    restoreOrDelete(SUBSPECIES_DATA, BUILTIN_SUBSPECIES, subspKey(parent, name));
-    // Clear it from the character if it was the selected subrace.
-    if(state.race===parent && state.subrace===name) state.subrace='';
-    buildSubraceSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSubspeciesImportedList(); buildLibraryEditSelects(); save();
-  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', e=>
+    deleteSubspeciesEntry(e.target.dataset.id, e.target.dataset.parent, e.target.dataset.name)));
+}
+
+async function deleteSubspeciesEntry(id, parent, name){
+  if(!confirm(`Remove imported subspecies "${name}" (${parent})?${BUILTIN_SUBSPECIES[subspKey(parent,name)]?' The built-in version is restored.':''}`)) return false;
+  await apiDeleteSubspecies(id);
+  restoreOrDelete(SUBSPECIES_DATA, BUILTIN_SUBSPECIES, subspKey(parent, name));
+  // Clear it from the character if it was the selected subrace.
+  if(state.race===parent && state.subrace===name) state.subrace='';
+  buildSubraceSelect(); renderSpeciesInfo(); buildSpeciesTraits(); renderSubspeciesImportedList(); buildLibraryEditSelects(); save();
+  return true;
 }
 
 function bindSubspeciesImport(){
@@ -2986,13 +3048,16 @@ function renderSpellImportedList(){
   box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
     fillSpellForm(e.target.dataset.name);
   }));
-  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', async e=>{
-    const id = e.target.dataset.id, name = e.target.dataset.name;
-    if(!confirm(`Remove imported spell "${name}"?`)) return;
-    await apiDeleteSpell(id);
-    delete CUSTOM_SPELLS[name];
-    buildSpellClassSelect(); buildSpellLibrary(); renderSpellImportedList(); buildLibraryEditSelects(); refreshTagPickers();
-  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', e=>
+    deleteSpellEntry(e.target.dataset.id, e.target.dataset.name)));
+}
+
+async function deleteSpellEntry(id, name){
+  if(!confirm(`Remove imported spell "${name}"?`)) return false;
+  await apiDeleteSpell(id);
+  delete CUSTOM_SPELLS[name];
+  buildSpellClassSelect(); buildSpellLibrary(); renderSpellImportedList(); buildLibraryEditSelects(); refreshTagPickers();
+  return true;
 }
 
 function bindSpellImport(){
@@ -3055,6 +3120,32 @@ function traitsToLines(traits){
   return (traits||[]).map(t=> t.desc ? `${t.name} | ${t.desc}` : t.name).join('\n');
 }
 
+// Show/hide a form's Delete button. Only imported (custom) entries can be
+// deleted; built-ins loaded for editing hide the button. `entry` is the deletion
+// target ({id, name[, parent]}) or null to hide.
+function setFormDelete(btnId, entry){
+  const btn = document.getElementById(btnId);
+  if(!btn) return;
+  if(entry && entry.id != null){
+    btn.style.display = '';
+    btn.dataset.id = entry.id;
+    btn.dataset.name = entry.name;
+    if(entry.parent != null) btn.dataset.parent = entry.parent; else delete btn.dataset.parent;
+  } else {
+    btn.style.display = 'none';
+    delete btn.dataset.id;
+  }
+}
+
+// After deleting from an edit form: hide the Delete button and confirm in the
+// form's message line.
+function afterFormDelete(btnId, msgId, name){
+  const btn = document.getElementById(btnId);
+  if(btn){ btn.style.display = 'none'; delete btn.dataset.id; }
+  const msg = document.getElementById(msgId);
+  if(msg){ msg.className = 'import-msg ok'; msg.textContent = `Deleted "${name}".`; }
+}
+
 function fillClassForm(name){
   const cd = CLASS_DATA[name];
   if(!cd) return;
@@ -3071,6 +3162,7 @@ function fillClassForm(name){
   document.getElementById('impCastAbility').value = (cd.casting&&cd.casting.ability)||'';
   document.getElementById('impDesc').value = cd.desc||'';
   document.getElementById('impFeatures').value = featuresToLines(cd.features);
+  setFormDelete('impDelete', cd.custom ? { id: cd.customId, name } : null);
   setImportMsg('impMsg', name);
 }
 
@@ -3086,6 +3178,7 @@ function fillSpeciesForm(name){
   document.getElementById('spLanguages').value = sd.languages||'';
   document.getElementById('spDesc').value = sd.desc||'';
   document.getElementById('spTraits').value = traitsToLines(sd.traits);
+  setFormDelete('spDelete', sd.custom ? { id: sd.customId, name } : null);
   setImportMsg('spMsg', name);
 }
 
@@ -3101,6 +3194,7 @@ function fillSubclassForm(parent, name){
   document.getElementById('subLevel').value = (sc && sc.subclassLevel) || cd.subclassLevel || 3;
   document.getElementById('subDesc').value = (sc && sc.desc)||'';
   document.getElementById('subFeatures').value = featuresToLines(sc && sc.features);
+  setFormDelete('subDelete', (sc && sc.custom) ? { id: sc.customId, parent, name } : null);
   setImportMsg('subMsg', `${name} (${parent})`);
 }
 
@@ -3116,6 +3210,7 @@ function fillSubspeciesForm(parent, name){
   document.getElementById('subspAsi').value = (ss && ss.asi)||'';
   document.getElementById('subspDesc').value = (ss && ss.desc)||'';
   document.getElementById('subspTraits').value = traitsToLines(ss && ss.traits);
+  setFormDelete('subspDelete', (ss && ss.custom) ? { id: ss.customId, parent, name } : null);
   setImportMsg('subspMsg', `${name} (${parent})`);
 }
 
@@ -3147,6 +3242,7 @@ function fillSpellForm(name){
   document.getElementById('splDuration').value = info.duration||'';
   setTagPicker('splTagPicker', info.tags||[]);
   document.getElementById('splDesc').value = info.desc||'';
+  setFormDelete('splDelete', imp ? { id: imp.customId, name } : null);
   setImportMsg('splMsg', name);
 }
 
@@ -3205,6 +3301,23 @@ function bindLibraryEditSelects(){
     if(i>0) fillSubspeciesForm(key.slice(0,i), key.slice(i+2));
   });
   wire('splEdit', fillSpellForm);
+
+  // Edit-form Delete buttons: fully remove the loaded imported entry. The
+  // dataset is set by the matching fillXForm via setFormDelete().
+  const wireDelete = (btnId, msgId, del)=>{
+    const btn = document.getElementById(btnId);
+    if(!btn) return;
+    btn.addEventListener('click', async ()=>{
+      if(!btn.dataset.id) return;
+      const name = btn.dataset.name;
+      if(await del(btn.dataset)) afterFormDelete(btnId, msgId, name);
+    });
+  };
+  wireDelete('impDelete',   'impMsg',   d=>deleteClassEntry(d.id, d.name));
+  wireDelete('spDelete',    'spMsg',    d=>deleteSpeciesEntry(d.id, d.name));
+  wireDelete('subDelete',   'subMsg',   d=>deleteSubclassEntry(d.id, d.parent, d.name));
+  wireDelete('subspDelete', 'subspMsg', d=>deleteSubspeciesEntry(d.id, d.parent, d.name));
+  wireDelete('splDelete',   'splMsg',   d=>deleteSpellEntry(d.id, d.name));
 }
 
 // ---------- Save status indicator ----------
@@ -3282,6 +3395,8 @@ function buildNotes(){
 // alignments — so the Notes page can look any of it up by name or text.
 let NOTES_INDEX = [];
 let notesFilter = 'All';
+let notesBrowsePage = 0; // current page when browsing a type filter with no search query
+const NOTES_PAGE_SIZE = 20;
 const NOTES_TYPES = ['All','Classes','Subclasses','Species','Spells','Features','Actions','Alignments'];
 
 function notesEntry(type, name, badges, haystack, detail, edit){
@@ -3422,8 +3537,14 @@ function renderNotesResults(){
   if(!box) return;
   const q = (document.getElementById('notesSearch').value||'').trim().toLowerCase();
   if(!q){
-    box.innerHTML = '';
-    if(ref) ref.style.display = '';
+    // No search query: browse mode. "All" and "Alignments" keep the static
+    // alignment reference below; every other filter shows a paginated list.
+    if(notesFilter==='All' || notesFilter==='Alignments'){
+      box.innerHTML = '';
+      if(ref) ref.style.display = '';
+    } else {
+      renderNotesBrowse();
+    }
     return;
   }
   if(ref) ref.style.display = 'none';
@@ -3462,14 +3583,71 @@ function renderNotesResults(){
   });
 }
 
+// Browse mode: with no search query, a specific type filter lists every entry
+// of that type, 20 per page, with prev/next paging. (All / Alignments keep the
+// static alignment reference instead — see renderNotesResults.)
+function renderNotesBrowse(){
+  const box = document.getElementById('notesResults');
+  const ref = document.getElementById('notesReference');
+  if(!box) return;
+  if(ref) ref.style.display = 'none';
+  const all = NOTES_INDEX.filter(e=> e.type===notesFilter)
+    .sort((a,b)=> a.name.localeCompare(b.name));
+  if(!all.length){
+    notesHits = [];
+    box.innerHTML = `<div class="action-empty">No ${esc(notesFilter.toLowerCase())} in the reference yet.</div>`;
+    return;
+  }
+  const pageCount = Math.ceil(all.length / NOTES_PAGE_SIZE);
+  notesBrowsePage = Math.min(Math.max(notesBrowsePage, 0), pageCount - 1);
+  const start = notesBrowsePage * NOTES_PAGE_SIZE;
+  const pageItems = all.slice(start, start + NOTES_PAGE_SIZE);
+  notesHits = pageItems; // rows index into this via data-i, like search results
+  let html = `<div class="nr-group">${esc(notesFilter)} — ${all.length} total</div>`
+    + pageItems.map((e,i)=>`
+      <div class="feat-item nr-item" data-i="${i}" title="Click for full details">
+        <div class="feat-head">
+          <span class="f-name">${esc(e.name)}</span>
+          ${e.badges.map(b=>`<span class="nr-badge">${esc(b)}</span>`).join('')}
+        </div>
+        ${e.detail}
+      </div>`).join('');
+  if(pageCount > 1){
+    html += `<div class="nr-pager">
+      <button class="pbtn nr-page-prev" ${notesBrowsePage===0?'disabled':''}>‹ Prev</button>
+      <span class="nr-page-info">Page ${notesBrowsePage+1} of ${pageCount}</span>
+      <button class="pbtn nr-page-next" ${notesBrowsePage>=pageCount-1?'disabled':''}>Next ›</button>
+    </div>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('.nr-item').forEach(item=>{
+    item.addEventListener('click', ()=> openNotesModal(notesHits[Number(item.dataset.i)]));
+  });
+  const prev = box.querySelector('.nr-page-prev');
+  const next = box.querySelector('.nr-page-next');
+  if(prev) prev.addEventListener('click', ()=>{ notesBrowsePage--; renderNotesBrowse(); });
+  if(next) next.addEventListener('click', ()=>{ notesBrowsePage++; renderNotesBrowse(); });
+}
+
 // ---------- Notes detail popup ----------
 // Shows an entry's full information; classes list their subclasses as chips
 // that open the subclass's own popup. The edit action lives only here.
 let notesHits = []; // entries behind the currently rendered result rows
+let notesModalStack = [];     // parent entries to return to via the Back button
+let notesModalCurrent = null; // entry currently shown in the popup
 
-function openNotesModal(entry){
+// opts.push  — drilling into a child (e.g. subclass): remember the parent.
+// opts.pop   — going back: stack was already adjusted, leave it alone.
+// (default)  — a fresh open from a result/browse row: clear the trail.
+function openNotesModal(entry, opts){
   const backdrop = document.getElementById('nrModalBackdrop');
   if(!backdrop || !entry) return;
+  opts = opts || {};
+  if(opts.push){ if(notesModalCurrent) notesModalStack.push(notesModalCurrent); }
+  else if(!opts.pop){ notesModalStack = []; }
+  notesModalCurrent = entry;
+  const back = document.getElementById('nrModalBack');
+  if(back) back.hidden = notesModalStack.length === 0;
   document.getElementById('nrModalTitle').textContent = entry.name;
   document.getElementById('nrModalBadges').innerHTML =
     entry.badges.map(b=>`<span class="nr-badge">${esc(b)}</span>`).join('');
@@ -3479,10 +3657,11 @@ function openNotesModal(entry){
     ? `<a class="pbtn nr-edit-link" href="${entry.edit.href}">✎ ${esc(entry.edit.label)}</a>
        <span class="nr-hint">opens the Library form with this entry loaded — re-import to save changes</span>`
     : '<span class="nr-hint">Built-in rule — not editable.</span>';
-  // Subclass chips open that subclass's own popup in place of this one.
+  // Subclass chips open that subclass's own popup; the parent stays reachable
+  // via the Back button.
   body.querySelectorAll('.nr-sub-link').forEach(chip=>chip.addEventListener('click', ()=>{
     const target = NOTES_INDEX.find(e=>e.key===chip.dataset.key);
-    if(target) openNotesModal(target);
+    if(target) openNotesModal(target, { push:true });
   }));
   backdrop.classList.add('open');
   backdrop.setAttribute('aria-hidden','false');
@@ -3495,12 +3674,22 @@ function closeNotesModal(){
   if(!backdrop) return;
   backdrop.classList.remove('open');
   backdrop.setAttribute('aria-hidden','true');
+  notesModalStack = [];
+  notesModalCurrent = null;
+}
+
+// Pop back to the parent entry (e.g. from a subclass to its class).
+function notesModalBack(){
+  const parent = notesModalStack.pop();
+  if(parent) openNotesModal(parent, { pop:true });
 }
 
 function bindNotesModal(){
   const backdrop = document.getElementById('nrModalBackdrop');
   if(!backdrop) return;
   document.getElementById('nrModalClose').addEventListener('click', closeNotesModal);
+  const back = document.getElementById('nrModalBack');
+  if(back) back.addEventListener('click', notesModalBack);
   backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeNotesModal(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeNotesModal(); });
 }
@@ -3512,6 +3701,7 @@ function buildNotesFilterBar(){
     `<span class="filter-chip ${notesFilter===t?'on':''}" data-t="${t}">${t}</span>`).join('');
   bar.querySelectorAll('.filter-chip').forEach(chip=>chip.addEventListener('click', ()=>{
     notesFilter = chip.dataset.t;
+    notesBrowsePage = 0; // start each browsed filter from its first page
     buildNotesFilterBar();
     renderNotesResults();
   }));

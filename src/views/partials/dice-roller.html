@@ -1,0 +1,35 @@
+<!-- Floating 2D dice roller with the standard D&D dice set (d4–d20 + d100).
+     Sits beside the journal FAB, bottom-right. Rolls are ephemeral (not saved).
+     Dice tiles and results are rendered by modules/dice.js. -->
+<button id="diceFab" class="corner-fab dice-fab" title="Dice roller" aria-label="Open dice roller">
+  <span class="corner-fab-glyph">🎲</span>
+</button>
+
+<div id="dicePopup" class="corner-popup" role="dialog" aria-label="Dice roller">
+  <div class="corner-popup-head">
+    <div class="corner-popup-title"><span>Dice</span><span class="rune">◈</span></div>
+    <button id="diceClose" class="corner-popup-close" aria-label="Close">✕</button>
+  </div>
+
+  <div class="dice-tray" id="diceTray"></div>
+
+  <div class="dice-pool-row">
+    <span class="dice-pool empty" id="dicePool">Tap dice to build a roll</span>
+    <button class="pbtn dice-clear" id="diceClear" type="button">Clear</button>
+  </div>
+
+  <div class="dice-adv" id="diceAdv" title="Applies to d20 rolls">
+    <button class="dice-adv-btn on" data-adv="normal" type="button">Normal</button>
+    <button class="dice-adv-btn" data-adv="adv" type="button">Advantage</button>
+    <button class="dice-adv-btn" data-adv="dis" type="button">Disadvantage</button>
+  </div>
+
+  <div class="dice-controls">
+    <label class="dice-mod-label">Mod
+      <input type="number" id="diceModifier" value="0">
+    </label>
+    <button class="add-btn dice-roll" id="diceRoll" type="button">Roll</button>
+  </div>
+
+  <div class="dice-result" id="diceResult"></div>
+</div>

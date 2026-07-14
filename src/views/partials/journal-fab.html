@@ -1,0 +1,25 @@
+<!-- Floating quick-note journal, reachable from any tab. Shares state.journal with
+     the Journal tab; clicking an entry opens the shared detail modal. Distinct ids
+     from the tab (journalPop*) so both can live on the page. Wired in modules/journal.js. -->
+<button id="journalFab" class="corner-fab journal-fab" title="Quick journal note" aria-label="Open quick journal">
+  <span class="corner-fab-glyph">✎</span>
+  <span class="corner-fab-badge" id="journalPopCount"></span>
+</button>
+
+<div id="journalPopup" class="corner-popup" role="dialog" aria-label="Quick journal">
+  <div class="corner-popup-head">
+    <div>
+      <div class="corner-popup-title"><span>Journal</span><span class="rune">◈</span></div>
+      <div class="corner-popup-sub" id="journalPopCharName"></div>
+    </div>
+    <button id="journalPopClose" class="corner-popup-close" aria-label="Close">✕</button>
+  </div>
+
+  <div class="journal-compose">
+    <input id="journalPopTitle" type="text" placeholder="Entry title (optional)">
+    <textarea id="journalPopText" rows="3" placeholder="Jot down what happened…"></textarea>
+    <button id="journalPopAdd" class="add-btn">+ Add entry</button>
+  </div>
+
+  <div class="corner-popup-list" id="journalPopList"></div>
+</div>
