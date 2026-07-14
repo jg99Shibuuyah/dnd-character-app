@@ -24,12 +24,14 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
-app.get('/library', (req, res) => {
-  res.render('library');
+// The import forms (formerly "Library").
+app.get('/import', (req, res) => {
+  res.render('import');
 });
 
-app.get('/notes', (req, res) => {
-  res.render('notes');
+// The rules reference + search (formerly "Notes").
+app.get('/library', (req, res) => {
+  res.render('library');
 });
 
 app.use('/api/characters', charactersRouter);

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Ledger — Import</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="import">
+<%- include('partials/sidebar.html') %>
+<div class="sheet">
+
+  <%- include('partials/page-bar.html', { title: 'Import' }) %>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-tab="classes">Classes</button>
+    <button class="tab-btn" data-tab="species">Species</button>
+    <button class="tab-btn" data-tab="spells">Spells</button>
+    <button class="tab-btn" data-tab="bulk">Bulk Import</button>
+    <button class="tab-btn" data-tab="reference">JSON Reference</button>
+  </nav>
+
+  <div id="tab-classes" class="tab-pane active">
+    <%- include('partials/import/import-class.html') %>
+    <div class="subimport-toggle">
+      <button class="pbtn" id="toggleSubclass" aria-expanded="false" aria-controls="subclassWrap"
+              data-show="+ Add a Subclass" data-hide="− Hide Subclass">+ Add a Subclass</button>
+      <span class="subimport-hint">Attach a subclass to any class.</span>
+    </div>
+    <div id="subclassWrap" class="subimport-wrap" hidden>
+      <%- include('partials/import/import-subclass.html') %>
+    </div>
+  </div>
+
+  <div id="tab-species" class="tab-pane">
+    <%- include('partials/import/import-species.html') %>
+    <div class="subimport-toggle">
+      <button class="pbtn" id="toggleSubspecies" aria-expanded="false" aria-controls="subspeciesWrap"
+              data-show="+ Add a Subspecies" data-hide="− Hide Subspecies">+ Add a Subspecies</button>
+      <span class="subimport-hint">Attach a subspecies to any species.</span>
+    </div>
+    <div id="subspeciesWrap" class="subimport-wrap" hidden>
+      <%- include('partials/import/import-subspecies.html') %>
+    </div>
+  </div>
+
+  <div id="tab-spells" class="tab-pane">
+    <div class="grid grid-half">
+      <%- include('partials/import/import-spell.html') %>
+    </div>
+  </div>
+
+  <div id="tab-bulk" class="tab-pane">
+    <%- include('partials/import/import-bulk.html') %>
+  </div>
+
+  <div id="tab-reference" class="tab-pane">
+    <%- include('partials/import/json-reference.html') %>
+  </div>
+
+  <div class="footer-note">Imports are saved to the shared database and available to every character.</div>
+</div>
+
+<script src="/app.js"></script>
+<script src="/modules/core.js"></script>
+<script src="/modules/importTab.js"></script>
+</body>
+</html>

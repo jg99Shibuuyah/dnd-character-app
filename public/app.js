@@ -1324,7 +1324,7 @@ function defaultCharacter(){
 
 let state = defaultCharacter();
 
-// Which page this script is running on: 'sheet' (index), 'library', or 'notes'.
+// Which page this script is running on: 'sheet' (index), 'import', or 'library'.
 // Standalone pages set data-page on <body>; shared handlers check this to skip
 // character-sheet-only work (autosave, sheet panel rebuilds).
 const PAGE = document.body.dataset.page || 'sheet';
@@ -4250,10 +4250,10 @@ function notesEntry(type, name, badges, haystack, detail, edit){
     text: (name + ' ' + haystack).toLowerCase(), detail, edit };
 }
 
-// Deep link into the Library page's import forms: /library?edit=<type>:<key>.
-// The Library page loads the entry into the matching form (see openLibraryEditParam).
+// Deep link into the Import page's forms: /import?edit=<type>:<key>.
+// The Import page loads the entry into the matching form (see openLibraryEditParam).
 function editLink(type, key, label){
-  return { href: '/library?edit=' + type + ':' + encodeURIComponent(key), label };
+  return { href: '/import?edit=' + type + ':' + encodeURIComponent(key), label };
 }
 
 // Level-tagged feature list used inside the detail popup for classes and subclasses.
@@ -4927,7 +4927,27 @@ const app = {
 };
 window.characterSheetApp = app;
 
-// Deep link from the Notes search: /library?edit=<type>:<key> loads the entry
+// A subclass / subspecies import form is tucked behind a toggle on its tab.
+// Show or hide it and keep the toggle button's label + aria state in sync.
+function setSubImportOpen(btnId, wrapId, open){
+  const btn = document.getElementById(btnId);
+  const wrap = document.getElementById(wrapId);
+  if(!btn || !wrap) return;
+  wrap.hidden = !open;
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? btn.dataset.hide : btn.dataset.show;
+}
+
+function bindSubImportToggles(){
+  [['toggleSubclass','subclassWrap'], ['toggleSubspecies','subspeciesWrap']].forEach(([btnId, wrapId])=>{
+    const btn = document.getElementById(btnId);
+    const wrap = document.getElementById(wrapId);
+    if(!btn || !wrap) return;
+    btn.addEventListener('click', ()=> setSubImportOpen(btnId, wrapId, wrap.hidden));
+  });
+}
+
+// Deep link from the Library search: /import?edit=<type>:<key> loads the entry
 // into the matching import form and scrolls its panel into view.
 function openLibraryEditParam(){
   const param = new URLSearchParams(location.search).get('edit');
@@ -4953,6 +4973,9 @@ function openLibraryEditParam(){
   m.fill();
   const sel = document.getElementById(m.sel);
   if(sel && [...sel.options].some(o=>o.value===key)) sel.value = key;
+  // Subclass / subspecies forms sit behind a toggle — reveal it so the deep link lands.
+  if(type==='subclass') setSubImportOpen('toggleSubclass', 'subclassWrap', true);
+  if(type==='subspecies') setSubImportOpen('toggleSubspecies', 'subspeciesWrap', true);
   const anchor = document.getElementById(m.anchor);
   const panel = anchor && anchor.closest('.panel');
   // The target form lives inside a tab pane — switch to that tab before scrolling.
@@ -4966,9 +4989,9 @@ function openLibraryEditParam(){
   if(panel) setTimeout(()=> panel.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 }
 
-// The Library page: import forms, imported lists, and load-existing pickers.
+// The Import page: import forms, imported lists, and load-existing pickers.
 // Registries are already loaded when this runs; no character is loaded here.
-function initLibraryPage(){
+function initImportPage(){
   bindClassImport();
   renderImportedList();
   bindSpeciesImport();
@@ -4980,12 +5003,13 @@ function initLibraryPage(){
   bindSpellImport();
   renderSpellImportedList();
   bindBulkImport();
-  bindTabs(); // Library panels are split across tabs (Classes / Species / Spells / Bulk / Reference)
+  bindTabs(); // Import panels are split across tabs (Classes / Species / Spells / Bulk / Reference)
+  bindSubImportToggles(); // Subclass / Subspecies forms are revealed by a toggle on their tab
   buildLibraryEditSelects();
   bindLibraryEditSelects();
   buildSpellLevelSelects();
   setTagPicker('splTagPicker', []);
-  openLibraryEditParam(); // honor ?edit= deep links from the Notes search
+  openLibraryEditParam(); // honor ?edit= deep links from the Library search
 }
 
 // The character sheet (index): loads a character and wires every tab.
@@ -5018,8 +5042,8 @@ async function init(){
   await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
   await loadCustomSubspecies(); // ...and imported subspecies (attach to parent species)
   await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)
-  if(PAGE==='library'){ initLibraryPage(); return; }
-  if(PAGE==='notes'){ initNotesPage(); return; } // search needs the registries loaded
+  if(PAGE==='import'){ initImportPage(); return; }
+  if(PAGE==='library'){ initNotesPage(); return; } // the Library page's search needs the registries loaded
   await initSheetPage();
 }
 
