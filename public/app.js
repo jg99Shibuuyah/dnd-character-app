@@ -264,6 +264,11 @@ function P(rows){ return rows.flatMap(([lv,...names])=>names.map(n=>({lv, name:n
 // the Class Features panel, and (for entries with `use` tags) the Actions tab.
 // `casting` describes spell access; `subclassLevel` is when the subclass is chosen.
 const CLASS_DATA = {
+  Artificer:{ hitDie:8, saves:['con','int'], choose:2, skills:['Arcana','History','Investigation','Medicine','Nature','Perception','Sleight of Hand'],
+    subclassLevel:3, subclasses:['Alchemist','Armorer','Artillerist','Battle Smith'],
+    casting:{type:'half', ability:'int', roundUp:true, note:'Prepared caster: prepares INT modifier + half artificer level (rounded down) spells; can cast rituals and use tools as a spellcasting focus.'},
+    desc:'Masters of invention, artificers use ingenuity and magic to unlock extraordinary capabilities in objects. Proficient with light &amp; medium armor, shields, and simple weapons; INT is their spellcasting ability.',
+    features:P([[1,'Magical Tinkering','Spellcasting'],[2,'Infuse Item'],[3,'Artificer Specialist','The Right Tool for the Job'],[4,'Ability Score Improvement'],[5,'Specialist feature'],[6,'Tool Expertise'],[7,'Flash of Genius'],[8,'Ability Score Improvement'],[9,'Specialist feature'],[10,'Magic Item Adept'],[11,'Spell-Storing Item'],[12,'Ability Score Improvement'],[14,'Magic Item Savant'],[15,'Specialist feature'],[16,'Ability Score Improvement'],[18,'Magic Item Master'],[19,'Ability Score Improvement'],[20,'Soul of Artifice']]) },
   Barbarian:{ hitDie:12, saves:['str','con'], choose:2, skills:['Animal Handling','Athletics','Intimidation','Nature','Perception','Survival'],
     subclassLevel:3, subclasses:['Path of the Berserker','Path of the Totem Warrior'],
     casting:{type:'none'},
@@ -462,7 +467,629 @@ Object.values(SPECIES_DATA).forEach(sd=>{ if(!sd.source) sd.source='5E'; sd.buil
 // their subclass *names* in CLASS_DATA[cls].subclasses; imported entries here
 // add source, description, and level-gated features. `subclassNamesForClass`
 // merges the two so pickers and cards see every option for a parent class.
-const SUBCLASS_DATA = {};
+const SUBCLASS_DATA = {
+  'Artificer::Alchemist':{ parent:'Artificer', name:'Alchemist', source:'5E', subclassLevel:3,
+    desc:'An Alchemist is an expert at combining reagents to produce mystical effects — using potions and oils to restore and protect allies while ravaging enemies with alchemical fire, acid, and poison.',
+    features:[
+      {lv:3, name:'Tool Proficiency', use:'passive', desc:"You gain proficiency with alchemist's supplies (or another set of artisan's tools if already proficient); you can use them as a spellcasting focus."},
+      {lv:3, name:'Alchemist Spells', use:'passive', desc:'You always have certain spells prepared (they don\'t count against your prepared total): L3 Healing Word, Ray of Sickness; L5 Flaming Sphere, Melf\'s Acid Arrow; L9 Gaseous Form, Mass Healing Word; L13 Blight, Death Ward; L17 Cloudkill, Raise Dead.'},
+      {lv:3, name:'Experimental Elixir', use:'action', cost:'1/long rest, +1 per slot', desc:'After a long rest, produce one experimental elixir in a flask (random or chosen effect: Healing, Swiftness, Resilience, Boldness, Flight, Transformation). Create extra elixirs by expending a spell slot (action). Drinking one is a bonus action.'},
+      {lv:5, name:'Alchemical Savant', use:'passive', desc:"When you cast a spell using alchemist's supplies as the focus, add your INT modifier to one roll of that spell that restores hit points or deals acid, fire, necrotic, or poison damage."},
+      {lv:9, name:'Restorative Reagents', use:'passive', desc:'Whenever a creature drinks one of your elixirs it gains temporary HP equal to 2d6 + your INT modifier. You can cast Lesser Restoration without a spell slot a number of times equal to your INT modifier per long rest.'},
+      {lv:15, name:'Chemical Mastery', use:'passive', desc:'You gain resistance to acid and poison damage and immunity to the poisoned condition. You can cast Greater Restoration and Heal once each per long rest without expending a spell slot.'},
+    ] },
+  'Artificer::Armorer':{ parent:'Artificer', name:'Armorer', source:'5E', subclassLevel:3,
+    desc:'An Armorer modifies magical armor into a protective exoskeleton, specializing it to sneak, defend, or destroy — becoming a walking arsenal of arcane technology.',
+    features:[
+      {lv:3, name:'Tools of the Trade', use:'passive', desc:"You gain proficiency with heavy armor and smith's tools (or another set of artisan's tools if already proficient)."},
+      {lv:3, name:'Armorer Spells', use:'passive', desc:'Always prepared: L3 Magic Missile, Thunderwave; L5 Mirror Image, Shatter; L9 Hypnotic Pattern, Lightning Bolt; L13 Fire Shield, Greater Invisibility; L17 Passwall, Wall of Force.'},
+      {lv:3, name:'Arcane Armor', use:'bonus', desc:"Turn a suit of armor into Arcane Armor (don/doff as an action). It requires no Strength, can't be removed against your will, replaces missing limbs, and serves as a spellcasting focus."},
+      {lv:3, name:'Armor Model', use:'passive', desc:'Choose a model when you don the armor (change on a rest): Guardian — Thunder Gauntlets (1d8 force, disadvantage vs others) and Defensive Field (bonus action temp HP); or Infiltrator — Lightning Launcher (1d6 lightning ranged), Powered Steps (+5 speed), and Dampening Field (advantage on Stealth).'},
+      {lv:5, name:'Extra Attack', use:'passive', desc:'You can attack twice, rather than once, whenever you take the Attack action on your turn.'},
+      {lv:9, name:'Armor Modifications', use:'passive', desc:'Your Arcane Armor counts as four separate infusable items (armor, boots, helmet, and the special weapon), and you can infuse more items and know more infusions.'},
+      {lv:15, name:'Perfected Armor', use:'passive', desc:'Guardian: as a reaction you can pull a Large or smaller creature within 30 ft up to 30 ft toward you. Infiltrator: your Lightning Launcher adds extra damage once per turn (INT mod) and reduces the target\'s speed.'},
+    ] },
+  'Artificer::Artillerist':{ parent:'Artificer', name:'Artillerist', source:'5E', subclassLevel:3,
+    desc:'An Artillerist harnesses magic to hurl fire, frost, and force across the battlefield, wielding an arcane cannon of their own creation and channeling spells through a magic weapon.',
+    features:[
+      {lv:3, name:'Tool Proficiency', use:'passive', desc:"You gain proficiency with woodcarver's tools (or another set of artisan's tools if already proficient)."},
+      {lv:3, name:'Artillerist Spells', use:'passive', desc:'Always prepared: L3 Shield, Thunderwave; L5 Scorching Ray, Shatter; L9 Fireball, Wind Wall; L13 Ice Storm, Wall of Fire; L17 Cone of Cold, Wall of Force.'},
+      {lv:3, name:'Eldritch Cannon', use:'action', cost:'1/long rest or 1 slot', desc:'Create a Small or Tiny magical cannon (AC 18, HP 5×artificer level). Choose Flamethrower (15-ft cone, 2d8 fire, DEX save), Force Ballista (120-ft ranged, 2d8 force + push), or Protector (temp HP 1d8+INT to nearby allies). Bonus action to activate or move it up to 15 ft.'},
+      {lv:5, name:'Arcane Firearm', use:'passive', desc:"After a long rest, use tinker's/woodcarver's/smith's tools to turn a rod, staff, or wand into an Arcane Firearm. When you cast an artificer spell through it, add +1d8 to one damage roll of that spell."},
+      {lv:9, name:'Explosive Cannon', use:'passive', desc:'Your Eldritch Cannon\'s damage rolls increase by 1d8. As an action you can command it to detonate: each creature within 20 ft takes 3d8 force damage (DEX save for half), destroying the cannon.'},
+      {lv:15, name:'Fortified Position', use:'passive', desc:'You can have two Eldritch Cannons at once (create both with one spell/action, activate both with one bonus action). You and your allies have half cover while within 10 ft of one of your cannons.'},
+    ] },
+  'Artificer::Battle Smith':{ parent:'Artificer', name:'Battle Smith', source:'5E', subclassLevel:3,
+    desc:'A Battle Smith is a protector who repairs the wounded and defends the fallen, fighting alongside a loyal Steel Defender of their own invention and wielding magic weapons with arcane skill.',
+    features:[
+      {lv:3, name:'Tool Proficiency', use:'passive', desc:"You gain proficiency with smith's tools (or another set of artisan's tools if already proficient); you can use them as a spellcasting focus."},
+      {lv:3, name:'Battle Smith Spells', use:'passive', desc:'Always prepared: L3 Heroism, Shield; L5 Branding Smite, Warding Bond; L9 Aura of Vitality, Conjure Barrage; L13 Aura of Purity, Fire Shield; L17 Banishing Smite, Mass Cure Wounds.'},
+      {lv:3, name:'Battle Ready', use:'passive', desc:'You gain proficiency with martial weapons. When you attack with a magic weapon, you can use your Intelligence modifier, instead of Strength or Dexterity, for the attack and damage rolls.'},
+      {lv:3, name:'Steel Defender', use:'action', cost:'1/long rest or 1 slot', desc:"Build a loyal mechanical companion (see its stat block). It shares your proficiency bonus, acts on your turn, and can Deflect Attack as a reaction. It takes the Dodge action unless you use a bonus action to command it to Dodge, Dash, Disengage, Help, or make its Force-Empowered Rend attack."},
+      {lv:5, name:'Extra Attack', use:'passive', desc:'You can attack twice, rather than once, whenever you take the Attack action on your turn.'},
+      {lv:9, name:'Arcane Jolt', use:'passive', cost:'INT mod/long rest', desc:'When your magic weapon or your Steel Defender hits a target, you can channel magical energy: either deal an extra 2d6 force damage, or heal one creature within 30 ft of the target for 2d6 hit points.'},
+      {lv:15, name:'Improved Defender', use:'passive', desc:'Your Arcane Jolt damage and healing increase to 4d6. Your Steel Defender gains a +2 bonus to AC, its Deflect Attack deals force damage (1d4 + INT mod), and its Force-Empowered Rend deals extra force damage.'},
+    ] },
+  // ---- Steinhardt's Guide to the Eldritch Hunt (World Anvil) subclasses ----
+  // Homebrew. Concise paraphrases of each Chapter/archetype's level-gated
+  // features; see worldanvil.com/w/steinhardt-s-guide-to-the-eldritch-hunt for
+  // full rules text. Jaeger Chapter names match CLASS_DATA.Jaeger.subclasses.
+  'Artificer::Mortis Engineer':{ parent:'Artificer', name:'Mortis Engineer', source:'Homebrew', subclassLevel:3,
+    desc:'A ghoulish forerunner of manikin science who grafts lightning to still-warm flesh — scorching foes from within, then jolting their corpses upright as twitching, ozone-reeking zombie servants.',
+    features:[
+      {lv:3, name:'Tool Proficiency', use:'passive', desc:'You gain proficiency in the Medicine skill (or another skill of your choice if already proficient).'},
+      {lv:3, name:'Mortis Engineer Spells', use:'passive', desc:'Always prepared (don\'t count against your prepared total): L3 false life, witch bolt; L5 lightning charged, ray of enfeeblement; L9 lightning bolt, revivify; L13 graveyard shuffle, jumping bolt; L17 negative energy flood, raise dead.'},
+      {lv:3, name:'Jumpstart', use:'passive', desc:'Once on your turn, when a spell of 1st level or higher deals lightning damage to a creature, you can heal it instead for INT modifier x the spell level. Repeating this on a creature on consecutive rounds forces an escalating CON save or it takes the damage as normal. From 9th level you can heal several creatures at once.'},
+      {lv:3, name:'Galvanized Flesh', use:'bonus action', desc:'When you deal lightning damage to a Small+ corpse with a spell, embed rods to raise it as a zombie for 10 minutes: 2x artificer-level temp HP and +INT to attacks. Control 2 zombies (3 at 9th, 4 at 17th); each discharges lightning at a nearby creature when it drops.'},
+      {lv:5, name:'Death Lightning', use:'passive', desc:'You can swap the necrotic and lightning damage of your spells for each other. Your zombies can also deliver your touch spells (using their reaction) from up to 100 ft away.'},
+      {lv:5, name:'Shock Trooper', use:'passive', desc:'Your zombies gain 40 ft speed, can deal lightning instead of bludgeoning damage, and gain a System Overload shock (bonus action, CON save).'},
+      {lv:9, name:'Unending Legion', use:'passive', desc:'A carried container fits your zombies with metallic shells: AC 12 + INT, +INT to saves, and added damage immunities.'},
+      {lv:15, name:'Flesh Titan', use:'action', cost:'1/long rest', desc:'Inject a zombie within 5 ft to turn it into a flesh golem for 1 minute (still affected by your zombie features); it detonates in a 20-ft lightning burst when the minute ends or it drops to 0 HP.'},
+    ] },
+  'Barbarian::Path of the Earthbreaker':{ parent:'Barbarian', name:'Path of the Earthbreaker', source:'Homebrew', subclassLevel:3,
+    desc:'A living titan who wields stolen gravity-magic, crushing foes with bare fists and levelling the battlefield itself. Save DC = 8 + proficiency bonus + STR modifier.',
+    features:[
+      {lv:3, name:'Overwhelming Power', use:'passive', desc:'Gravity-charged unarmed strikes deal 1d6 + STR bludgeoning (d8/d10/d12 at 6th/10th/14th); after one, a bonus action makes another unarmed strike on the same target. Nonmagical weapons shatter on a melee hit; thrown-weapon range doubles and can use the unarmed die.'},
+      {lv:3, name:'Gravitational Rage', use:'passive', desc:'Once per turn on an unarmed hit, force an Earthbreaker save: Burying Hands (speed halved, prone on a big fail) or Bulldozing Punch (push 10 ft, collision damage).'},
+      {lv:6, name:'Ruination', use:'passive', desc:'Your unarmed strikes count as magical. Punch a wall/force spell (wall of force, forcecage, etc.) and make a STR check (DC 10 + spell level) to rupture and dispel it.'},
+      {lv:6, name:'Imperious Gravity', use:'bonus action', desc:'While raging: Attractive Field (15-ft cone pull), Repulsive Field (retaliatory push bubble), or Stomp (line quake, difficult terrain). Range and distances double at 14th.'},
+      {lv:10, name:'Unyielding', use:'passive', desc:'Your unarmed strikes deal double damage to structures, you ignore difficult terrain, and you add your CON modifier to STR and Intimidation checks.'},
+      {lv:14, name:'World Breaker', use:'passive', cost:'STR mod/short rest', desc:'Once per turn while raging, a melee hit deals +3d12 bludgeoning and pushes 30 ft; hit or miss, a 90-ft cone breaks as a brief earthquake (your save DC, up to 1d4 fissures).'},
+    ] },
+  'Barbarian::Path of the Lightning Vessel':{ parent:'Barbarian', name:'Path of the Lightning Vessel', source:'Homebrew', subclassLevel:3,
+    desc:'A brute overflowing with implanted lightning, crashing into the fray from impossible heights and electrocuting all around. Vessel save DC = 8 + proficiency bonus + CON modifier.',
+    features:[
+      {lv:3, name:'Galvanic Heart', use:'bonus action', desc:'Gain lightning resistance (or reduce lightning damage 1d6 if already resistant). While raging, spend a bonus action on Electrified Chains (bonus lightning + anchor a target), Fulgurant Strike (call lightning through an embedded weapon, DEX-save area), or Lightning Step (dash half speed, zap a nearby creature).'},
+      {lv:6, name:'Roaring Crash', use:'special', desc:'When you enter your rage, leap and slam a point within 30 ft: a 10-ft radius makes a DEX save or takes CON-many d8 lightning (half on a save). Range/target size grows at 10th (60 ft, Huge) and 14th (90 ft, Gargantuan).'},
+      {lv:10, name:'Lightning Reflexes', use:'passive', desc:'Add your CON modifier (min +1) to DEX checks, and while raging you can use Lightning Step once per turn without a bonus action.'},
+      {lv:14, name:'Electric Beast', use:'passive', desc:'The damage of your Galvanic Heart abilities rises to three times your CON modifier, and each of those abilities gains an upgraded effect.'},
+    ] },
+  'Bard::College of the Apocalypse':{ parent:'Bard', name:'College of the Apocalypse', source:'Homebrew', subclassLevel:3,
+    desc:'A herald of the end who channels the power of the Great Ones through aberrant song, unleashing madness and cataclysm on the battlefield.',
+    features:[
+      {lv:3, name:'Endless Symphony', use:'passive', desc:'Gain an extra use of Bardic Inspiration at 3rd, 6th, and 14th level. In exchange, the die stays a d6 until it becomes a d8 at 10th level and a d10 at 15th.'},
+      {lv:3, name:'Eldritch Choir', use:'action', cost:'1 Bardic Inspiration', desc:'Learn Eldritch Melodies (2, +1 at 6th and 14th), sung as an action by expending Bardic Inspiration: e.g. a mass push/prone, a single-target stun, or an attack/damage buff to allies. Swapping a melody on a rest risks a DC 17 CHA save (short-term madness on a fail).'},
+      {lv:6, name:'Knowledge from Beyond the Stars', use:'passive', desc:'You can speak, read, and write Deep Speech, and add a roll of your Bardic Inspiration die (without expending it) to INT checks about the cosmos or the eldritch.'},
+      {lv:6, name:'Devouring Maw', use:'reaction', desc:'A creature holding your Bardic Inspiration die can expend it as a reaction to an attack for a bonus to AC equal to the roll; if that turns a hit into a miss, it may teleport up to 30 ft.'},
+      {lv:14, name:'Song of the Apocalypse', use:'passive', cost:'1/long rest free cast', desc:'Learn divine order: transcend (doesn\'t count against spells known); cast it once per long rest without a slot, with concentration that damage can\'t break and automatic success to keep control.'},
+    ] },
+  'Cleric::Guardian Domain':{ parent:'Cleric', name:'Guardian Domain', source:'Homebrew', subclassLevel:1,
+    desc:'A frontline saint of the Radiant Church who summons a guardian angel to shield the innocent and body-block death itself. Radiance around a protective, self-sacrificing emissary.',
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:'Always prepared: L1 protection from evil and good, sanctuary; L3 aid, warding bond; L5 protection from energy, slow; L7 guardian of faith, resilient sphere; L9 antilife shell, wall of force.'},
+      {lv:1, name:'Bonus Proficiency', use:'passive', desc:'You gain proficiency with heavy armor.'},
+      {lv:1, name:'Protective Magic', use:'passive', desc:'When you cast a spell that restores hit points, the target also gains half as many temporary hit points (choose one creature if the spell targets several).'},
+      {lv:2, name:'Channel Divinity: Guardian Angel', use:'action', desc:'Summon a flying celestial ally (choose radiant or necrotic) for 1 hour. It shares your initiative, Dodges unless you command it with a bonus action, and can teleport in front of allies to take hits for them.'},
+      {lv:6, name:'Angelic Protection', use:'passive', desc:'When summoned, your Guardian Angel immediately casts warding bond (no action, ignoring components) on a friendly creature it can see.'},
+      {lv:8, name:'Divine Strike', use:'passive', desc:'Once per turn a weapon hit deals +1d8 radiant damage (2d8 at 14th). Your Guardian Angel gains this feature too.'},
+      {lv:17, name:'Aura of Defense', use:'passive', cost:'1/long rest', desc:'Your Guardian Angel\'s warding bond can cover a number of allies equal to your WIS modifier, and it gains 5 temporary HP per creature warded.'},
+    ] },
+  'Druid::Circle of Symbiosis':{ parent:'Druid', name:'Circle of Symbiosis', source:'Homebrew', subclassLevel:2,
+    desc:'A druid who grafts fragments of nature onto their own body through osteomancy, becoming a bone-and-timber behemoth that regenerates through the fury of battle.',
+    features:[
+      {lv:2, name:'Circle Spells', use:'passive', desc:'Always prepared: L2 shillelagh; L3 barkskin, skeletal tail; L5 osseous cage, plant growth; L7 maiden of bones, stoneskin; L9 forest of dread, tree stride.'},
+      {lv:2, name:'Wickerbone Behemoth', use:'action', cost:'1 Wild Shape', desc:'Spend a Wild Shape to become a behemoth (no armor) instead of a beast: arms act as shillelagh clubs, you gain barkskin without concentration, splinter for 1d4 (2d4 at 10th) when hit, and regenerate half the damage taken each turn (max 3x WIS). Lasts 10 minutes.'},
+      {lv:2, name:'Grafted Powers', use:'passive', desc:'Choose Bear Back (larger carrying/grapple, add WIS to STR checks), Deer Head (advantage on sight/smell Perception), or Goat Hooves (anti-prone advantage and a climbing speed).'},
+      {lv:6, name:'Extra Attack', use:'passive', desc:'You can attack twice whenever you take the Attack action, and can replace one attack with a cantrip.'},
+      {lv:10, name:"Nature's Wrath", use:'passive', desc:'You are permanently under barkskin. Your Wickerbone Behemoth becomes Large and grants 1d8 + WIS temporary HP whenever you deal bludgeoning, piercing, or slashing damage.'},
+      {lv:14, name:'Briarheart', use:'passive', cost:'1/long rest', desc:'Your melee weapon hits deal +WIS damage. When you drop to 0 HP, grant your Wickerbone Behemoth to two willing creatures within 30 ft for 1 minute (they can transform even in armor).'},
+    ] },
+  'Fighter::Blood Archer':{ parent:'Fighter', name:'Blood Archer', source:'Homebrew', subclassLevel:3,
+    desc:'A cursed archer coursing with tarblood, weaving their own blood into arrows to charm, burn, banish, and bleed their prey. Blood Shot save DC = 8 + proficiency bonus + CON modifier.',
+    features:[
+      {lv:3, name:'Blood Shot', use:'special', cost:'1+CON/short rest', desc:'Learn 3 Blood Shot options (+1 at 7th/10th/15th/18th); once per turn apply one to a bow attack. Options include Bewitching (charm/turncoat), Bloodboil (fire burst), Bloodshard (line attack), Constraining (acid tendrils), and Exiling (banish); all scale up at 18th.'},
+      {lv:3, name:'Blood Archer Anatomy', use:'passive', desc:'You are immune to disease and have resistance to and advantage against poison. You have advantage on Perception/Survival checks to track any creature you have damaged that has blood.'},
+      {lv:7, name:'Blood Arrows', use:'passive', desc:'Conjure magical arrows in place of ammunition (they overcome nonmagical resistance), and add your CON modifier to Blood Shot damage.'},
+      {lv:10, name:'Blood Recall', use:'bonus action', desc:'When you miss with a blood arrow, use a bonus action to reroll the attack roll against the same target as the arrow flies back.'},
+      {lv:15, name:'Blood of Creation', use:'action', desc:'Sacrifice your lifeforce: take 1d10 + CON necrotic damage that can\'t be reduced, and regain 1d4 uses of Blood Shot.'},
+    ] },
+  'Fighter::Living Nightmare':{ parent:'Fighter', name:'Living Nightmare', source:'Homebrew', subclassLevel:3,
+    desc:'A hunter grafted with eldritch flesh, reshaping their own body into blades, hammers, and lashes and devouring the dead to heal and wear their faces. Living Nightmare save DC = 8 + proficiency bonus + CON modifier.',
+    features:[
+      {lv:3, name:'Awakened Mutation', use:'passive', desc:'You lose proficiency with shields and heavy armor. While unarmored, your AC equals 11 + DEX modifier + CON modifier.'},
+      {lv:3, name:'Eldritch Weaponry', use:'bonus action', desc:'Grow simple melee weapons: Stinger (1d8 pierce, bonus-action second strike), Hammer Arm (2d6 bludgeon + push), Tendinous Lash (1d4 slash, 15 ft reach, trip on a STR save), or reaction Sinister Aegis (+2 AC). On a rest you can devour a rapier/maul/whip/shield to graft its magic onto the matching limb.'},
+      {lv:7, name:'Macabre Appetite', use:'action', desc:'Devour a corpse (dead under 1 week) within 5 ft to heal HP equal to its CR, and for 24 hours you can assume the creature\'s appearance and voice.'},
+      {lv:10, name:'Ascended Being', use:'bonus action', cost:'CON mod/long rest', desc:'Devouring a creature also grants its last week of memories. As a bonus action, grow eldritch wings for a 30 ft flying speed for 1 minute.'},
+      {lv:15, name:'Nightmarish Weaponry', use:'special', desc:'Once per turn, replace an Eldritch Weaponry attack with a stronger burst — e.g. a Stinger 30-ft cone (DEX save for the damage of 3 hits) or a ground-shattering Hammer Arm quake.'},
+    ] },
+  'Monk::Way of the Fire Dancer':{ parent:'Monk', name:'Way of the Fire Dancer', source:'Homebrew', subclassLevel:3,
+    desc:'An heir to a persecuted tradition who hides deadly martial arts within dance, wreathing weapons and body in flame. (A darkflame variant swaps fire for necrotic.)',
+    features:[
+      {lv:3, name:'Blazing Performer', use:'passive', desc:'Gain proficiency (doubled) in Performance or Acrobatics, and fire resistance (or reduce fire damage 1d6 if already resistant).'},
+      {lv:3, name:'Dance of Fire', use:'passive', cost:'1 ki', desc:'Spending a ki point on your turn ignites your monk weapons and unarmed strikes until your next turn: +WIS fire damage and +half WIS AC. While ablaze, you can react to a missed melee attack with an unarmed strike or a Flurry of Blows.'},
+      {lv:6, name:'Scorching Vortex', use:'special', cost:'1+WIS/long rest', desc:'With Step of the Wind, circling a creature traps it in a fiery vortex: a DEX save or 2d6 fire and confinement; the opaque flames block line of sight.'},
+      {lv:11, name:'Flames of Redemption', use:'passive', desc:'Your fire damage ignores fire resistance, and you can choose to deal it as radiant damage instead.'},
+      {lv:11, name:'Purifying Flames', use:'action', cost:'2 ki', desc:'Touch a creature to end one poison, charm, or short-term madness afflicting it.'},
+      {lv:17, name:'One with the Fire', use:'passive', desc:'Monk-weapon fire damage sets targets alight (WIS fire each turn until doused). While in Dance of Fire, you gain immunity to fire and resistance to bludgeoning, piercing, and slashing damage.'},
+    ] },
+  'Paladin::Oath of the Eldritch Hunt':{ parent:'Paladin', name:'Oath of the Eldritch Hunt', source:'Homebrew', subclassLevel:3,
+    desc:'A grey templar sworn to eradicate the aberrant, marking prey and teleporting to the kill while walking the razor edge between hunter and beast.',
+    features:[
+      {lv:3, name:'Oath Spells', use:'passive', desc:'Always prepared: L3 faerie fire, spectral slash; L5 moonbeam, hold person; L9 displacing maw, spectral fury; L13 black tentacles, maiden of bones; L17 contact other plane, hold monster.'},
+      {lv:3, name:'Channel Divinity: Hunt the Prey', use:'bonus action', desc:'Mark a creature within 60 ft for 1 minute; as a bonus action each turn you can teleport up to 30 ft to a space next to the marked target.'},
+      {lv:3, name:'Channel Divinity: Stolen Eldritch Gift', use:'bonus action', desc:'For 10 minutes, add your CHA modifier to Athletics, Acrobatics, and Perception checks.'},
+      {lv:7, name:'Sharpened Senses', use:'passive', desc:'You gain blindsight 10 ft (30 ft at 18th); within range nothing can hide from you, even while blinded or in darkness.'},
+      {lv:15, name:'Find Weakness', use:'passive', desc:'Dealing damage to a creature reveals its resistances, immunities, and vulnerabilities. Hunt the Prey also lets you make a weapon attack against the marked target when you reappear.'},
+      {lv:20, name:'Perfect Hunter', use:'bonus action', cost:'1/long rest', desc:'For 1 minute you become invisible, can\'t be grappled/restrained/paralyzed, and your weapon hits deal +1d8 necrotic that bypasses resistance.'},
+    ] },
+  'Ranger::Lunar Warden':{ parent:'Ranger', name:'Lunar Warden', source:'Homebrew', subclassLevel:3,
+    desc:'An heir to an ancient elven tradition who bonds with the ever-shifting eldritch moons, channeling their powers and swelling in strength under the moon that matches.',
+    features:[
+      {lv:3, name:'Astral Affinity', use:'passive', desc:'Learn the light cantrip, gain advantage on saves against direct Eldritch Moon effects, and gain darkvision 60 ft (or +30 ft).'},
+      {lv:3, name:'Moon Conduit', use:'special', cost:'WIS/long rest', desc:'Once per turn channel a Moon Conduit (short rest recharge from 7th): e.g. Blood Moon of Rebirth (party healing), Howling Moon (claws), Shattered Moon (dampen magic / counterspell), Scorching Moon (charge + fire), Vacuous Moon (teleport). A conduit matching the moon overhead is empowered (Lunar Alignment).'},
+      {lv:11, name:'Additional Moon Conduits', use:'passive', desc:'Learn further conduits — Glacial Moon (retaliatory temp HP), Slumbering Moon (free misty step / dimension door), Krakenlight (charming lure), and more.'},
+      {lv:15, name:'Celestial Tide', use:'action', cost:'1/long rest', desc:'Cast reverse gravity for free in a pool of moonlight; when it ends, the lunar energy flows back and you regain all Moon Conduit uses.'},
+    ] },
+  'Ranger::Torturer Conclave':{ parent:'Ranger', name:'Torturer Conclave', source:'Homebrew', subclassLevel:3,
+    desc:'An inquisitorial hunter who brings implements of torture into battle, fueling agonizing techniques with magic. Technique save DC = 8 + proficiency bonus + WIS modifier. (Torture is a heavy theme — discuss with your table.)',
+    features:[
+      {lv:3, name:'Tools of the Trade', use:'passive', desc:'Gain proficiency (doubled) with torture tools and Insight checks.'},
+      {lv:3, name:'Torturer Techniques', use:'special', cost:'2/long rest or 1 slot', desc:'Learn techniques that enhance a melee attack made while holding torture tools. Expending a spell slot empowers a technique with extra damage (scaling WIS) and a saving-throw penalty on the target.'},
+      {lv:7, name:'Technique Mastery', use:'passive', desc:'Your techniques gain upgraded effects, such as a lingering bleed that recurs when you strike the same target on consecutive rounds.'},
+      {lv:11, name:'Greater Technique Mastery', use:'passive', desc:'Further technique upgrades, such as blinding a target that fails a technique save on consecutive rounds.'},
+      {lv:15, name:'Mental Agony', use:'reaction', desc:'React to a creature that recently failed a technique save (within 60 ft) to torment its mind, hindering its WIS, CHA, or INT saving throw.'},
+    ] },
+  'Rogue::Blade of Radiance':{ parent:'Rogue', name:'Blade of Radiance', source:'Homebrew', subclassLevel:3,
+    desc:'A zealous Steel Saint of the Church who sanctifies a blade and spends divine power to protect the faithful and smite enemies of the faith. Radiance save DC = 8 + proficiency bonus + WIS modifier.',
+    features:[
+      {lv:3, name:'Sanctified Champion', use:'passive', desc:'Gain proficiency with martial weapons and medium armor, and ritually sanctify a melee weapon on a long rest (it has finesse and counts as silvered in your hands).'},
+      {lv:3, name:'Divine Blessings', use:'special', cost:'1+WIS Divine points/rest', desc:'Divine points refresh on a rest (regain 1 per CR 1/2+ aberration/beast/fiend/undead slain with your blade); spending one grants WIS temp HP. Powers: Armor of the Faithful (reaction to force a foe off you), Divine Inspiration (reroll Religion/History/Insight), Rend the Blasphemous (bonus-action extra attack).'},
+      {lv:9, name:'Righteous Armament', use:'special', cost:'Divine points', desc:'More powers: Chains of Judgement (restrain on a hit), Divine Retaliation (reaction strike), Erupting Blades (convert Sneak Attack into a radiant DEX-save cone).'},
+      {lv:13, name:'Saintly Revelations', use:'passive', desc:'Learn 2 cleric cantrips and cast protection from evil and good, heroism, and shield of faith at will on yourself (from 17th, without concentration).'},
+      {lv:17, name:'Final Judgement', use:'passive', desc:'Command your sanctified blade to shed bright light (30 ft) and dim light (30 ft); while lit it counts as magical and deals +2d4 radiant damage.'},
+    ] },
+  'Rogue::Shadow':{ parent:'Rogue', name:'Shadow', source:'Homebrew', subclassLevel:3,
+    desc:'A secret assassin of the Silverblood Royalty who bonds a shadow-wreathed rifle, melts into darkness, and reappears to strike unseen.',
+    features:[
+      {lv:3, name:'Umbral Weapon', use:'passive', desc:'Gain firearm proficiency and ritually bond a rifle: you can\'t be disarmed of it and can summon it to hand; it needs no ammunition, makes no sound, and loses the Barrel property.'},
+      {lv:3, name:'Shadow Movement', use:'bonus action', desc:'While in darkness, take the Hide action with advantage and become a shadowy form (squeeze through 1-inch gaps, climbing speed, but incapacitated). End it to fire a concealed shot (1d4) that doesn\'t reveal you on a miss.'},
+      {lv:9, name:'Tenebrous Body', use:'passive', desc:'See normally in magical and nonmagical darkness out to 120 ft, and maintain Shadow Movement for up to 1 hour.'},
+      {lv:13, name:'Grim Curse', use:'passive', desc:'On a Sneak Attack with your umbral weapon, sacrifice up to 3 Sneak Attack dice to impose prone / restrained / blinded (save DC 8 + DEX + proficiency, with a -1d6 penalty if both of you are in darkness).'},
+      {lv:17, name:'Veil of Shadows', use:'reaction', desc:'When you use Uncanny Dodge, teleport up to 30 ft to a space in darkness and make one umbral-weapon attack against the attacker.'},
+    ] },
+  'Sorcerer::Scion of Madness':{ parent:'Sorcerer', name:'Scion of Madness', source:'Homebrew', subclassLevel:1,
+    desc:'A sorcerer whose mind is riddled with eldritch insanity — feeding on madness itself, spreading it to enemies, and warping the magic of the world.',
+    features:[
+      {lv:1, name:'Mind of Madness', use:'passive', desc:'You can reroll any madness you gain. A creature that reads your thoughts or scries you takes psychic damage equal to your class level, its effect fails, and it must save or gain a short-term madness.'},
+      {lv:1, name:'Spread of Chaos', use:'passive', cost:'1/long rest', desc:'When you cast a non-self spell of 1st level or higher, affected creatures must save or gain a short-term madness (targeting several forces a CHA save that risks failing the spell and afflicting you).'},
+      {lv:6, name:'Depths of Depravity', use:'reaction', cost:'1/short rest', desc:'While affected by a madness, react to give a creature within 120 ft disadvantage on a save; if it fails, regain one sorcery point per madness affecting you.'},
+      {lv:14, name:'Powers of Insanity', use:'passive', desc:'When determining a madness effect, roll two d10 and take the lower, and gaining a madness no longer stuns you.'},
+      {lv:18, name:'Maddening Hunger', use:'passive', desc:'Whenever you gain a madness, regain sorcery points: 1d4 (short-term), 2d4 (long-term), or 4d4 (indefinite).'},
+    ] },
+  'Warlock::The Void':{ parent:'Warlock', name:'The Void', source:'Homebrew', subclassLevel:1,
+    desc:'A warlock pledged to an energy-devouring cosmic entity, manipulating gravity and conjuring miniature black holes to crush and consume the enemy.',
+    features:[
+      {lv:1, name:'Expanded Spell List', use:'passive', desc:'Added to your spell options: L1 feather fall, gravity leap; L2 levitate, otherworldly gaze; L3 astral barrage, blink; L4 black tentacles, resilient sphere; L5 telekinesis, starfall.'},
+      {lv:1, name:'Fugite Omnis', use:'passive', desc:'You can hover a few inches off the ground, ascending and descending as part of your movement; being knocked prone instead sets you on the ground.'},
+      {lv:1, name:'Voracious Void', use:'bonus action', cost:'1/long rest or 1 slot', desc:'Create a 5-ft miniature black hole within 60 ft for 1 minute (concentration). It is difficult terrain, pulls objects and (STR save) creatures to its center, and deals 1d6 bludgeoning while halving speed. It grows at warlock levels 3/5/7/9 (restrain, annihilate at 0 HP, larger, 2d6 and airborne).'},
+      {lv:6, name:'Gravitational Pull', use:'reaction', desc:'When a creature within 120 ft is hit by a ranged attack passing through your active black hole, react with a ranged spell attack to deflect or blunt the strike.'},
+      {lv:10, name:'Warp Gravity', use:'passive', desc:'Gain a flying speed equal to your walking speed and can hover; you can share this with one creature touching you.'},
+      {lv:14, name:'Oblivion', use:'special', cost:'1/long rest', desc:'Let Voracious Void run wild: every creature that starts its turn in the field must save or be pulled to the center (you and a number of allies equal to your CHA modifier are exempt).'},
+    ] },
+  'Wizard::Osteomancer':{ parent:'Wizard', name:'Osteomancer', source:'Homebrew', subclassLevel:2,
+    desc:'A wizard who harvests power from bones — armoring themselves in their own skeleton and puppeting the skeletons of their foes.',
+    features:[
+      {lv:2, name:'Brittle Bone Armor', use:'bonus action', cost:'1/short rest', desc:'While unarmored, force out a frame of bones for 2x class-level temporary HP for 1 minute, gaining resistance to slashing and piercing and a bonus to AC equal to one-third your class level.'},
+      {lv:2, name:'Anatomical Expert', use:'passive', desc:'Gain Medicine proficiency and add your INT modifier to Medicine checks; on a check about a creature with a skeleton, add double your proficiency bonus.'},
+      {lv:6, name:'Bone Puppetry', use:'action', cost:'INT mod/long rest', desc:'Target a boned creature within 60 ft (STR save); on a failure you control its skeleton until the end of its next turn, and it hinders its own allies while resisting you.'},
+      {lv:10, name:'Skeletal Mastery', use:'passive', desc:'Cast alter self at will (Change Appearance or Natural Weapons only). As an action you can dissolve your own skeleton to ooze through 5-inch gaps at 10 ft speed (prone, no attacks or spells).'},
+      {lv:14, name:'Improved Bone Puppetry', use:'passive', desc:'Bone Puppetry lasts 1 minute (concentration that damage can\'t break) with no self-imposed penalties; the target repeats the save each turn, and you can spend extra uses to impose disadvantage on it.'},
+    ] },
+  'Jaeger::Absolute Chapter':{ parent:'Jaeger', name:'Absolute Chapter', source:'Homebrew', subclassLevel:3,
+    desc:'Jaegers who pursue the perfect hunt — killing their prey without taking a single hit, refining the core jaeger techniques to absolute perfection.',
+    features:[
+      {lv:3, name:'Counter Strike', use:'passive', desc:'Weapon Parry deals extra damage equal to half your class level; if the blocked damage exceeds the attack and your roll would hit AC, the target takes the remainder. Spending a Focus Point on a Focus Art grants advantage on your next weapon attack.'},
+      {lv:3, name:'Unencumbered Movement', use:'passive', desc:'While in light or no armor, your speed increases by 10 ft and your Dodge Step distance increases by 5 ft.'},
+      {lv:7, name:'Encircling Strike', use:'passive', desc:'When you flank a creature (opposite the side you started, or opposite an ally), your first melee hit deals extra damage equal to one Momentum die.'},
+      {lv:14, name:'Mobile Pursuer', use:'passive', desc:"Hunter's Pursuit ignores difficult terrain, lets you pass through hostile creatures, and costs no extra movement to climb or swim."},
+      {lv:17, name:'The Hunt', use:'free', cost:'1/long rest', desc:'Declare a hunt: for 1 minute you have freedom of movement and each Focus Point you spend grants 2 Momentum dice instead of 1.'},
+    ] },
+  'Jaeger::Heretic Chapter':{ parent:'Jaeger', name:'Heretic Chapter', source:'Homebrew', subclassLevel:3,
+    desc:'Jaegers who tear power from the gods themselves through blasphemous ritual, binding warlock magic to their soul. INT is their spellcasting ability.',
+    features:[
+      {lv:3, name:'Heretic Magic', use:'passive', desc:'You gain INT-based spellcasting from the warlock list with short-rest slots: 2 cantrips (+1 at 10th) and a growing list of known spells. Slot level rises 1st at 3rd, 2nd at 7th, 3rd at 13th, and 4th at 19th.'},
+      {lv:3, name:'Arcane Arts (Spell Flurry)', use:'bonus action', cost:'1 FP', desc:'When you cast a cantrip or a spell of 1st level or higher, expend a Focus Point to make a single weapon attack as a bonus action.'},
+      {lv:7, name:'Shrouded Steps', use:'passive', desc:'Jaeger features that let you move without spending movement can teleport instead; using this for Dodge Step makes you automatically succeed on its save.'},
+      {lv:14, name:'Mystical Momentum', use:'passive', desc:'When you expend a spell slot, you gain a number of Momentum dice equal to the slot level.'},
+      {lv:17, name:'Darkness Within', use:'bonus action', cost:'1/long rest', desc:'For 1 minute take a shadow-winged aspect: dim the area within 10 ft, become heavily obscured, gain a 30 ft flying speed, and resist nonmagical, non-silvered bludgeoning/piercing/slashing damage.'},
+    ] },
+  'Jaeger::Marauder Chapter':{ parent:'Jaeger', name:'Marauder Chapter', source:'Homebrew', subclassLevel:3,
+    desc:'Jaegers of raw slaughter who wade into the fray with two-handed weapons, cleaving through hordes and toppling giants.',
+    features:[
+      {lv:3, name:'Path of Gore (Great Cleave)', use:'special', cost:'all Momentum dice', desc:'On a hit with a two-handed weapon, expend all Momentum dice to deal +1 die damage and cleave that many adjacent targets; regain 1 Focus Point per creature reduced to 0 HP.'},
+      {lv:3, name:'Marauder Momentum', use:'passive', desc:'While wielding a two-handed melee weapon, your Momentum die is one size larger. While in medium armor you can add your CON modifier (max +2) instead of DEX to your AC.'},
+      {lv:7, name:'Leap Attack', use:'passive', desc:'Once per turn, if you move more than 15 ft toward a target (or fall 10+ ft onto it) before attacking, you deal +1 Momentum die of damage; when falling this way you halve falling damage and don\'t land prone.'},
+      {lv:14, name:'Fell the Leviathan', use:'passive', desc:'When you use a Finisher, the target makes a STR save (8 + STR + proficiency) or is knocked prone; Large or larger creatures have disadvantage.'},
+      {lv:17, name:'Titanic Strength', use:'passive', desc:'You can wield two-handed weapons in one hand and dual-wield non-light weapons; two-handed hits deal +half your STR modifier. On a Finisher you can double your Momentum dice (once per long rest).'},
+    ] },
+  'Jaeger::Salvation Chapter':{ parent:'Jaeger', name:'Salvation Chapter', source:'Homebrew', subclassLevel:3,
+    desc:'Divinely favored jaegers who purge evil with one hand and shield the innocent with the other, wreathing allies in healing light.',
+    features:[
+      {lv:3, name:'Art of Salvation (Prayer of Salvation)', use:'bonus action', cost:'1 FP', desc:'You and an ally within 60 ft each regain 1d6 HP and gain that many temporary HP.'},
+      {lv:3, name:"Savior's Focus", use:'passive', desc:'When an ally you can see or hear drops to 0 HP, you regain 1 Focus Point (once per minute).'},
+      {lv:7, name:'Sanctifying Light', use:'passive', desc:'When you spend a Focus Point you can emit sunlight (20 ft bright, 20 ft dim) until end of your next turn; allies entering or starting there heal 1d6 + your proficiency bonus.'},
+      {lv:14, name:'Purifying Salvation', use:'passive', desc:'Prayer of Salvation reaches one more creature and heals 1d12, and can cleanse charm, fright, poison, or short-term madness.'},
+      {lv:17, name:'Light of Hope', use:'bonus action', cost:'1/long rest', desc:'For 1 minute Sanctifying Light grows to 30 ft bright / 30 ft dim, allies within gain bless and advantage on death saves (and can\'t die at three fails while inside), and Prayer of Salvation refunds its Focus Point.'},
+    ] },
+  'Jaeger::Sanguine Chapter':{ parent:'Jaeger', name:'Sanguine Chapter', source:'Homebrew', subclassLevel:3,
+    desc:'Jaegers who draw power from blood — their own and their foes\' — sustaining unnatural resilience through an endless crimson parade. Blood Magic save DC = 8 + INT or CON modifier + proficiency bonus.',
+    features:[
+      {lv:3, name:'Vital Consumption (Blood Drain)', use:'bonus action', cost:'all Momentum dice', desc:'Drain a creature within 5 ft: it makes a CON save vs your Blood Magic DC for necrotic damage equal to the Momentum dice rolled (half on a save); you heal for half the damage. Regain 1 Focus Point if the target ends bloodied or was already bleeding.'},
+      {lv:3, name:'Crimson Rage', use:'passive', desc:'When you become bloodied (half HP or fewer) you regain 1 Focus Point and 1 Momentum die (once per minute).'},
+      {lv:7, name:'Blood Hex', use:'passive', desc:'When a target fails its save against Blood Drain, apply a hex: Blood Puppet (forced reaction attack), Bound Blood (restrained), or Burning Blood (recurring fire damage).'},
+      {lv:17, name:'Blood Frenzy', use:'passive', desc:'While bloodied, gain +20 ft speed, a third attack on the Attack action, and doubled healing from your jaeger abilities. You also gain Blood Craze (reaction, 1 FP: drop to 1 HP instead of 0 when reduced but not killed outright).'},
+    ] },
+  'Barbarian::Path of the Berserker':{ parent:'Barbarian', name:'Path of the Berserker', source:'5E', subclassLevel:3,
+    desc:"For a Berserker, rage is a means to an end — that end being violence. Committed to the path of unbridled fury, they lose themselves to the roiling emotions of combat.",
+    features:[
+      {lv:3, name:'Frenzy', use:'special', desc:"When you rage, you can go into a frenzy. For its duration you can make a single melee weapon attack as a bonus action on each of your turns. When your rage ends, you suffer one level of exhaustion."},
+      {lv:6, name:'Mindless Rage', use:'passive', desc:"You can't be charmed or frightened while raging. If you're charmed or frightened when you enter your rage, the effect is suspended for the duration."},
+      {lv:10, name:'Intimidating Presence', use:'action', desc:"Frighten a creature within 30 ft (WIS save vs 8 + proficiency + CHA). It's frightened until the end of your next turn; use your action on later turns to extend it."},
+      {lv:14, name:'Retaliation', use:'reaction', desc:"When you take damage from a creature within 5 ft of you, use your reaction to make a melee weapon attack against that creature."},
+    ] },
+  'Barbarian::Path of the Totem Warrior':{ parent:'Barbarian', name:'Path of the Totem Warrior', source:'5E', subclassLevel:3,
+    desc:"The Totem Warrior draws on a spirit animal as guide, protector, and inspiration, blending rage with primal magic that binds them to the natural world.",
+    features:[
+      {lv:3, name:'Spirit Seeker', use:'passive', desc:"You can cast Beast Sense and Speak with Animals, but only as rituals."},
+      {lv:3, name:'Totem Spirit', use:'passive', desc:"Choose a totem animal and gain its benefit while raging: Bear — resistance to all damage except psychic; Eagle — opportunity attacks against you have disadvantage and you can Dash as a bonus action; Wolf — allies have advantage on melee attacks against enemies within 5 ft of you."},
+      {lv:6, name:'Aspect of the Beast', use:'passive', desc:"Gain a lasting benefit from a totem: Bear — double carrying capacity and advantage on Strength checks to push/pull/lift; Eagle — see up to a mile without difficulty; Wolf — track at a fast pace and move stealthily at a normal pace."},
+      {lv:10, name:'Spirit Walker', use:'passive', desc:"You can cast Commune with Nature as a ritual, and the spirit you contact takes the form of your totem animal."},
+      {lv:14, name:'Totemic Attunement', use:'passive', desc:"Gain a totem benefit while raging: Bear — enemies within 5 ft have disadvantage attacking creatures other than you; Eagle — gain a flying speed equal to your walking speed (falling if you end your turn aloft); Wolf — knock a Large or smaller creature prone when you hit it with a melee attack (bonus action)."},
+    ] },
+  'Bard::College of Lore':{ parent:'Bard', name:'College of Lore', source:'5E', subclassLevel:3,
+    desc:"Bards of the College of Lore know something about most things, collecting bits of knowledge from many disciplines and using their learning to undermine the powerful.",
+    features:[
+      {lv:3, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with three skills of your choice."},
+      {lv:3, name:'Cutting Words', use:'reaction', cost:'1 Bardic Inspiration', desc:"When a creature within 60 ft makes an attack roll, ability check, or damage roll, expend a Bardic Inspiration die and subtract it from the roll (before you know if it succeeds)."},
+      {lv:6, name:'Additional Magical Secrets', use:'passive', desc:"Learn two spells of your choice from any class. They count as bard spells for you and don't count against the number of bard spells you know."},
+      {lv:14, name:'Peerless Skill', use:'special', cost:'1 Bardic Inspiration', desc:"When you make an ability check, expend one Bardic Inspiration die and add it to the roll (you can do this after rolling but before knowing the outcome)."},
+    ] },
+  'Bard::College of Valor':{ parent:'Bard', name:'College of Valor', source:'5E', subclassLevel:3,
+    desc:"Bards of the College of Valor are daring skalds whose tales keep alive the memory of great heroes, and by doing so inspire a new generation to reach such heights.",
+    features:[
+      {lv:3, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with medium armor, shields, and martial weapons."},
+      {lv:3, name:'Combat Inspiration', use:'passive', desc:"A creature that has a Bardic Inspiration die from you can add it to a weapon damage roll, or use its reaction to add it to AC against one attack."},
+      {lv:6, name:'Extra Attack', use:'passive', desc:"You can attack twice, rather than once, whenever you take the Attack action on your turn."},
+      {lv:14, name:'Battle Magic', use:'bonus', desc:"When you use your action to cast a bard spell, you can make one weapon attack as a bonus action."},
+    ] },
+  'Cleric::Knowledge':{ parent:'Cleric', name:'Knowledge', source:'5E', subclassLevel:1,
+    desc:"The Knowledge domain values learning and understanding above all, holding that the mysteries of the multiverse are the truest source of power.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Command, Identify; L3 Augury, Suggestion; L5 Nondetection, Speak with Dead; L7 Arcane Eye, Confusion; L9 Legend Lore, Scrying."},
+      {lv:1, name:'Blessings of Knowledge', use:'passive', desc:"Learn two languages, and gain proficiency (with double proficiency bonus) in two of Arcana, History, Nature, or Religion."},
+      {lv:2, name:'Channel Divinity: Knowledge of the Ages', use:'action', cost:'1 Channel Divinity', desc:"Gain proficiency with one skill or tool of your choice for 10 minutes."},
+      {lv:6, name:'Channel Divinity: Read Thoughts', use:'action', cost:'1 Channel Divinity', desc:"Read the surface thoughts of a creature within 60 ft (WIS save). On a failure you can read its thoughts for 1 minute and cast Suggestion on it with no save."},
+      {lv:8, name:'Potent Spellcasting', use:'passive', desc:"Add your Wisdom modifier to the damage you deal with any cleric cantrip."},
+      {lv:17, name:'Visions of the Past', use:'special', desc:"Through prayer and meditation you can call up visions of the past relating to an object you hold or your immediate surroundings."},
+    ] },
+  'Cleric::Life':{ parent:'Cleric', name:'Life', source:'5E', subclassLevel:1,
+    desc:"The Life domain focuses on the vibrant positive energy that sustains all life. Its clerics are dedicated to healing and protecting the living.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Bless, Cure Wounds; L3 Lesser Restoration, Spiritual Weapon; L5 Beacon of Hope, Revivify; L7 Death Ward, Guardian of Faith; L9 Mass Cure Wounds, Raise Dead."},
+      {lv:1, name:'Bonus Proficiency', use:'passive', desc:"You gain proficiency with heavy armor."},
+      {lv:1, name:'Disciple of Life', use:'passive', desc:"Your healing spells of 1st level or higher restore additional hit points equal to 2 + the spell's level."},
+      {lv:2, name:'Channel Divinity: Preserve Life', use:'action', cost:'1 Channel Divinity', desc:"Restore hit points equal to 5 times your cleric level, divided among creatures within 30 ft (a creature can be restored to no more than half its maximum)."},
+      {lv:6, name:'Blessed Healer', use:'passive', desc:"When you cast a spell of 1st level or higher that restores hit points to another creature, you regain 2 + the spell's level hit points."},
+      {lv:8, name:'Divine Strike', use:'passive', desc:"Once on each of your turns when you hit with a weapon attack, deal an extra 1d8 radiant damage (2d8 at 14th level)."},
+      {lv:17, name:'Supreme Healing', use:'passive', desc:"When you would normally roll dice to restore hit points with a spell, use the highest number possible for each die instead."},
+    ] },
+  'Cleric::Light':{ parent:'Cleric', name:'Light', source:'5E', subclassLevel:1,
+    desc:"The Light domain emphasizes the light of truth, life, and the sun. Its clerics wield fire and searing radiance to burn away darkness and deceit.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Burning Hands, Faerie Fire; L3 Flaming Sphere, Scorching Ray; L5 Daylight, Fireball; L7 Guardian of Faith, Wall of Fire; L9 Flame Strike, Scrying."},
+      {lv:1, name:'Bonus Cantrip', use:'passive', desc:"You learn the Light cantrip if you don't already know it."},
+      {lv:1, name:'Warding Flare', use:'reaction', cost:'WIS mod/long rest', desc:"When a creature within 30 ft that you can see attacks you, impose disadvantage on the attack roll by flaring bright light."},
+      {lv:2, name:'Channel Divinity: Radiance of the Dawn', use:'action', cost:'1 Channel Divinity', desc:"Dispel any magical darkness within 30 ft, and deal 2d10 + cleric level radiant damage to each hostile creature there (CON save for half)."},
+      {lv:6, name:'Improved Flare', use:'passive', desc:"You can use Warding Flare when another creature within 30 ft of you is attacked, not just when you are."},
+      {lv:8, name:'Potent Spellcasting', use:'passive', desc:"Add your Wisdom modifier to the damage you deal with any cleric cantrip."},
+      {lv:17, name:'Corona of Light', use:'action', desc:"Emit an aura of sunlight for 1 minute. Enemies in the bright light have disadvantage on saves against spells that deal fire or radiant damage."},
+    ] },
+  'Cleric::Nature':{ parent:'Cleric', name:'Nature', source:'5E', subclassLevel:1,
+    desc:"The Nature domain is served by clerics who revere the gods of the wild, tending the balance of the natural world and channeling its primal power.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Animal Friendship, Speak with Animals; L3 Barkskin, Spike Growth; L5 Plant Growth, Wind Wall; L7 Dominate Beast, Grasping Vine; L9 Insect Plague, Tree Stride."},
+      {lv:1, name:'Acolyte of Nature', use:'passive', desc:"Learn one druid cantrip, and gain proficiency in one of Animal Handling, Nature, or Survival."},
+      {lv:1, name:'Bonus Proficiency', use:'passive', desc:"You gain proficiency with heavy armor."},
+      {lv:2, name:'Channel Divinity: Charm Animals and Plants', use:'action', cost:'1 Channel Divinity', desc:"Charm beasts and plants within 30 ft (WIS save) for 1 minute or until they take damage."},
+      {lv:6, name:'Dampen Elements', use:'reaction', desc:"When you or a creature within 30 ft takes acid, cold, fire, lightning, or thunder damage, grant resistance to that instance of damage."},
+      {lv:8, name:'Divine Strike', use:'passive', desc:"Once on each of your turns when you hit with a weapon attack, deal an extra 1d8 cold, fire, or lightning damage (2d8 at 14th level)."},
+      {lv:17, name:'Master of Nature', use:'passive', desc:"You can command creatures charmed by your Charm Animals and Plants as a bonus action."},
+    ] },
+  'Cleric::Tempest':{ parent:'Cleric', name:'Tempest', source:'5E', subclassLevel:1,
+    desc:"The Tempest domain governs storm, sea, and sky. Its clerics call down thunder and lightning to smite their foes and inspire awe.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Fog Cloud, Thunderwave; L3 Gust of Wind, Shatter; L5 Call Lightning, Sleet Storm; L7 Control Water, Ice Storm; L9 Destructive Wave, Insect Plague."},
+      {lv:1, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with martial weapons and heavy armor."},
+      {lv:1, name:'Wrath of the Storm', use:'reaction', cost:'WIS mod/long rest', desc:"When a creature within 5 ft hits you, deal 2d8 lightning or thunder damage to it (DEX save for half)."},
+      {lv:2, name:'Channel Divinity: Destructive Wrath', use:'special', cost:'1 Channel Divinity', desc:"When you roll lightning or thunder damage, deal maximum damage instead of rolling."},
+      {lv:6, name:'Thunderbolt Strike', use:'passive', desc:"When you deal lightning damage to a Large or smaller creature, you can push it up to 10 ft away."},
+      {lv:8, name:'Divine Strike', use:'passive', desc:"Once on each of your turns when you hit with a weapon attack, deal an extra 1d8 thunder damage (2d8 at 14th level)."},
+      {lv:17, name:'Stormborn', use:'passive', desc:"You have a flying speed equal to your walking speed whenever you are not underground or indoors."},
+    ] },
+  'Cleric::Trickery':{ parent:'Cleric', name:'Trickery', source:'5E', subclassLevel:1,
+    desc:"The Trickery domain serves gods of mischief and misdirection. Its clerics are a disruptive force, champions of the downtrodden who upend the established order.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Charm Person, Disguise Self; L3 Mirror Image, Pass without Trace; L5 Blink, Dispel Magic; L7 Dimension Door, Polymorph; L9 Dominate Person, Modify Memory."},
+      {lv:1, name:'Blessing of the Trickster', use:'action', desc:"Touch a willing creature to give it advantage on Dexterity (Stealth) checks for 1 hour."},
+      {lv:2, name:'Channel Divinity: Invoke Duplicity', use:'action', cost:'1 Channel Divinity', desc:"Create an illusory duplicate of yourself for 1 minute (move it up to 30 ft as a bonus action). You can cast spells as though from its space and gain advantage on attacks when both you and it are within 5 ft of the target."},
+      {lv:6, name:'Channel Divinity: Cloak of Shadows', use:'action', cost:'1 Channel Divinity', desc:"Become invisible until the end of your next turn, until you attack, or until you cast a spell."},
+      {lv:8, name:'Divine Strike', use:'passive', desc:"Once on each of your turns when you hit with a weapon attack, deal an extra 1d8 poison damage (2d8 at 14th level)."},
+      {lv:17, name:'Improved Duplicity', use:'passive', desc:"Your Invoke Duplicity can create up to four illusory duplicates at once."},
+    ] },
+  'Cleric::War':{ parent:'Cleric', name:'War', source:'5E', subclassLevel:1,
+    desc:"The War domain inspires the courage of soldiers and champions. Its clerics are skilled combatants who share their gods' martial prowess.",
+    features:[
+      {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Divine Favor, Shield of Faith; L3 Magic Weapon, Spiritual Weapon; L5 Crusader's Mantle, Spirit Guardians; L7 Freedom of Movement, Stoneskin; L9 Flame Strike, Hold Monster."},
+      {lv:1, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with martial weapons and heavy armor."},
+      {lv:1, name:'War Priest', use:'bonus', cost:'WIS mod/long rest', desc:"When you take the Attack action, you can make one weapon attack as a bonus action."},
+      {lv:2, name:'Channel Divinity: Guided Strike', use:'special', cost:'1 Channel Divinity', desc:"Gain a +10 bonus to an attack roll (you can do this after you see the roll but before it hits or misses)."},
+      {lv:6, name:"Channel Divinity: War God's Blessing", use:'reaction', cost:'1 Channel Divinity', desc:"When a creature within 30 ft makes an attack roll, grant it a +10 bonus to the roll."},
+      {lv:8, name:'Divine Strike', use:'passive', desc:"Once on each of your turns when you hit with a weapon attack, deal an extra 1d8 damage of the weapon's type (2d8 at 14th level)."},
+      {lv:17, name:'Avatar of Battle', use:'passive', desc:"You gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons."},
+    ] },
+  'Druid::Circle of the Land':{ parent:'Druid', name:'Circle of the Land', source:'5E', subclassLevel:2,
+    desc:"The Circle of the Land is made up of mystics and sages who safeguard ancient knowledge and rites, drawing on the magic tied to a particular land.",
+    features:[
+      {lv:2, name:'Bonus Cantrip', use:'passive', desc:"You learn one additional druid cantrip of your choice."},
+      {lv:2, name:'Natural Recovery', use:'special', cost:'1/day', desc:"During a short rest, recover expended spell slots with a combined level up to half your druid level (rounded up), none of 6th level or higher."},
+      {lv:3, name:'Circle Spells', use:'passive', desc:"Choose a land type (arctic, coast, desert, forest, grassland, mountain, swamp, or Underdark) to gain always-prepared circle spells at druid levels 3, 5, 7, and 9."},
+      {lv:6, name:"Land's Stride", use:'passive', desc:"Moving through nonmagical difficult terrain costs no extra movement, and you have advantage on saves against plants magically created to impede movement."},
+      {lv:10, name:"Nature's Ward", use:'passive', desc:"You can't be charmed or frightened by elementals or fey, and you're immune to poison and disease."},
+      {lv:14, name:"Nature's Sanctuary", use:'passive', desc:"When a beast or plant creature attacks you, it must make a WIS save (vs your spell DC) or choose a different target."},
+    ] },
+  'Druid::Circle of the Moon':{ parent:'Druid', name:'Circle of the Moon', source:'5E', subclassLevel:2,
+    desc:"Druids of the Circle of the Moon are fierce guardians of the wilds who harness the moon's mystic power to take on the most dangerous animal forms.",
+    features:[
+      {lv:2, name:'Combat Wild Shape', use:'bonus', desc:"You can use Wild Shape as a bonus action. While transformed, you can use a bonus action to expend a spell slot and regain 1d8 hit points per slot level."},
+      {lv:2, name:'Circle Forms', use:'passive', desc:"You can Wild Shape into beasts with a challenge rating as high as 1 (rising to CR = druid level / 3 at higher levels)."},
+      {lv:6, name:'Primal Strike', use:'passive', desc:"Your attacks in beast form count as magical for overcoming resistance and immunity to nonmagical attacks."},
+      {lv:10, name:'Elemental Wild Shape', use:'special', desc:"You can expend two uses of Wild Shape at once to transform into an air, earth, fire, or water elemental."},
+      {lv:14, name:'Thousand Forms', use:'passive', desc:"You can cast Alter Self at will."},
+    ] },
+  'Fighter::Champion':{ parent:'Fighter', name:'Champion', source:'5E', subclassLevel:3,
+    desc:"The Champion focuses on the development of raw physical power honed to deadly perfection, with a simple, direct approach to combat.",
+    features:[
+      {lv:3, name:'Improved Critical', use:'passive', desc:"Your weapon attacks score a critical hit on a roll of 19 or 20."},
+      {lv:7, name:'Remarkable Athlete', use:'passive', desc:"Add half your proficiency bonus (rounded up) to any STR, DEX, or CON check you're not already proficient in, and your running long jump distance increases by feet equal to your STR modifier."},
+      {lv:10, name:'Additional Fighting Style', use:'passive', desc:"You can choose a second option from the Fighting Style class feature."},
+      {lv:15, name:'Superior Critical', use:'passive', desc:"Your weapon attacks score a critical hit on a roll of 18–20."},
+      {lv:18, name:'Survivor', use:'passive', desc:"At the start of each of your turns, regain hit points equal to 5 + your CON modifier if you have no more than half your hit points left (and at least 1)."},
+    ] },
+  'Fighter::Battle Master':{ parent:'Fighter', name:'Battle Master', source:'5E', subclassLevel:3,
+    desc:"Battle Masters are students of the martial arts, employing techniques passed down through generations to control the battlefield and outmaneuver their foes.",
+    features:[
+      {lv:3, name:'Combat Superiority', use:'special', cost:'superiority dice', desc:"You learn maneuvers fueled by superiority dice (start with four maneuvers and four d8s; dice grow to d10 at 10th and d12 at 18th, refreshing on a short or long rest). Maneuvers add effects such as extra damage, trips, and ripostes to your attacks."},
+      {lv:3, name:'Student of War', use:'passive', desc:"You gain proficiency with one type of artisan's tools of your choice."},
+      {lv:7, name:'Know Your Enemy', use:'passive', desc:"If you study a creature for 1 minute outside combat, you learn how its capabilities compare to your own (for two chosen categories)."},
+      {lv:10, name:'Improved Combat Superiority', use:'passive', desc:"Your superiority dice turn into d10s (and you know additional maneuvers and gain more dice)."},
+      {lv:15, name:'Relentless', use:'passive', desc:"When you roll initiative and have no superiority dice remaining, you regain one superiority die."},
+      {lv:18, name:'Improved Combat Superiority', use:'passive', desc:"Your superiority dice turn into d12s."},
+    ] },
+  'Fighter::Eldritch Knight':{ parent:'Fighter', name:'Eldritch Knight', source:'5E', subclassLevel:3,
+    desc:"The Eldritch Knight combines martial mastery with the study of magic, using wizard spells of abjuration and evocation to support their weapon work.",
+    features:[
+      {lv:3, name:'Spellcasting', use:'passive', desc:"You learn wizard spells (Intelligence-based), drawn mostly from the abjuration and evocation schools, with cantrips and spell slots per the Eldritch Knight table."},
+      {lv:3, name:'Weapon Bond', use:'passive', desc:"Bond with up to two weapons. You can't be disarmed of a bonded weapon while conscious, and you can summon it to your hand as a bonus action if it's on the same plane."},
+      {lv:7, name:'War Magic', use:'bonus', desc:"When you use your action to cast a cantrip, you can make one weapon attack as a bonus action."},
+      {lv:10, name:'Eldritch Strike', use:'passive', desc:"When you hit a creature with a weapon attack, it has disadvantage on the next saving throw it makes against a spell you cast before the end of your next turn."},
+      {lv:15, name:'Arcane Charge', use:'passive', desc:"When you use Action Surge, you can teleport up to 30 ft to an unoccupied space you can see, before or after the extra action."},
+      {lv:18, name:'Improved War Magic', use:'bonus', desc:"When you use your action to cast a spell, you can make one weapon attack as a bonus action."},
+    ] },
+  'Monk::Way of the Open Hand':{ parent:'Monk', name:'Way of the Open Hand', source:'5E', subclassLevel:3,
+    desc:"Monks of the Way of the Open Hand are the ultimate masters of unarmed combat, manipulating a foe's ki and body to devastating effect.",
+    features:[
+      {lv:3, name:'Open Hand Technique', use:'passive', desc:"When you hit with a Flurry of Blows attack, you can impose one effect: knock the target prone (DEX save), push it 15 ft (STR save), or deny it reactions until the end of your next turn."},
+      {lv:6, name:'Wholeness of Body', use:'action', cost:'1/long rest', desc:"You can heal yourself for hit points equal to three times your monk level."},
+      {lv:11, name:'Tranquility', use:'passive', desc:"At the end of a long rest, you gain the effect of a Sanctuary spell (DC 8 + WIS + proficiency) that lasts until the start of your next long rest."},
+      {lv:17, name:'Quivering Palm', use:'special', cost:'3 ki', desc:"When you hit a creature with an unarmed strike, you can set up lethal vibrations. Later, use an action to end them: the target makes a CON save, dropping to 0 HP on a failure or taking 10d10 necrotic damage on a success."},
+    ] },
+  'Monk::Way of Shadow':{ parent:'Monk', name:'Way of Shadow', source:'5E', subclassLevel:3,
+    desc:"Monks of the Way of Shadow follow a tradition that values stealth and subterfuge, practicing ninja-like arts to move unseen and strike from darkness.",
+    features:[
+      {lv:3, name:'Shadow Arts', use:'special', cost:'2 ki', desc:"You can spend ki to cast Darkness, Darkvision, Pass without Trace, or Silence, and you learn the Minor Illusion cantrip."},
+      {lv:6, name:'Shadow Step', use:'bonus', desc:"When you're in dim light or darkness, teleport up to 60 ft to an unoccupied space in dim light or darkness, then gain advantage on the first melee attack you make before the end of the turn."},
+      {lv:11, name:'Cloak of Shadows', use:'action', desc:"When in dim light or darkness, become invisible until you attack, cast a spell, or move into bright light."},
+      {lv:17, name:'Opportunist', use:'reaction', desc:"When a creature within 5 ft of you is hit by an attack from a creature other than you, make a melee attack against that creature."},
+    ] },
+  'Monk::Way of the Four Elements':{ parent:'Monk', name:'Way of the Four Elements', source:'5E', subclassLevel:3,
+    desc:"Monks of the Way of the Four Elements harmonize their ki with the elemental forces of the world, channeling them to mimic the effects of elemental magic.",
+    features:[
+      {lv:3, name:'Disciple of the Elements', use:'special', cost:'ki', desc:"You learn Elemental Disciplines that let you spend ki to create elemental effects, starting with Elemental Attunement plus one discipline of your choice."},
+      {lv:6, name:'Additional Discipline', use:'passive', desc:"You learn an additional Elemental Discipline of your choice."},
+      {lv:11, name:'Additional Discipline', use:'passive', desc:"You learn another Elemental Discipline and can spend ki to fuel higher-level elemental effects."},
+      {lv:17, name:'Additional Discipline', use:'passive', desc:"You learn another Elemental Discipline, including access to the most powerful elemental effects."},
+    ] },
+  'Paladin::Oath of Devotion':{ parent:'Paladin', name:'Oath of Devotion', source:'5E', subclassLevel:3,
+    desc:"The Oath of Devotion binds a paladin to the loftiest ideals of justice, virtue, and order — the shining knight who upholds honesty, courage, and compassion.",
+    features:[
+      {lv:3, name:'Oath Spells', use:'passive', desc:"Always prepared: L3 Protection from Evil and Good, Sanctuary; L5 Lesser Restoration, Zone of Truth; L9 Beacon of Hope, Dispel Magic; L13 Freedom of Movement, Guardian of Faith; L17 Commune, Flame Strike."},
+      {lv:3, name:'Channel Divinity: Sacred Weapon', use:'action', cost:'1 Channel Divinity', desc:"For 1 minute, add your CHA modifier to attack rolls with one weapon, which emits bright light and counts as magical."},
+      {lv:3, name:'Channel Divinity: Turn the Unholy', use:'action', cost:'1 Channel Divinity', desc:"Each fiend and undead within 30 ft must make a WIS save or be turned for 1 minute."},
+      {lv:7, name:'Aura of Devotion', use:'passive', desc:"You and friendly creatures within 10 ft (30 ft at 18th) can't be charmed while you're conscious."},
+      {lv:15, name:'Purity of Spirit', use:'passive', desc:"You are always under the effects of a Protection from Evil and Good spell."},
+      {lv:20, name:'Holy Nimbus', use:'action', cost:'1/long rest', desc:"For 1 minute, emit bright sunlight; enemies that start their turn within 30 ft take 10 radiant damage, and you have advantage on saves against spells cast by fiends and undead."},
+    ] },
+  'Paladin::Oath of the Ancients':{ parent:'Paladin', name:'Oath of the Ancients', source:'5E', subclassLevel:3,
+    desc:"The Oath of the Ancients is as old as the race of elves, calling on the light in the world and the preservation of life, love, joy, and beauty against the darkness.",
+    features:[
+      {lv:3, name:'Oath Spells', use:'passive', desc:"Always prepared: L3 Ensnaring Strike, Speak with Animals; L5 Misty Step, Moonbeam; L9 Plant Growth, Protection from Energy; L13 Ice Storm, Stoneskin; L17 Commune with Nature, Tree Stride."},
+      {lv:3, name:"Channel Divinity: Nature's Wrath", use:'action', cost:'1 Channel Divinity', desc:"Spectral vines restrain a creature within 10 ft (it's restrained until it succeeds on a STR or DEX save)."},
+      {lv:3, name:'Channel Divinity: Turn the Faithless', use:'action', cost:'1 Channel Divinity', desc:"Each fey and fiend within 30 ft must make a WIS save or be turned for 1 minute."},
+      {lv:7, name:'Aura of Warding', use:'passive', desc:"You and friendly creatures within 10 ft (30 ft at 18th) have resistance to damage from spells."},
+      {lv:15, name:'Undying Sentinel', use:'passive', desc:"When reduced to 0 HP but not killed outright, you can drop to 1 HP instead (once per long rest). You also no longer age and can't be aged magically."},
+      {lv:20, name:'Elder Champion', use:'action', cost:'1/long rest', desc:"For 1 minute: regain 10 HP at the start of each turn, cast paladin spells as a bonus action, and enemies within 10 ft have disadvantage on saves against your spells and Channel Divinity."},
+    ] },
+  'Paladin::Oath of Vengeance':{ parent:'Paladin', name:'Oath of Vengeance', source:'5E', subclassLevel:3,
+    desc:"The Oath of Vengeance is a solemn commitment to punish those who have committed grievous sins — the dark knight or self-appointed avenger who will pay any price to see wrongs righted.",
+    features:[
+      {lv:3, name:'Oath Spells', use:'passive', desc:"Always prepared: L3 Bane, Hunter's Mark; L5 Hold Person, Misty Step; L9 Haste, Protection from Energy; L13 Banishment, Dimension Door; L17 Hold Monster, Scrying."},
+      {lv:3, name:'Channel Divinity: Abjure Enemy', use:'action', cost:'1 Channel Divinity', desc:"One creature within 60 ft must make a WIS save or be frightened for 1 minute; its speed is reduced to 0 while frightened this way (halved on a success)."},
+      {lv:3, name:'Channel Divinity: Vow of Enmity', use:'bonus', cost:'1 Channel Divinity', desc:"Gain advantage on attack rolls against one creature within 10 ft for 1 minute or until it drops to 0 HP."},
+      {lv:7, name:'Relentless Avenger', use:'passive', desc:"When you hit a creature with an opportunity attack, you can move up to half your speed immediately without provoking opportunity attacks."},
+      {lv:15, name:'Soul of Vengeance', use:'reaction', desc:"When a creature under your Vow of Enmity makes an attack, use your reaction to make a melee attack against it."},
+      {lv:20, name:'Avenging Angel', use:'action', cost:'1/long rest', desc:"For 1 hour, gain a 60-ft flying speed and an aura that frightens enemies within 30 ft (WIS save)."},
+    ] },
+  'Ranger::Hunter':{ parent:'Ranger', name:'Hunter', source:'5E', subclassLevel:3,
+    desc:"The Hunter accepts the role of a protector, learning specialized techniques to fight the threats that menace civilization — from rampaging ogres to hordes of orcs.",
+    features:[
+      {lv:3, name:"Hunter's Prey", use:'passive', desc:"Choose one: Colossus Slayer (once per turn, +1d8 to a hit against a creature below its HP maximum), Giant Killer (react to attack a Large+ creature that attacks you), or Horde Breaker (once per turn, attack a second creature within 5 ft of the first)."},
+      {lv:7, name:'Defensive Tactics', use:'passive', desc:"Choose one: Escape the Horde (opportunity attacks against you have disadvantage), Multiattack Defense (+4 AC vs a creature's follow-up attacks), or Steel Will (advantage on saves vs being frightened)."},
+      {lv:11, name:'Multiattack', use:'passive', desc:"Choose one: Volley (make a ranged attack against any number of creatures in a 10-ft radius) or Whirlwind Attack (make a melee attack against any number of creatures within 5 ft)."},
+      {lv:15, name:"Superior Hunter's Defense", use:'passive', desc:"Choose one: Evasion, Stand Against the Tide (redirect a missed melee attack to another creature), or Uncanny Dodge."},
+    ] },
+  'Ranger::Beast Master':{ parent:'Ranger', name:'Beast Master', source:'5E', subclassLevel:3,
+    desc:"The Beast Master embodies a friendship between the civilized races and the beasts of the world, bonding with an animal companion that fights at their side.",
+    features:[
+      {lv:3, name:"Ranger's Companion", use:'passive', desc:"Gain a beast companion of CR 1/4 or lower (Small or Medium). It acts on your initiative, adds your proficiency bonus to its AC, attacks, and damage, and obeys your commands."},
+      {lv:7, name:'Exceptional Training', use:'bonus', desc:"On any turn your companion doesn't attack, you can command it to Dash, Disengage, Dodge, or Help as a bonus action. Its attacks also count as magical."},
+      {lv:11, name:'Bestial Fury', use:'passive', desc:"When you command your companion to take the Attack action, it can make two attacks."},
+      {lv:15, name:'Share Spells', use:'passive', desc:"When you cast a spell targeting yourself, you can also affect your companion if it's within 30 ft."},
+    ] },
+  'Rogue::Thief':{ parent:'Rogue', name:'Thief', source:'5E', subclassLevel:3,
+    desc:"The Thief hones skills in the larcenous and adventurous arts, gaining agility, stealth, and a knack for getting out of tight spots.",
+    features:[
+      {lv:3, name:'Fast Hands', use:'bonus', desc:"You can use your Cunning Action bonus action to make a Sleight of Hand check, use thieves' tools to disarm a trap or open a lock, or use an object."},
+      {lv:3, name:'Second-Story Work', use:'passive', desc:"Climbing no longer costs extra movement, and your running jump distance is measured using your DEX modifier instead of STR."},
+      {lv:9, name:'Supreme Sneak', use:'passive', desc:"You have advantage on Dexterity (Stealth) checks on any turn you move no more than half your speed."},
+      {lv:13, name:'Use Magic Device', use:'passive', desc:"You ignore all class, race, and level requirements on the use of magic items."},
+      {lv:17, name:"Thief's Reflexes", use:'passive', desc:"You can take two turns during the first round of any combat (at your normal initiative and again at your initiative minus 10)."},
+    ] },
+  'Rogue::Assassin':{ parent:'Rogue', name:'Assassin', source:'5E', subclassLevel:3,
+    desc:"The Assassin focuses on the grim art of death, using disguise, poison, and lethal ambush to eliminate targets with ruthless efficiency.",
+    features:[
+      {lv:3, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with the disguise kit and the poisoner's kit."},
+      {lv:3, name:'Assassinate', use:'passive', desc:"You have advantage on attacks against any creature that hasn't taken a turn yet in combat, and any hit you score against a surprised creature is a critical hit."},
+      {lv:9, name:'Infiltration Expertise', use:'passive', desc:"With 25 gp and seven days of work, you can create a false identity complete with documentation and established acquaintances."},
+      {lv:13, name:'Impostor', use:'passive', desc:"You can unerringly mimic another creature's speech, writing, and behavior after studying it for at least 3 hours."},
+      {lv:17, name:'Death Strike', use:'passive', desc:"When you attack and hit a surprised creature, it must make a CON save (DC 8 + DEX + proficiency) or take double damage from the attack."},
+    ] },
+  'Rogue::Arcane Trickster':{ parent:'Rogue', name:'Arcane Trickster', source:'5E', subclassLevel:3,
+    desc:"The Arcane Trickster enhances stealth and agility with magic, learning enchantment and illusion spells to deceive and confound.",
+    features:[
+      {lv:3, name:'Spellcasting', use:'passive', desc:"You learn wizard spells (Intelligence-based), drawn mostly from the enchantment and illusion schools, with cantrips and spell slots per the Arcane Trickster table (you always know Mage Hand)."},
+      {lv:3, name:'Mage Hand Legerdemain', use:'passive', desc:"Your Mage Hand is invisible, and you can use it to perform Sleight of Hand tasks such as stowing/retrieving objects, picking locks, and disarming traps at range."},
+      {lv:9, name:'Magical Ambush', use:'passive', desc:"If you're hidden from a creature when you cast a spell on it, it has disadvantage on any saving throw it makes against the spell this turn."},
+      {lv:13, name:'Versatile Trickster', use:'bonus', desc:"You can use your Mage Hand to distract a creature within 5 ft of the hand, gaining advantage on attack rolls against that creature until the end of the turn."},
+      {lv:17, name:'Spell Thief', use:'reaction', cost:'1/long rest', desc:"When a creature casts a spell targeting you or including you, force it to make a save; on a failure you negate the spell and steal knowledge of it for 8 hours."},
+    ] },
+  'Sorcerer::Draconic Bloodline':{ parent:'Sorcerer', name:'Draconic Bloodline', source:'5E', subclassLevel:1,
+    desc:"Your innate magic comes from draconic blood in your veins. Most often a distant ancestor was a dragon, and its power flickers in your bloodline.",
+    features:[
+      {lv:1, name:'Dragon Ancestor', use:'passive', desc:"Choose a type of dragon as your ancestor, which sets your associated damage type. You can speak, read, and write Draconic and double your proficiency bonus on CHA checks when interacting with dragons."},
+      {lv:1, name:'Draconic Resilience', use:'passive', desc:"Your hit point maximum increases by 1 per sorcerer level, and when you aren't wearing armor your AC equals 13 + your DEX modifier."},
+      {lv:6, name:'Elemental Affinity', use:'passive', desc:"When you cast a spell that deals your ancestry's damage type, add your CHA modifier to one damage roll. You can also spend 1 sorcery point to gain resistance to that damage type for 1 hour."},
+      {lv:14, name:'Dragon Wings', use:'bonus', desc:"You can sprout draconic wings, gaining a flying speed equal to your current speed (while you aren't wearing armor that lacks accommodation for wings)."},
+      {lv:18, name:'Draconic Presence', use:'action', cost:'5 sorcery points', desc:"Radiate an aura of awe or fear to 60 ft for 1 minute; each hostile creature that starts its turn there must make a WIS save or be charmed or frightened."},
+    ] },
+  'Sorcerer::Wild Magic':{ parent:'Sorcerer', name:'Wild Magic', source:'5E', subclassLevel:1,
+    desc:"Your innate magic comes from the wild forces of chaos that underlie the order of creation, leaving you with unpredictable surges of raw power.",
+    features:[
+      {lv:1, name:'Wild Magic Surge', use:'special', desc:"Once per turn after you cast a sorcerer spell of 1st level or higher, the DM can have you roll on the Wild Magic Surge table for a random magical effect."},
+      {lv:1, name:'Tides of Chaos', use:'special', cost:'1/long rest', desc:"Gain advantage on one attack roll, ability check, or saving throw. You regain the use when the DM has you roll on the Wild Magic Surge table."},
+      {lv:6, name:'Bend Luck', use:'reaction', cost:'2 sorcery points', desc:"When another creature makes an attack roll, ability check, or saving throw, roll 1d4 and apply it as a bonus or penalty to that roll."},
+      {lv:14, name:'Controlled Chaos', use:'passive', desc:"Whenever you roll on the Wild Magic Surge table, you can roll twice and use either result."},
+      {lv:18, name:'Spell Bombardment', use:'passive', desc:"When you roll damage for a spell and roll the highest number possible on any of the dice, choose one of those dice, roll it again, and add it to the damage (once per turn)."},
+    ] },
+  'Warlock::The Archfey':{ parent:'Warlock', name:'The Archfey', source:'5E', subclassLevel:1,
+    desc:"Your patron is a lord or lady of the fey, a creature of legend whose motives are often inscrutable. Ancient and coldly calculating, they cloak their aims in beauty and whimsy.",
+    features:[
+      {lv:1, name:'Expanded Spell List', use:'passive', desc:"You can choose from additional spells: L1 Faerie Fire, Sleep; L2 Calm Emotions, Phantasmal Force; L3 Blink, Plant Growth; L4 Dominate Beast, Greater Invisibility; L5 Dominate Person, Seeming."},
+      {lv:1, name:'Fey Presence', use:'action', cost:'1/short rest', desc:"Each creature in a 10-ft cube around you must make a WIS save or be charmed or frightened (your choice) until the end of your next turn."},
+      {lv:6, name:'Misty Escape', use:'reaction', cost:'1/short rest', desc:"When you take damage, turn invisible and teleport up to 60 ft to a space you can see; you stay invisible until the end of your next turn or until you attack or cast a spell."},
+      {lv:10, name:'Beguiling Defenses', use:'passive', desc:"You are immune to being charmed, and when a creature tries to charm you, you can turn the attempt back on it (WIS save or 1 minute of psychic damage each turn)."},
+      {lv:14, name:'Dark Delirium', use:'action', cost:'1/long rest', desc:"Send a creature within 60 ft into an illusory realm (WIS save); for 1 minute it's charmed or frightened, and you can end it early to deal 5d10 psychic damage."},
+    ] },
+  'Warlock::The Fiend':{ parent:'Warlock', name:'The Fiend', source:'5E', subclassLevel:1,
+    desc:"You have made a pact with a fiend from the lower planes, a being whose aims are evil even if you strive against those goals. Such patrons desire the corruption or destruction of all things.",
+    features:[
+      {lv:1, name:'Expanded Spell List', use:'passive', desc:"You can choose from additional spells: L1 Burning Hands, Command; L2 Blindness/Deafness, Scorching Ray; L3 Fireball, Stinking Cloud; L4 Fire Shield, Wall of Fire; L5 Flame Strike, Hallow."},
+      {lv:1, name:"Dark One's Blessing", use:'passive', desc:"When you reduce a hostile creature to 0 HP, you gain temporary hit points equal to your CHA modifier + your warlock level (minimum 1)."},
+      {lv:6, name:"Dark One's Own Luck", use:'special', cost:'1/short rest', desc:"Add 1d10 to one ability check or saving throw (you can do this after rolling but before the outcome is determined)."},
+      {lv:10, name:'Fiendish Resilience', use:'passive', desc:"After a short or long rest, choose one damage type to gain resistance to (except from magical or silvered weapons) until you choose a different one."},
+      {lv:14, name:'Hurl Through Hell', use:'special', cost:'1/long rest', desc:"When you hit a creature with an attack, you can instantly transport it through the lower planes; unless it's a fiend, it takes 10d10 psychic damage as it reels from the experience."},
+    ] },
+  'Warlock::The Great Old One':{ parent:'Warlock', name:'The Great Old One', source:'5E', subclassLevel:1,
+    desc:"Your patron is a mysterious entity from the Far Realm or beyond, whose nature is utterly alien. Its mind is unfathomable, and it may be unaware of your existence — yet its secrets flow to you.",
+    features:[
+      {lv:1, name:'Expanded Spell List', use:'passive', desc:"You can choose from additional spells: L1 Dissonant Whispers, Tasha's Hideous Laughter; L2 Detect Thoughts, Phantasmal Force; L3 Clairvoyance, Sending; L4 Dominate Beast, Evard's Black Tentacles; L5 Dominate Person, Telekinesis."},
+      {lv:1, name:'Awakened Mind', use:'passive', desc:"You can telepathically speak to any creature within 30 ft that you can see, as long as it understands at least one language."},
+      {lv:6, name:'Entropic Ward', use:'reaction', cost:'1/short rest', desc:"When a creature attacks you, impose disadvantage on that attack roll; if it misses, you gain advantage on your next attack against that creature before the end of your next turn."},
+      {lv:10, name:'Thought Shield', use:'passive', desc:"Your thoughts can't be read unless you allow it, you have resistance to psychic damage, and any creature that deals psychic damage to you takes the same amount."},
+      {lv:14, name:'Create Thrall', use:'action', desc:"Touch an incapacitated humanoid to charm it until Remove Curse is cast on it, it's no longer on the same plane, or you use this again; you can communicate with it telepathically over any distance on the same plane."},
+    ] },
+  'Wizard::Abjuration':{ parent:'Wizard', name:'Abjuration', source:'5E', subclassLevel:2,
+    desc:"The School of Abjuration emphasizes magic that blocks, banishes, or protects. Its specialists — abjurers — are sought as guardians and dispellers of hostile magic.",
+    features:[
+      {lv:2, name:'Abjuration Savant', use:'passive', desc:"The gold and time you spend to copy an abjuration spell into your spellbook is halved."},
+      {lv:2, name:'Arcane Ward', use:'passive', desc:"When you cast an abjuration spell of 1st level or higher, create a magical ward (HP = twice your wizard level + INT modifier) that absorbs damage you take until it's depleted; abjuration spells recharge it."},
+      {lv:6, name:'Projected Ward', use:'reaction', desc:"When a creature within 30 ft takes damage, you can use your Arcane Ward to absorb that damage instead."},
+      {lv:10, name:'Improved Abjuration', use:'passive', desc:"When you cast an abjuration spell that requires an ability check as part of casting (such as Counterspell or Dispel Magic), add your proficiency bonus to that check."},
+      {lv:14, name:'Spell Resistance', use:'passive', desc:"You have advantage on saving throws against spells, and resistance to damage from spells."},
+    ] },
+  'Wizard::Conjuration':{ parent:'Wizard', name:'Conjuration', source:'5E', subclassLevel:2,
+    desc:"The School of Conjuration produces objects and creatures out of thin air, and transports things across great distances. Conjurers are prized for their versatility.",
+    features:[
+      {lv:2, name:'Conjuration Savant', use:'passive', desc:"The gold and time you spend to copy a conjuration spell into your spellbook is halved."},
+      {lv:2, name:'Minor Conjuration', use:'action', desc:"Conjure an inanimate object (up to 3 ft on a side and 10 lb) in your hand or on the ground; it lasts 1 hour or until it takes damage."},
+      {lv:6, name:'Benign Transposition', use:'action', cost:'1/day', desc:"Teleport up to 30 ft to an unoccupied space you can see, or swap places with a willing Small or Medium creature within range. Recharges when you cast a conjuration spell of 1st level or higher."},
+      {lv:10, name:'Focused Conjuration', use:'passive', desc:"Your concentration on a conjuration spell can't be broken as a result of taking damage."},
+      {lv:14, name:'Durable Summons', use:'passive', desc:"Any creature you summon or create with a conjuration spell gains 30 temporary hit points."},
+    ] },
+  'Wizard::Divination':{ parent:'Wizard', name:'Divination', source:'5E', subclassLevel:2,
+    desc:"The School of Divination grants the ability to glimpse the future, uncover the truth, and peer beyond the veil. Diviners are valued for their counsel and foresight.",
+    features:[
+      {lv:2, name:'Divination Savant', use:'passive', desc:"The gold and time you spend to copy a divination spell into your spellbook is halved."},
+      {lv:2, name:'Portent', use:'special', cost:'2/long rest', desc:"After a long rest, roll two d20s and record them. You can replace any attack roll, saving throw, or ability check made by you or a creature you can see with one of these rolls."},
+      {lv:6, name:'Expert Divination', use:'passive', desc:"When you cast a divination spell of 2nd level or higher using a spell slot, you regain one expended spell slot of a lower level (max 5th)."},
+      {lv:10, name:'The Third Eye', use:'action', desc:"After a rest, use an action to gain one benefit until your next rest: darkvision 60 ft, ethereal sight 60 ft, greater comprehension (read any language), or see invisibility 10 ft."},
+      {lv:14, name:'Greater Portent', use:'passive', desc:"You roll three d20s for your Portent feature, rather than two."},
+    ] },
+  'Wizard::Enchantment':{ parent:'Wizard', name:'Enchantment', source:'5E', subclassLevel:2,
+    desc:"The School of Enchantment shapes the minds of others, charming and beguiling. Enchanters make thralls of enemies and turn foes into friends.",
+    features:[
+      {lv:2, name:'Enchantment Savant', use:'passive', desc:"The gold and time you spend to copy an enchantment spell into your spellbook is halved."},
+      {lv:2, name:'Hypnotic Gaze', use:'action', desc:"Charm a creature within 5 ft (WIS save); it's charmed and incapacitated until the end of your next turn, and you can sustain the effect each turn."},
+      {lv:6, name:'Instinctive Charm', use:'reaction', cost:'1/day', desc:"When a creature within 30 ft attacks you, redirect the attack to another creature within range (WIS save). Recharges when you cast an enchantment spell of 1st level or higher."},
+      {lv:10, name:'Split Enchantment', use:'passive', desc:"When you cast an enchantment spell that targets only one creature, you can have it target a second creature."},
+      {lv:14, name:'Alter Memories', use:'passive', desc:"When your enchantment spell ends, you can make the creature unaware it was charmed and cause it to forget up to 1 + your CHA modifier hours of time."},
+    ] },
+  'Wizard::Evocation':{ parent:'Wizard', name:'Evocation', source:'5E', subclassLevel:2,
+    desc:"The School of Evocation channels magical energy into elemental effects — creating powerful blasts of fire, lightning, and cold. Evokers focus on offensive magic.",
+    features:[
+      {lv:2, name:'Evocation Savant', use:'passive', desc:"The gold and time you spend to copy an evocation spell into your spellbook is halved."},
+      {lv:2, name:'Sculpt Spells', use:'passive', desc:"When you cast an evocation spell affecting other creatures, protect 1 + the spell's level of them; they automatically succeed on their saves and take no damage from the spell."},
+      {lv:6, name:'Potent Cantrip', use:'passive', desc:"When a creature succeeds on a saving throw against your cantrip, it still takes half the cantrip's damage (if any) and suffers no additional effect."},
+      {lv:10, name:'Empowered Evocation', use:'passive', desc:"Add your INT modifier to one damage roll of any wizard evocation spell you cast."},
+      {lv:14, name:'Overchannel', use:'special', desc:"When you cast a wizard spell of 1st–5th level that deals damage, deal maximum damage. Using this more than once per long rest deals necrotic damage to you that increases each time."},
+    ] },
+  'Wizard::Illusion':{ parent:'Wizard', name:'Illusion', source:'5E', subclassLevel:2,
+    desc:"The School of Illusion uses magic to deceive the senses, befuddle minds, and create wonders of unreality. Illusionists make the false seem real.",
+    features:[
+      {lv:2, name:'Illusion Savant', use:'passive', desc:"The gold and time you spend to copy an illusion spell into your spellbook is halved."},
+      {lv:2, name:'Improved Minor Illusion', use:'passive', desc:"You learn the Minor Illusion cantrip; it can create both a sound and an image with a single casting."},
+      {lv:6, name:'Malleable Illusions', use:'passive', desc:"When you cast an illusion spell with a duration of 1 minute or more, you can use an action to change the nature of that illusion."},
+      {lv:10, name:'Illusory Self', use:'reaction', cost:'1/day', desc:"When a creature makes an attack against you, interpose an illusory duplicate so the attack automatically misses. Recharges after a short or long rest."},
+      {lv:14, name:'Illusory Reality', use:'passive', desc:"When you cast an illusion spell of 1st level or higher, you can make one inanimate, nonmagical object that's part of the illusion real for 1 minute."},
+    ] },
+  'Wizard::Necromancy':{ parent:'Wizard', name:'Necromancy', source:'5E', subclassLevel:2,
+    desc:"The School of Necromancy explores the cosmic forces of life, death, and undeath. Necromancers manipulate life energy and command the dead.",
+    features:[
+      {lv:2, name:'Necromancy Savant', use:'passive', desc:"The gold and time you spend to copy a necromancy spell into your spellbook is halved."},
+      {lv:2, name:'Grim Harvest', use:'passive', desc:"Once per turn when you kill a creature with a spell of 1st level or higher, regain hit points equal to twice the spell's level (three times for a necromancy spell)."},
+      {lv:6, name:'Undead Thralls', use:'passive', desc:"Add Animate Dead to your spellbook. When you cast it you can target one additional corpse, and undead you create gain bonus HP and add your proficiency bonus to their weapon damage."},
+      {lv:10, name:'Inured to Undeath', use:'passive', desc:"You have resistance to necrotic damage, and your hit point maximum can't be reduced."},
+      {lv:14, name:'Command Undead', use:'action', desc:"Target one undead within 60 ft; it must make a CHA save (with a bonus if its INT is higher than yours) or fall under your control for as long as you maintain the required concentration effect."},
+    ] },
+  'Wizard::Transmutation':{ parent:'Wizard', name:'Transmutation', source:'5E', subclassLevel:2,
+    desc:"The School of Transmutation alters the properties of creatures and objects — changing matter, shape, and form. Transmuters are masters of change itself.",
+    features:[
+      {lv:2, name:'Transmutation Savant', use:'passive', desc:"The gold and time you spend to copy a transmutation spell into your spellbook is halved."},
+      {lv:2, name:'Minor Alchemy', use:'passive', desc:"Over 10 minutes of work, temporarily transform one nonmagical material into another similar material (such as wood into iron) for up to 1 hour."},
+      {lv:6, name:"Transmuter's Stone", use:'passive', desc:"Create a stone that grants one benefit to its bearer (darkvision 60 ft, +10 ft speed, proficiency in CON saves, or resistance to a chosen damage type). You can change the benefit when you cast a transmutation spell."},
+      {lv:10, name:'Shapechanger', use:'passive', desc:"Add Polymorph to your spellbook. You can cast it once per long rest without a spell slot to transform yourself into a beast of CR 1 or lower."},
+      {lv:14, name:'Master Transmuter', use:'action', desc:"Destroy your Transmuter's Stone to produce one major effect: remove curses/diseases/poisons from a creature, restore a creature's youth, create a panacea, or permanently transmute a Large-or-smaller nonmagical object."},
+    ] },
+};
 function subKey(parent, name){ return parent + '::' + name; }
 function subclassNamesForClass(className){
   const own = (CLASS_DATA[className] && CLASS_DATA[className].subclasses) || [];
@@ -656,6 +1283,7 @@ let CUSTOM_SPELLS = {};
 // PHB multiclassing prerequisites: an array of alternatives, each an ability-minimum set.
 // (Jaeger has no published prereq — DEX or INT 13 mirrors its primary abilities.)
 const MC_REQS = {
+  Artificer:[{int:13}],
   Barbarian:[{str:13}], Bard:[{cha:13}], Cleric:[{wis:13}], Druid:[{wis:13}],
   Fighter:[{str:13},{dex:13}], Jaeger:[{dex:13},{int:13}], Monk:[{dex:13,wis:13}],
   Paladin:[{str:13,cha:13}], Ranger:[{dex:13,wis:13}], Rogue:[{dex:13}],
@@ -924,11 +1552,18 @@ function computeSpellSlots(picked){
   const warlocks = picked.filter(c=>{ const t=CLASS_DATA[c.name]&&CLASS_DATA[c.name].casting; return t&&t.type==='pact'; });
   let table=null, lvl=0;
   if(leveled.length===1){
-    const c=leveled[0]; lvl=c.level||1;
-    table = CLASS_DATA[c.name].casting.type==='full' ? FULL_SLOTS : HALF_SLOTS;
+    const c=leveled[0]; const cast=CLASS_DATA[c.name].casting;
+    if(cast.roundUp){ // Artificer: half caster rounded UP — reads the full table at ceil(level/2).
+      lvl = Math.ceil((c.level||1)/2); table = FULL_SLOTS;
+    } else {
+      lvl = c.level||1; table = cast.type==='full' ? FULL_SLOTS : HALF_SLOTS;
+    }
   } else if(leveled.length>1){
-    // Multiclass: full levels + half of half-caster levels, read off the full table.
-    lvl = leveled.reduce((s,c)=> s + (CLASS_DATA[c.name].casting.type==='full' ? (c.level||1) : Math.floor((c.level||1)/2)), 0);
+    // Multiclass: full levels + half of half-caster levels (Artificer rounds up), read off the full table.
+    lvl = leveled.reduce((s,c)=>{ const cast=CLASS_DATA[c.name].casting;
+      if(cast.type==='full') return s + (c.level||1);
+      return s + (cast.roundUp ? Math.ceil((c.level||1)/2) : Math.floor((c.level||1)/2));
+    }, 0);
     table = FULL_SLOTS;
   }
   if(table && lvl>0){ (table[Math.min(20,Math.max(1,lvl))]||[]).forEach((n,i)=>totals[i]+=n); }
@@ -1411,6 +2046,7 @@ function castingSummary(cd){
   const ab = c.ability ? c.ability.toUpperCase() : '';
   let text = null;
   if(c.type==='full') text = `Full caster (${ab}). Spell levels: 1st@L1, 2nd@L3, 3rd@L5, 4th@L7, 5th@L9, 6th@L11, 7th@L13, 8th@L15, 9th@L17.`;
+  else if(c.type==='half' && c.roundUp) text = `Half caster, rounded up (${ab}). Spell levels: 1st@L1, 2nd@L5, 3rd@L9, 4th@L13, 5th@L17.`;
   else if(c.type==='half') text = `Half caster (${ab}). Spell levels: 1st@L2, 2nd@L5, 3rd@L9, 4th@L13, 5th@L17.`;
   else if(c.type==='pact') text = `Pact magic (${ab}): slots refresh on a short rest. Slot level: 1st@L1, 2nd@L3, 3rd@L5, 4th@L7, 5th@L9; Mystic Arcanum adds 6th–9th at L11/13/15/17.`;
   if(c.note) text = text ? text+' '+c.note : c.note;
@@ -1428,12 +2064,12 @@ function mcReqStatus(name){
 
 // PHB multiclass spellcasting: full-caster levels + half of paladin/ranger levels.
 // Warlock pact magic stacks separately.
-const FULL_CASTERS = ['Bard','Cleric','Druid','Sorcerer','Wizard'];
-const HALF_CASTERS = ['Paladin','Ranger'];
 function multiclassCasterLevel(picked){
   return picked.reduce((s,c)=>{
-    if(FULL_CASTERS.includes(c.name)) return s + (c.level||1);
-    if(HALF_CASTERS.includes(c.name)) return s + Math.floor((c.level||1)/2);
+    const cast = CLASS_DATA[c.name] && CLASS_DATA[c.name].casting;
+    if(!cast) return s;
+    if(cast.type==='full') return s + (c.level||1);
+    if(cast.type==='half') return s + (cast.roundUp ? Math.ceil((c.level||1)/2) : Math.floor((c.level||1)/2));
     return s;
   }, 0);
 }
@@ -3095,6 +3731,216 @@ function bindSpellImport(){
   });
 }
 
+// ---------- Bulk import (Library tab) ----------
+// One JSON payload can carry many entries of every type. Entries are keyed by
+// object type + name (subclasses/subspecies also by parent) so the batch is
+// deduplicated the same way the database is — the same key overwrites rather
+// than duplicating. Classes and species import before their subclasses and
+// subspecies so a parent defined in the same batch is available to its children.
+const BULK_TYPE_ALIASES = {
+  class:'class', classes:'class',
+  species:'species',
+  subclass:'subclass', subclasses:'subclass',
+  subspecies:'subspecies',
+  spell:'spell', spells:'spell'
+};
+const BULK_TYPE_ORDER = { class:0, species:1, subclass:2, subspecies:3, spell:4 };
+
+function bulkTypeFromString(s){
+  return BULK_TYPE_ALIASES[String(s||'').trim().toLowerCase().replace(/[\s_-]+/g,'')] || null;
+}
+
+// Best-effort type guess for entries that omit an explicit `type`, based on the
+// shape of their fields.
+function inferBulkType(o){
+  const d = (o && o.data && typeof o.data==='object') ? o.data : o;
+  if(!d || typeof d!=='object') return null;
+  if(o.parent!=null){
+    if('subclassLevel' in d || Array.isArray(d.features)) return 'subclass';
+    if(Array.isArray(d.traits) || 'asi' in d) return 'subspecies';
+    return null;
+  }
+  if('hitDie' in d || 'saves' in d || Array.isArray(d.subclasses)) return 'class';
+  if('level' in d || 'castingTime' in d || 'school' in d) return 'spell';
+  if('size' in d || 'speed' in d || Array.isArray(d.traits)) return 'species';
+  return null;
+}
+
+// Turn one raw object into a normalized {type,name,parent,source,data} entry,
+// or {error} when the type can't be resolved. `typeHint` comes from a grouped
+// payload's key (e.g. "classes") and wins over the object's own `type`.
+function normalizeBulkEntry(o, typeHint){
+  if(!o || typeof o!=='object' || Array.isArray(o)) return { error:'not an object' };
+  const { name, source, parent, data, type, ...rest } = o;
+  const t = typeHint || bulkTypeFromString(type) || inferBulkType(o);
+  if(!t) return { error:'unknown type' };
+  const entry = {
+    type: t,
+    name: typeof name==='string' ? name.trim() : '',
+    source,
+    data: (data && typeof data==='object' && !Array.isArray(data)) ? data : rest
+  };
+  if(t==='subclass' || t==='subspecies') entry.parent = typeof parent==='string' ? parent.trim() : '';
+  return entry;
+}
+
+// Flatten any accepted shape (array of typed entries, grouped object of
+// type→array, or a single entry) into a list of normalized entries.
+function collectBulkEntries(root){
+  const list = [];
+  if(Array.isArray(root)){
+    root.forEach(o=> list.push(normalizeBulkEntry(o)));
+  } else if(root && typeof root==='object'){
+    const groups = Object.keys(root).filter(k=> bulkTypeFromString(k) && Array.isArray(root[k]));
+    if(groups.length){
+      groups.forEach(k=>{
+        const t = bulkTypeFromString(k);
+        root[k].forEach(o=> list.push(normalizeBulkEntry(o, t)));
+      });
+    } else {
+      list.push(normalizeBulkEntry(root));
+    }
+  }
+  return list;
+}
+
+// Import a single normalized entry: hit the matching endpoint and merge the
+// result into the in-memory registry, mirroring the per-form submit handlers
+// (but without their per-item UI rebuilds — the bulk flow refreshes once).
+async function importOneBulk(e){
+  const source = CLASS_SOURCES.includes(e.source) ? e.source : 'Homebrew';
+  if(e.type==='class'){
+    const res = await apiImportClass({ name:e.name, source, data:e.data });
+    CLASS_DATA[e.name] = Object.assign({}, e.data, { source, homebrew:source==='Homebrew', custom:true, customId:res.id, builtin:false });
+  } else if(e.type==='species'){
+    const res = await apiImportSpecies({ name:e.name, source, data:e.data });
+    SPECIES_DATA[e.name] = Object.assign({}, e.data, { source, custom:true, customId:res.id, builtin:false });
+  } else if(e.type==='subclass'){
+    if(!CLASS_DATA[e.parent]) throw new Error(`unknown parent class "${e.parent}"`);
+    const res = await apiImportSubclass({ parent:e.parent, name:e.name, source, data:e.data });
+    SUBCLASS_DATA[subKey(e.parent, e.name)] = Object.assign({ parent:e.parent, name:e.name }, e.data, { source, custom:true, customId:res.id });
+  } else if(e.type==='subspecies'){
+    if(!SPECIES_DATA[e.parent]) throw new Error(`unknown parent species "${e.parent}"`);
+    const res = await apiImportSubspecies({ parent:e.parent, name:e.name, source, data:e.data });
+    SUBSPECIES_DATA[subspKey(e.parent, e.name)] = Object.assign({ parent:e.parent, name:e.name }, e.data, { source, custom:true, customId:res.id });
+  } else if(e.type==='spell'){
+    const res = await apiImportSpell({ name:e.name, source, data:e.data });
+    CUSTOM_SPELLS[e.name] = Object.assign({}, e.data, { source, custom:true, customId:res.id });
+  }
+}
+
+// Rebuild every Library list, picker, and edit select in one pass after a batch.
+function refreshLibraryAfterBulk(){
+  buildClassFilterBar(); buildClassList(); renderClassInfoStack(); buildClassFeatures(); buildActions();
+  buildSpeciesSelect(); buildSubraceSelect(); renderSpeciesInfo(); buildSpeciesTraits();
+  buildSpellClassSelect(); buildSpellLibrary();
+  buildSubclassParentSelect(); buildSubspeciesParentSelect();
+  renderImportedList(); renderSpeciesImportedList(); renderSubclassImportedList();
+  renderSubspeciesImportedList(); renderSpellImportedList();
+  buildLibraryEditSelects(); refreshTagPickers();
+}
+
+function setBulkMsg(kind, html){
+  const msg = document.getElementById('bulkMsg');
+  if(!msg) return;
+  msg.className = 'import-msg ' + kind;
+  msg.innerHTML = html;
+}
+
+async function submitBulkImport(){
+  const raw = (document.getElementById('bulkJson').value || '').trim();
+  if(!raw){ setBulkMsg('err', 'Paste JSON containing one or more entries to import.'); return; }
+  let root;
+  try { root = JSON.parse(raw); }
+  catch(e){ setBulkMsg('err', 'Invalid JSON: ' + esc(e.message)); return; }
+
+  const collected = collectBulkEntries(root);
+  if(!collected.length){
+    setBulkMsg('err', 'No importable entries found. Provide an array of typed entries, a { "classes":[…], "spells":[…] } object, or a single entry.');
+    return;
+  }
+
+  // Validate + dedupe by type + parent + name (case-insensitive; last wins).
+  const problems = [];
+  const byKey = new Map();
+  let dupes = 0;
+  collected.forEach((e, i)=>{
+    const n = i + 1;
+    if(e.error){ problems.push(`#${n}: ${e.error} — add a "type" field (class, species, subclass, subspecies, or spell).`); return; }
+    if(!e.name){ problems.push(`#${n} (${e.type}): missing name.`); return; }
+    if((e.type==='subclass' || e.type==='subspecies') && !e.parent){ problems.push(`#${n} (${e.type} "${e.name}"): missing parent.`); return; }
+    if(!e.data || typeof e.data!=='object' || Array.isArray(e.data) || !Object.keys(e.data).length){
+      problems.push(`#${n} (${e.type} "${e.name}"): missing data fields.`); return;
+    }
+    const key = e.type + ' ' + (e.parent||'').toLowerCase() + ' ' + e.name.toLowerCase();
+    if(byKey.has(key)) dupes++;
+    byKey.set(key, e);
+  });
+
+  const queue = [...byKey.values()].sort((a,b)=> BULK_TYPE_ORDER[a.type] - BULK_TYPE_ORDER[b.type]);
+  if(!queue.length){
+    setBulkMsg('err', 'Nothing could be imported.<br>' + problems.map(esc).join('<br>'));
+    return;
+  }
+
+  setBulkMsg('ok', `Importing ${queue.length} entr${queue.length===1?'y':'ies'}…`);
+  const counts = {};
+  const failed = [];
+  for(const e of queue){
+    try { await importOneBulk(e); counts[e.type] = (counts[e.type]||0) + 1; }
+    catch(err){ failed.push(`${e.type} "${esc(e.name)}": ${esc(err.message)}`); }
+  }
+  refreshLibraryAfterBulk();
+
+  const PLURALS = { class:'classes', species:'species', subclass:'subclasses', subspecies:'subspecies', spell:'spells' };
+  const done = Object.values(counts).reduce((a,b)=>a+b, 0);
+  const breakdown = Object.keys(counts).sort((a,b)=>BULK_TYPE_ORDER[a]-BULK_TYPE_ORDER[b])
+    .map(t=>`${counts[t]} ${counts[t]>1 ? PLURALS[t] : t}`).join(', ');
+  const lines = [];
+  lines.push(`<strong>Imported ${done} entr${done===1?'y':'ies'}</strong>${breakdown?` — ${esc(breakdown)}`:''}.`);
+  if(dupes) lines.push(`${dupes} in-batch duplicate${dupes>1?'s':''} merged by type + name.`);
+  if(problems.length) lines.push(`Skipped ${problems.length}: ${problems.map(esc).join('; ')}`);
+  if(failed.length) lines.push(`Failed ${failed.length}: ${failed.join('; ')}`);
+  setBulkMsg(failed.length || problems.length ? 'err' : 'ok', lines.join('<br>'));
+}
+
+// Fill the box with every imported entry in the bulk format, so a library can be
+// copied out and re-imported (round-trips through submitBulkImport).
+function exportLibraryJson(){
+  const strip = (obj)=>{ const { source, custom, customId, builtin, homebrew, parent, name, ...rest } = obj; return rest; };
+  const entries = [];
+  Object.entries(CLASS_DATA).filter(([,d])=>d.custom).forEach(([name,d])=> entries.push({ type:'class', name, source:d.source, data:strip(d) }));
+  Object.entries(SPECIES_DATA).filter(([,d])=>d.custom).forEach(([name,d])=> entries.push({ type:'species', name, source:d.source, data:strip(d) }));
+  Object.values(SUBCLASS_DATA).filter(d=>d.custom).forEach(d=> entries.push({ type:'subclass', parent:d.parent, name:d.name, source:d.source, data:strip(d) }));
+  Object.values(SUBSPECIES_DATA).filter(d=>d.custom).forEach(d=> entries.push({ type:'subspecies', parent:d.parent, name:d.name, source:d.source, data:strip(d) }));
+  Object.entries(CUSTOM_SPELLS).forEach(([name,d])=> entries.push({ type:'spell', name, source:d.source, data:strip(d) }));
+  const box = document.getElementById('bulkJson');
+  if(box) box.value = JSON.stringify(entries, null, 2);
+  setBulkMsg(entries.length?'ok':'err', entries.length
+    ? `Exported ${entries.length} imported entr${entries.length===1?'y':'ies'} into the box.`
+    : 'No imported entries to export yet.');
+}
+
+function bindBulkImport(){
+  const submit = document.getElementById('bulkSubmit');
+  if(!submit) return;
+  submit.addEventListener('click', submitBulkImport);
+  document.getElementById('bulkExport')?.addEventListener('click', exportLibraryJson);
+  const file = document.getElementById('bulkFile');
+  file?.addEventListener('change', ()=>{
+    const f = file.files && file.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      document.getElementById('bulkJson').value = reader.result || '';
+      setBulkMsg('ok', `Loaded "${esc(f.name)}" — review it, then press Import All.`);
+    };
+    reader.onerror = ()=> setBulkMsg('err', `Could not read "${esc(f.name)}".`);
+    reader.readAsText(f);
+    file.value = ''; // allow re-selecting the same file
+  });
+}
+
 // ---------- Load-existing pickers (Library tab) ----------
 // Every panel gets a dropdown listing built-in AND imported entries; picking
 // one fills the form so it can be tweaked and re-imported. Saving under the
@@ -3397,7 +4243,7 @@ let NOTES_INDEX = [];
 let notesFilter = 'All';
 let notesBrowsePage = 0; // current page when browsing a type filter with no search query
 const NOTES_PAGE_SIZE = 20;
-const NOTES_TYPES = ['All','Classes','Subclasses','Species','Spells','Features','Actions','Alignments'];
+const NOTES_TYPES = ['All','Classes','Subclasses','Species','Subspecies','Spells','Features','Actions','Alignments'];
 
 function notesEntry(type, name, badges, haystack, detail, edit){
   return { type, name, badges: badges.filter(Boolean).map(String),
@@ -3468,6 +4314,7 @@ function buildNotesIndex(){
       summary,
       editLink('subclass', subKey(sc.parent, sc.name), 'Edit subclass in Library')),
       { key: subKey(sc.parent, sc.name),
+        parent: { type:'Classes', name: sc.parent },
         full: summary + ((sc.features||[]).length?`<div class="nr-sect">Features</div>`+classFeaturesHtml(sc.features):'') }));
     (sc.features||[]).forEach(f=> ix.push(featureEntry(f, sc.name, sc.parent,
       editLink('subclass', subKey(sc.parent, sc.name), 'Edit '+sc.name+' in Library'))));
@@ -3479,21 +4326,56 @@ function buildNotesIndex(){
         `<div class="nr-meta">${esc(parent)} subclass · chosen at level ${cd.subclassLevel||3}</div>`,
         editLink('subclass', subKey(parent, n), 'Edit subclass in Library')),
         { key: subKey(parent, n),
+          parent: { type:'Classes', name: parent },
           full: `<div class="nr-meta">${esc(parent)} subclass · chosen at level ${cd.subclassLevel||3}</div>
                  <div class="feat-desc">Name-only entry — import it in the Library to add a description and features.</div>` }));
     });
   });
 
-  // Species with their traits inline.
+  // Species with their traits inline; subraces listed as click-through chips.
   Object.entries(SPECIES_DATA).forEach(([name, sd])=>{
     const traits = sd.traits||[];
-    ix.push(notesEntry('Species', name, [sd.source, sd.custom?'imported':'built-in'],
-      [sd.desc, sd.asi, sd.languages, traits.map(t=>t.name+' '+(t.desc||'')).join(' ')].filter(Boolean).join(' '),
-      `<div class="nr-meta">${esc(sd.size||'Medium')} · ${sd.speed||30} ft${sd.darkvision?' · darkvision '+sd.darkvision+' ft':''}${sd.asi?' · '+esc(sd.asi):''}</div>
+    const subNames = subspeciesNamesForSpecies(name); // built-in + imported
+    const detail = `<div class="nr-meta">${esc(sd.size||'Medium')} · ${sd.speed||30} ft${sd.darkvision?' · darkvision '+sd.darkvision+' ft':''}${sd.asi?' · '+esc(sd.asi):''}</div>
        ${sd.languages?`<div class="nr-meta">languages: ${esc(sd.languages)}</div>`:''}
        ${sd.desc?`<div class="feat-desc">${esc(sd.desc)}</div>`:''}
-       ${traits.map(t=>`<div class="feat-desc"><b>${esc(t.name)}</b>${t.desc?' — '+esc(t.desc):''}</div>`).join('')}`,
-      editLink('species', name, 'Edit species in Library')));
+       ${traits.map(t=>`<div class="feat-desc"><b>${esc(t.name)}</b>${t.desc?' — '+esc(t.desc):''}</div>`).join('')}`;
+    ix.push(Object.assign(notesEntry('Species', name, [sd.source, sd.custom?'imported':'built-in'],
+      [sd.desc, sd.asi, sd.languages, subNames.join(' '), traits.map(t=>t.name+' '+(t.desc||'')).join(' ')].filter(Boolean).join(' '),
+      detail,
+      editLink('species', name, 'Edit species in Library')),
+      { full: detail
+        + (subNames.length?`<div class="nr-sect">Subraces — click to view</div><div class="nr-sub-list">${
+            subNames.map(n=>`<span class="nr-sub-link" data-key="${esc(subspKey(name, n))}">${esc(n)}</span>`).join('')}</div>`:'') }));
+  });
+
+  // Subspecies (subraces): detailed records carry traits; species subrace
+  // name-lists fill in the rest. Each links back to its parent species.
+  const seenSubsp = new Set();
+  Object.values(SUBSPECIES_DATA).forEach(ss=>{
+    seenSubsp.add(subspKey(ss.parent, ss.name));
+    const traits = ss.traits||[];
+    const summary = `<div class="nr-meta">${esc(ss.parent)} subrace${ss.asi?' · '+esc(ss.asi):''}</div>
+       ${ss.desc?`<div class="feat-desc">${esc(ss.desc)}</div>`:''}`;
+    ix.push(Object.assign(notesEntry('Subspecies', ss.name, [ss.parent, ss.source||'Homebrew', ss.custom?'imported':'built-in'],
+      [ss.desc, ss.parent, ss.asi, traits.map(t=>t.name+' '+(t.desc||'')).join(' ')].filter(Boolean).join(' '),
+      summary,
+      editLink('subspecies', subspKey(ss.parent, ss.name), 'Edit subspecies in Library')),
+      { key: subspKey(ss.parent, ss.name),
+        parent: { type:'Species', name: ss.parent },
+        full: summary + (traits.length?`<div class="nr-sect">Traits</div>`+traits.map(t=>`<div class="feat-desc"><b>${esc(t.name)}</b>${t.desc?' — '+esc(t.desc):''}</div>`).join(''):'') }));
+  });
+  Object.entries(SPECIES_DATA).forEach(([parent, sd])=>{
+    (sd.subraces||[]).forEach(n=>{
+      if(seenSubsp.has(subspKey(parent, n))) return;
+      ix.push(Object.assign(notesEntry('Subspecies', n, [parent, 'built-in'], parent,
+        `<div class="nr-meta">${esc(parent)} subrace</div>`,
+        editLink('subspecies', subspKey(parent, n), 'Edit subspecies in Library')),
+        { key: subspKey(parent, n),
+          parent: { type:'Species', name: parent },
+          full: `<div class="nr-meta">${esc(parent)} subrace</div>
+                 <div class="feat-desc">Name-only entry — import it in the Library to add a description and traits.</div>` }));
+    });
   });
 
   // Spells: imported entries carry full detail and shadow built-in names.
@@ -3629,69 +4511,251 @@ function renderNotesBrowse(){
   if(next) next.addEventListener('click', ()=>{ notesBrowsePage++; renderNotesBrowse(); });
 }
 
-// ---------- Notes detail popup ----------
-// Shows an entry's full information; classes list their subclasses as chips
-// that open the subclass's own popup. The edit action lives only here.
+// ---------- Notes detail popups (floating, draggable, edge-snappable) ----------
+// Each opened entry becomes its own modeless window cloned from #nrWindowTpl and
+// appended to #nrWindowLayer, so several can coexist. Drilling into a subclass /
+// parent tag REPLACES content in the same window (with a per-window Back stack).
+// Windows drag by their header and snap to viewport halves/quarters/full when
+// dropped near an edge (Aero-style). Below NR_WIN_MOBILE they go full-screen and
+// dragging is disabled. Also used by the sheet's Spells/Actions detail popups.
 let notesHits = []; // entries behind the currently rendered result rows
-let notesModalStack = [];     // parent entries to return to via the Back button
-let notesModalCurrent = null; // entry currently shown in the popup
+let nrWindows = []; // open windows: { el, refs, stack, current, restore }
+let nrTopZ = 1200;  // z-index high-water mark for click-to-front
+let nrModalBound = false;
+const NR_WIN_MOBILE = 640; // viewport width at/below which windows go full-screen
+const NR_EDGE = 26;        // px from a viewport edge that arms a snap zone
 
-// opts.push  — drilling into a child (e.g. subclass): remember the parent.
-// opts.pop   — going back: stack was already adjusted, leave it alone.
-// (default)  — a fresh open from a result/browse row: clear the trail.
-function openNotesModal(entry, opts){
-  const backdrop = document.getElementById('nrModalBackdrop');
-  if(!backdrop || !entry) return;
-  opts = opts || {};
-  if(opts.push){ if(notesModalCurrent) notesModalStack.push(notesModalCurrent); }
-  else if(!opts.pop){ notesModalStack = []; }
-  notesModalCurrent = entry;
-  const back = document.getElementById('nrModalBack');
-  if(back) back.hidden = notesModalStack.length === 0;
-  document.getElementById('nrModalTitle').textContent = entry.name;
-  document.getElementById('nrModalBadges').innerHTML =
-    entry.badges.map(b=>`<span class="nr-badge">${esc(b)}</span>`).join('');
-  const body = document.getElementById('nrModalBody');
-  body.innerHTML = entry.full || entry.detail;
-  document.getElementById('nrModalFoot').innerHTML = entry.edit
+function nrIsMobile(){ return window.innerWidth <= NR_WIN_MOBILE; }
+
+// Public entry point: spawn a NEW window for an entry (from a result/browse row
+// or a sheet spell/action). Returns the window object.
+function openNotesModal(entry){
+  const layer = document.getElementById('nrWindowLayer');
+  const tpl = document.getElementById('nrWindowTpl');
+  if(!layer || !tpl || !entry) return null;
+  const el = tpl.content.firstElementChild.cloneNode(true);
+  const win = {
+    el, stack: [], current: null, restore: null,
+    refs: {
+      head:   el.querySelector('[data-role=head]'),
+      back:   el.querySelector('[data-role=back]'),
+      title:  el.querySelector('[data-role=title]'),
+      badges: el.querySelector('[data-role=badges]'),
+      body:   el.querySelector('[data-role=body]'),
+      foot:   el.querySelector('[data-role=foot]'),
+      close:  el.querySelector('[data-role=close]')
+    }
+  };
+  layer.appendChild(el);
+  nrWindows.push(win);
+  win.refs.close.addEventListener('click', ()=> nrCloseWindow(win));
+  win.refs.back.addEventListener('click', ()=> nrNavigate(win, null, 'pop'));
+  el.addEventListener('mousedown', ()=> nrFocusWindow(win), true);
+  nrEnableDrag(win);
+  nrPlaceWindow(win);
+  nrFocusWindow(win);
+  nrNavigate(win, entry, 'fresh');
+  nrUpdateClearAll();
+  return win;
+}
+
+// Update a window's content in place. mode: 'fresh' | 'push' | 'pop'.
+function nrNavigate(win, entry, mode){
+  if(mode==='push'){ if(win.current) win.stack.push(win.current); win.current = entry; }
+  else if(mode==='pop'){ win.current = win.stack.pop() || win.current; }
+  else { win.stack = []; win.current = entry; }
+  entry = win.current;
+  if(!entry) return;
+  const r = win.refs;
+  r.back.hidden = win.stack.length === 0;
+  r.title.textContent = entry.name;
+  // The parent tag (a subclass's class, a subrace's species) is a live link to
+  // that parent's own view, opened in this same window when it's in the index.
+  const parentEntry = entry.parent
+    ? NOTES_INDEX.find(e=> e.type===entry.parent.type && e.name===entry.parent.name) : null;
+  r.badges.innerHTML = entry.badges.map(b=> (parentEntry && b===entry.parent.name)
+    ? `<span class="nr-badge nr-parent-link" title="Open ${esc(b)}">${esc(b)} ↗</span>`
+    : `<span class="nr-badge">${esc(b)}</span>`).join('');
+  r.body.innerHTML = entry.full || entry.detail;
+  r.foot.innerHTML = entry.edit
     ? `<a class="pbtn nr-edit-link" href="${entry.edit.href}">✎ ${esc(entry.edit.label)}</a>
        <span class="nr-hint">opens the Library form with this entry loaded — re-import to save changes</span>`
     : '<span class="nr-hint">Built-in rule — not editable.</span>';
-  // Subclass chips open that subclass's own popup; the parent stays reachable
-  // via the Back button.
-  body.querySelectorAll('.nr-sub-link').forEach(chip=>chip.addEventListener('click', ()=>{
+  r.body.querySelectorAll('.nr-sub-link').forEach(chip=>chip.addEventListener('click', ()=>{
     const target = NOTES_INDEX.find(e=>e.key===chip.dataset.key);
-    if(target) openNotesModal(target, { push:true });
+    if(target) nrNavigate(win, target, 'push');
   }));
-  backdrop.classList.add('open');
-  backdrop.setAttribute('aria-hidden','false');
-  const modal = backdrop.querySelector('.nr-modal');
-  if(modal) modal.scrollTop = 0;
+  if(parentEntry){
+    const link = r.badges.querySelector('.nr-parent-link');
+    if(link) link.addEventListener('click', ()=> nrNavigate(win, parentEntry, 'push'));
+  }
+  r.body.scrollTop = 0;
 }
 
-function closeNotesModal(){
-  const backdrop = document.getElementById('nrModalBackdrop');
-  if(!backdrop) return;
-  backdrop.classList.remove('open');
-  backdrop.setAttribute('aria-hidden','true');
-  notesModalStack = [];
-  notesModalCurrent = null;
+function nrFocusWindow(win){
+  win.el.style.zIndex = String(++nrTopZ);
+  nrWindows.forEach(w=> w.el.classList.toggle('focused', w===win));
 }
 
-// Pop back to the parent entry (e.g. from a subclass to its class).
-function notesModalBack(){
-  const parent = notesModalStack.pop();
-  if(parent) openNotesModal(parent, { pop:true });
+function nrCloseWindow(win){
+  win.el.remove();
+  nrWindows = nrWindows.filter(w=> w!==win);
+  nrUpdateClearAll();
 }
 
+function nrCloseAllWindows(){
+  nrWindows.forEach(w=> w.el.remove());
+  nrWindows = [];
+  nrUpdateClearAll();
+}
+
+// Initial placement: mobile → full-screen; desktop → a cascading offset so
+// stacked windows don't hide each other.
+function nrPlaceWindow(win){
+  if(nrIsMobile()){ win.el.classList.add('nr-window-max'); return; }
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const w = Math.min(460, vw - 40);
+  const n = (nrWindows.length - 1) % 6;
+  const x = Math.max(10, Math.round((vw - w) / 2 - 90) + n * 30);
+  const y = Math.max(10, Math.round(vh / 2 - 260) + n * 30);
+  win.el.style.width = w + 'px';
+  win.el.style.left = x + 'px';
+  win.el.style.top = y + 'px';
+}
+
+// ----- Dragging + Aero-style edge snapping -----
+function nrEnableDrag(win){
+  win.refs.head.addEventListener('mousedown', e=>{
+    if(e.target.closest('button') || nrIsMobile()) return;
+    e.preventDefault();
+    nrFocusWindow(win);
+    // Restore floating size before dragging a snapped window.
+    if(win.el.classList.contains('nr-window-snapped')){
+      win.el.classList.remove('nr-window-snapped');
+      const rest = win.restore || {};
+      win.el.style.width = rest.width || '460px';
+      win.el.style.height = rest.height || '';
+    }
+    const rect = win.el.getBoundingClientRect();
+    let offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+    if(offX > rect.width) offX = rect.width / 2; // was snapped wider than restore
+    let zone = null;
+    const onMove = ev=>{
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const x = Math.max(-rect.width + 90, Math.min(ev.clientX - offX, vw - 90));
+      const y = Math.max(0, Math.min(ev.clientY - offY, vh - 40));
+      win.el.style.left = x + 'px';
+      win.el.style.top = y + 'px';
+      zone = nrSnapZoneFor(ev.clientX, ev.clientY);
+      nrShowSnapPreview(zone);
+    };
+    const onUp = ()=>{
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      nrShowSnapPreview(null);
+      if(zone) nrApplySnap(win, zone);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function nrSnapZoneFor(px, py){
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const L = px <= NR_EDGE, R = px >= vw - NR_EDGE;
+  const T = py <= NR_EDGE, B = py >= vh - NR_EDGE;
+  if(T && L) return 'tl';
+  if(T && R) return 'tr';
+  if(B && L) return 'bl';
+  if(B && R) return 'br';
+  if(L) return 'left';
+  if(R) return 'right';
+  if(T) return 'max';
+  return null;
+}
+
+function nrZoneRect(zone){
+  const vw = window.innerWidth, vh = window.innerHeight, m = 6;
+  const halfW = vw / 2, halfH = vh / 2;
+  switch(zone){
+    case 'left':  return { left:m,          top:m,          width:halfW - 1.5*m, height:vh - 2*m };
+    case 'right': return { left:halfW + m/2, top:m,          width:halfW - 1.5*m, height:vh - 2*m };
+    case 'max':   return { left:m,          top:m,          width:vw - 2*m,      height:vh - 2*m };
+    case 'tl':    return { left:m,          top:m,          width:halfW - 1.5*m, height:halfH - 1.5*m };
+    case 'tr':    return { left:halfW + m/2, top:m,          width:halfW - 1.5*m, height:halfH - 1.5*m };
+    case 'bl':    return { left:m,          top:halfH + m/2, width:halfW - 1.5*m, height:halfH - 1.5*m };
+    case 'br':    return { left:halfW + m/2, top:halfH + m/2, width:halfW - 1.5*m, height:halfH - 1.5*m };
+  }
+  return null;
+}
+
+function nrShowSnapPreview(zone){
+  const z = document.getElementById('nrSnapZone');
+  if(!z) return;
+  const r = zone && nrZoneRect(zone);
+  if(!r){ z.hidden = true; return; }
+  z.style.left = r.left + 'px';
+  z.style.top = r.top + 'px';
+  z.style.width = r.width + 'px';
+  z.style.height = r.height + 'px';
+  z.hidden = false;
+}
+
+function nrApplySnap(win, zone){
+  const r = nrZoneRect(zone);
+  if(!r) return;
+  if(!win.el.classList.contains('nr-window-snapped')){
+    win.restore = { width: win.el.style.width, height: win.el.style.height };
+  }
+  win.el.classList.add('nr-window-snapped');
+  win.el.style.left = r.left + 'px';
+  win.el.style.top = r.top + 'px';
+  win.el.style.width = r.width + 'px';
+  win.el.style.height = r.height + 'px';
+}
+
+// A "Close all" button appears (bottom-centre) once two or more windows are open.
+function nrUpdateClearAll(){
+  let btn = document.getElementById('nrClearAll');
+  if(nrWindows.length >= 2){
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'nrClearAll';
+      btn.type = 'button';
+      btn.className = 'pbtn nr-clear-all';
+      btn.addEventListener('click', nrCloseAllWindows);
+      document.body.appendChild(btn);
+    }
+    btn.textContent = `✕ Close all (${nrWindows.length})`;
+  } else if(btn){
+    btn.remove();
+  }
+}
+
+// Global wiring (once per page): Esc closes the top window; a resize keeps
+// floating windows on-screen and re-fits snapped ones.
 function bindNotesModal(){
-  const backdrop = document.getElementById('nrModalBackdrop');
-  if(!backdrop) return;
-  document.getElementById('nrModalClose').addEventListener('click', closeNotesModal);
-  const back = document.getElementById('nrModalBack');
-  if(back) back.addEventListener('click', notesModalBack);
-  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeNotesModal(); });
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeNotesModal(); });
+  if(nrModalBound) return;
+  nrModalBound = true;
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && nrWindows.length){
+      const top = nrWindows.reduce((a,b)=>
+        Number(b.el.style.zIndex||0) >= Number(a.el.style.zIndex||0) ? b : a);
+      nrCloseWindow(top);
+    }
+  });
+  window.addEventListener('resize', ()=>{
+    const vw = window.innerWidth, vh = window.innerHeight;
+    nrWindows.forEach(w=>{
+      if(w.el.classList.contains('nr-window-max') !== nrIsMobile()){
+        w.el.classList.toggle('nr-window-max', nrIsMobile());
+      }
+      if(nrIsMobile() || w.el.classList.contains('nr-window-snapped')) return;
+      const rect = w.el.getBoundingClientRect();
+      w.el.style.left = Math.max(0, Math.min(rect.left, vw - 90)) + 'px';
+      w.el.style.top = Math.max(0, Math.min(rect.top, vh - 40)) + 'px';
+    });
+  });
 }
 
 function buildNotesFilterBar(){
@@ -3840,6 +4904,9 @@ const app = {
   bindSubclassImport,
   bindSubspeciesImport,
   bindSpellImport,
+  bindBulkImport,
+  submitBulkImport,
+  exportLibraryJson,
   fillClassForm,
   fillSpeciesForm,
   fillSubclassForm,
@@ -3888,6 +4955,12 @@ function openLibraryEditParam(){
   if(sel && [...sel.options].some(o=>o.value===key)) sel.value = key;
   const anchor = document.getElementById(m.anchor);
   const panel = anchor && anchor.closest('.panel');
+  // The target form lives inside a tab pane — switch to that tab before scrolling.
+  const pane = anchor && anchor.closest('.tab-pane');
+  if(pane){
+    const btn = document.querySelector(`.tab-btn[data-tab="${pane.id.replace(/^tab-/, '')}"]`);
+    if(btn) btn.click();
+  }
   // Deferred: a smooth scroll started during initial page layout gets cancelled
   // by the browser's own load-time scroll handling.
   if(panel) setTimeout(()=> panel.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
@@ -3906,6 +4979,8 @@ function initLibraryPage(){
   renderSubspeciesImportedList();
   bindSpellImport();
   renderSpellImportedList();
+  bindBulkImport();
+  bindTabs(); // Library panels are split across tabs (Classes / Species / Spells / Bulk / Reference)
   buildLibraryEditSelects();
   bindLibraryEditSelects();
   buildSpellLevelSelects();

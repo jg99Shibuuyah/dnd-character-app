@@ -1,0 +1,173 @@
+<div class="panel">
+  <h2><span>How Imports Read JSON</span><span class="rune">◈</span></h2>
+  <div class="picker-hint">Every entry has a <span class="hl">name</span>, an optional <span class="hl">source</span>, and a <span class="hl">data</span> object holding its fields. Subclasses and subspecies also need a <span class="hl">parent</span>. The <span class="hl">Paste JSON…</span> box on each import form takes a single entry; the <span class="hl">Bulk Import</span> tab takes many at once.</div>
+  <ul class="ref-fields">
+    <li><code>name</code> <span class="ref-req">required</span> — <b>the display name.</b> Re-importing a name that already exists overwrites it (dedup is by type + name).</li>
+    <li><code>source</code> — one of <code>"5E"</code>, <code>"5E (legacy)"</code>, <code>"5.5E"</code>, <code>"Homebrew"</code>. Anything else defaults to <b>Homebrew</b>.</li>
+    <li><code>parent</code> <span class="ref-req">subclass / subspecies</span> — the name of the parent class or species it attaches to.</li>
+    <li><code>data</code> — the object of type-specific fields shown below. Fields may also be listed inline instead of nested under <code>data</code>.</li>
+  </ul>
+
+  <div class="picker-hint" style="margin-top:14px;">The <span class="hl">Bulk Import</span> tab accepts three shapes:</div>
+  <ul class="ref-fields">
+    <li><b>An array</b> of entries, each tagged with a <code>type</code> — <code>class</code>, <code>species</code>, <code>subclass</code>, <code>subspecies</code>, or <code>spell</code>.</li>
+    <li><b>A grouped object</b> keyed by type: <code>{ "classes": [ … ], "spells": [ … ] }</code>. No per-entry <code>type</code> needed.</li>
+    <li><b>A single entry.</b> If <code>type</code> is omitted it is inferred from the fields present.</li>
+  </ul>
+<pre class="json-ref">[
+  { "type": "class",  "name": "Artificer", "source": "5E", "data": { … } },
+  { "type": "spell",  "name": "Mend Bone", "data": { … } },
+  { "type": "subclass", "parent": "Artificer", "name": "Alchemist", "data": { … } }
+]
+
+// — or grouped —
+
+{
+  "classes":  [ { "name": "Artificer", "data": { … } } ],
+  "spells":   [ { "name": "Mend Bone", "data": { … } } ]
+}</pre>
+</div>
+
+<div class="grid grid-half">
+  <div>
+    <div class="panel">
+      <h2><span>Class</span><span class="rune">◇</span></h2>
+<pre class="json-ref">{
+  "type": "class",
+  "name": "Artificer",
+  "source": "5E",
+  "data": {
+    "hitDie": 8,
+    "saves": ["con", "int"],
+    "choose": 2,
+    "skills": ["Arcana", "History"],
+    "subclassLevel": 3,
+    "subclasses": ["Alchemist", "Artillerist"],
+    "casting": { "type": "half", "ability": "int" },
+    "desc": "A master of invention.",
+    "features": [
+      { "lv": 1, "name": "Magical Tinkering" },
+      { "lv": 2, "name": "Infuse Item", "use": "special", "cost": "2 infusions" }
+    ]
+  }
+}</pre>
+      <ul class="ref-fields">
+        <li><code>hitDie</code> — hit-die size: <b>6, 8, 10, or 12</b>.</li>
+        <li><code>saves</code> — array of ability keys: <code>str dex con int wis cha</code>.</li>
+        <li><code>choose</code> — number of skill proficiencies the class picks.</li>
+        <li><code>skills</code> — array of skill names to choose from, or <code>"any"</code>.</li>
+        <li><code>subclassLevel</code> — the level a subclass is chosen (default 3).</li>
+        <li><code>subclasses</code> — array of subclass names (optional).</li>
+        <li><code>casting</code> — <code>{ "type": "none" | "full" | "half" | "pact", "ability": "int" | "wis" | "cha" }</code>.</li>
+        <li><code>features</code> — array of <code>{ lv, name, desc?, use?, cost? }</code>. <code>use</code> (reaction / bonus action / free / special) and <code>cost</code> surface it on the Actions tab.</li>
+        <li><code>desc</code> — one-paragraph summary (optional).</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h2><span>Subclass</span><span class="rune">◇</span></h2>
+<pre class="json-ref">{
+  "type": "subclass",
+  "parent": "Artificer",
+  "name": "Alchemist",
+  "source": "5E",
+  "data": {
+    "subclassLevel": 3,
+    "desc": "Potions and elixirs.",
+    "features": [
+      { "lv": 3, "name": "Experimental Elixir" }
+    ]
+  }
+}</pre>
+      <ul class="ref-fields">
+        <li><code>parent</code> <span class="ref-req">required</span> — the class this attaches to.</li>
+        <li><code>subclassLevel</code> — defaults to the parent class's subclass level.</li>
+        <li><code>features</code> — array of <code>{ lv, name, desc?, use?, cost? }</code>, same as a class.</li>
+        <li><code>desc</code> — one-paragraph summary (optional).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2><span>Species</span><span class="rune">◇</span></h2>
+<pre class="json-ref">{
+  "type": "species",
+  "name": "Aarakocra",
+  "source": "5E",
+  "data": {
+    "size": "Medium",
+    "speed": 30,
+    "darkvision": 0,
+    "asi": "+2 Dex, +1 Wis",
+    "languages": "Common, Auran",
+    "desc": "Bird-folk of the peaks.",
+    "traits": [
+      { "name": "Flight", "desc": "Flying speed 50 ft." }
+    ]
+  }
+}</pre>
+      <ul class="ref-fields">
+        <li><code>size</code> — e.g. <code>"Small"</code>, <code>"Medium"</code>.</li>
+        <li><code>speed</code> — walking speed in feet (default 30).</li>
+        <li><code>darkvision</code> — range in feet, or <code>0</code> for none.</li>
+        <li><code>asi</code> — ability score increases, free text (optional).</li>
+        <li><code>languages</code> — free text (optional).</li>
+        <li><code>traits</code> — array of <code>{ name, desc? }</code>.</li>
+        <li><code>desc</code> — one-paragraph summary (optional).</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h2><span>Subspecies</span><span class="rune">◇</span></h2>
+<pre class="json-ref">{
+  "type": "subspecies",
+  "parent": "Elf",
+  "name": "High Elf",
+  "source": "5E",
+  "data": {
+    "asi": "+1 Int",
+    "desc": "Attuned to arcane magic.",
+    "traits": [
+      { "name": "Cantrip", "desc": "Know one wizard cantrip." }
+    ]
+  }
+}</pre>
+      <ul class="ref-fields">
+        <li><code>parent</code> <span class="ref-req">required</span> — the species this attaches to.</li>
+        <li><code>traits</code> — array of <code>{ name, desc? }</code>.</li>
+        <li><code>asi</code> — ability score increases, free text (optional).</li>
+        <li><code>desc</code> — one-paragraph summary (optional).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-half">
+  <div class="panel">
+    <h2><span>Spell</span><span class="rune">◇</span></h2>
+<pre class="json-ref">{
+  "type": "spell",
+  "name": "Fireball",
+  "source": "5E",
+  "data": {
+    "level": 3,
+    "classes": ["Sorcerer", "Wizard"],
+    "school": "Evocation",
+    "castingTime": "1 Action",
+    "range": "150 feet",
+    "components": "V, S, M",
+    "duration": "Instantaneous",
+    "tags": ["Damage", "AoE"],
+    "desc": "A bright streak of flame."
+  }
+}</pre>
+    <ul class="ref-fields">
+      <li><code>level</code> — <b>0–9</b> (0 = cantrip).</li>
+      <li><code>classes</code> — array of class names that can cast it. Empty = every class.</li>
+      <li><code>school</code>, <code>castingTime</code>, <code>range</code>, <code>components</code>, <code>duration</code> — free text (optional).</li>
+      <li><code>tags</code> — array of labels (e.g. <code>"Reaction"</code> surfaces it on the Actions tab).</li>
+      <li><code>desc</code> — the spell's effect text (optional).</li>
+    </ul>
+  </div>
+</div>

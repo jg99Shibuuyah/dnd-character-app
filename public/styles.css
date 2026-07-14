@@ -479,6 +479,21 @@ textarea.trait{
 .tab-pane{ display:none; }
 .tab-pane.active{ display:block; }
 
+/* ---------- JSON reference tab (Library) ---------- */
+.json-ref{
+  font-family:'JetBrains Mono', monospace; font-size:12px; line-height:1.55;
+  background: var(--void-2); color: var(--ink);
+  border:1px solid var(--border-glow); border-radius:6px;
+  padding:12px 14px; margin:10px 0 4px;
+  overflow-x:auto; white-space:pre;
+}
+.ref-fields{ list-style:none; margin:8px 0 0; padding:0; font-size:12px; }
+.ref-fields li{ padding:4px 0; border-bottom:1px dashed var(--border-glow); color: var(--ink-dim); }
+.ref-fields li:last-child{ border-bottom:none; }
+.ref-fields code{ color: var(--neon-green); font-family:'JetBrains Mono', monospace; }
+.ref-fields b{ color: var(--ink); font-weight:600; }
+.ref-req{ color: var(--neon-cyan); font-size:10px; letter-spacing:1px; text-transform:uppercase; }
+
 .grid-sheet{ grid-template-columns: 250px 1fr; }
 .grid-two{ grid-template-columns: 340px 1fr; align-items:start; }
 .grid-half{ grid-template-columns: 1fr 1fr; align-items:start; }
@@ -894,27 +909,48 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 }
 .nr-sub-link:hover{ color: var(--neon-cyan); border-color: var(--neon-cyan); }
 
-/* Detail popup for search results */
-.nr-modal-backdrop{
-  position:fixed; inset:0; z-index:300; display:none;
-  background: rgba(0,0,0,0.55);
-  align-items:flex-start; justify-content:center;
-  padding:48px 16px;
+/* Detail popups: modeless, draggable, edge-snappable floating windows. */
+.nr-window-layer{
+  position:fixed; inset:0; z-index:1000; pointer-events:none;
 }
-.nr-modal-backdrop.open{ display:flex; }
-.nr-modal{
-  width:100%; max-width:640px; max-height:calc(100vh - 96px); overflow-y:auto;
-  margin-bottom:0;
+.nr-window{
+  position:absolute; pointer-events:auto;
+  display:flex; flex-direction:column;
+  max-height:calc(100vh - 20px); overflow:hidden; margin-bottom:0;
+  box-shadow: 0 10px 34px rgba(0,0,0,0.55);
 }
-.nr-modal-head{
+.nr-window.focused{ border-color: var(--neon-cyan); box-shadow: 0 0 0 1px var(--neon-cyan), 0 12px 40px rgba(0,0,0,0.6); }
+.nr-window.nr-window-snapped{ max-height:none; }
+.nr-window-body{ overflow-y:auto; flex:1 1 auto; }
+/* Mobile: windows fill the screen and can't be dragged. */
+.nr-window.nr-window-max{
+  left:0 !important; top:0 !important; width:100% !important; height:100% !important;
+  max-height:none; border-radius:0;
+}
+/* Snap-preview highlight shown while dragging near an edge. */
+.nr-snap-zone{
+  position:fixed; z-index:999; pointer-events:none; border-radius:4px;
+  border:2px dashed var(--neon-cyan); background: rgba(0,255,213,0.10);
+  box-shadow: 0 0 16px rgba(0,255,213,0.25) inset;
+}
+.nr-snap-zone[hidden]{ display:none; }
+/* "Close all" control, shown when 2+ windows are open. */
+.nr-clear-all{ position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:1100; }
+.nr-window-head{
   display:flex; align-items:center; gap:8px; flex-wrap:wrap;
   padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--parchment-line);
+  cursor:grab; user-select:none;
 }
-.nr-modal-head .f-name{
+.nr-window-head:active{ cursor:grabbing; }
+.nr-window-head .f-name{
   font-family:'Orbitron', sans-serif; font-size:15px;
   color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0,255,213,0.35);
 }
 .nr-modal-badges{ display:inline-flex; gap:5px; flex-wrap:wrap; }
+.nr-parent-link{
+  cursor:pointer; color: var(--neon-cyan); border-color: var(--neon-cyan);
+}
+.nr-parent-link:hover{ background: rgba(0,255,213,0.12); box-shadow: 0 0 8px rgba(0,255,213,0.25); }
 .nr-modal-back{
   background:transparent; cursor:pointer;
   color: var(--gold-bright); border:1px solid var(--gold); border-radius:3px;

@@ -1,0 +1,21 @@
+<div class="panel">
+  <h2><span>Bulk Import — JSON</span><span class="rune">◈</span></h2>
+  <div class="picker-hint">Paste or load a JSON file holding <span class="hl">many entries at once</span> — classes, species, subclasses, subspecies, and spells mixed together. Each entry is saved to the shared database and appears in the matching picker. Entries are <span class="hl">deduplicated by type and name</span>: importing a name that already exists (here or in the batch) overwrites it rather than creating a copy.</div>
+  <div class="import-grid">
+    <div class="set-field full"><label>Library JSON</label>
+      <textarea id="bulkJson" class="import-ta" style="min-height:150px;" placeholder='[
+  { "type":"class",  "name":"Artificer", "source":"5E", "data":{ "hitDie":8, "saves":["con","int"] } },
+  { "type":"spell",  "name":"Mend Bone", "source":"Homebrew", "data":{ "level":2, "classes":["Cleric"] } },
+  { "type":"subclass", "parent":"Artificer", "name":"Alchemist", "data":{ "subclassLevel":3, "features":[] } }
+]'></textarea>
+      <div class="import-note">Accepts an <span class="hl">array</span> of entries (each with a <span class="hl">type</span> of class / species / subclass / subspecies / spell), a grouped object like <span class="hl">{ "classes":[…], "spells":[…] }</span>, or a single entry. Subclasses and subspecies need a <span class="hl">parent</span>. When <span class="hl">type</span> is omitted it is inferred from the fields. Each entry may nest its fields under <span class="hl">data</span> or list them inline.</div>
+    </div>
+    <div class="full">
+      <button class="add-btn" id="bulkSubmit">+ Import All</button>
+      <label class="pbtn" for="bulkFile" style="margin-left:8px;cursor:pointer;">Load file…</label>
+      <input id="bulkFile" type="file" accept=".json,application/json" style="display:none;">
+      <button class="pbtn" id="bulkExport" style="margin-left:8px;" title="Fill the box with every imported entry, ready to save or re-import elsewhere">Export imported</button>
+    </div>
+  </div>
+  <div class="import-msg" id="bulkMsg"></div>
+</div>
