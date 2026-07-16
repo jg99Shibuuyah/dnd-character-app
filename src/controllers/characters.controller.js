@@ -1,10 +1,11 @@
 const Character = require('../models/character.model');
+const GameSession = require('../models/gameSession.model');
 
 const DEFAULT_NAME = 'Unnamed Adventurer';
 
-// List all profiles (lightweight: id/name/class/level/race/updated_at only)
+// List the signed-in user's profiles (lightweight: id/name/class/level/race only)
 function list(req, res) {
-  const summaries = Character.list().map(row => {
+  const summaries = Character.listByUser(req.user.id).map(row => {
     let parsed = {};
     try { parsed = JSON.parse(row.data); } catch (e) {}
     return {
@@ -19,40 +20,61 @@ function list(req, res) {
   res.json(summaries);
 }
 
+// Owners read their own characters; a DM may also read any character attached
+// to a session they run (read-only — the writes below stay owner-only).
 function get(req, res) {
   const row = Character.findById(req.params.id);
   if (!row) return res.status(404).json({ error: 'Character not found' });
-  res.json({ id: row.id, name: row.name, data: JSON.parse(row.data), updatedAt: row.updated_at });
+  const owned = row.user_id === req.user.id;
+  if (!owned && !GameSession.dmCanViewCharacter(req.user.id, row.id)) {
+    return res.status(403).json({ error: 'This character belongs to another player' });
+  }
+  res.json({ id: row.id, name: row.name, data: JSON.parse(row.data), updatedAt: row.updated_at, owned });
 }
 
 function create(req, res) {
   const { name, data } = req.body;
   if (!data) return res.status(400).json({ error: 'Missing character data' });
-  const id = Character.create(name || DEFAULT_NAME, data);
+  const id = Character.create(name || DEFAULT_NAME, data, req.user.id);
   res.json({ id });
+}
+
+function requireOwned(req, res) {
+  const row = Character.findById(req.params.id);
+  if (!row) {
+    res.status(404).json({ error: 'Character not found' });
+    return null;
+  }
+  if (row.user_id !== req.user.id) {
+    res.status(403).json({ error: 'This character belongs to another player' });
+    return null;
+  }
+  return row;
 }
 
 function update(req, res) {
   const { name, data } = req.body;
   if (!data) return res.status(400).json({ error: 'Missing character data' });
-  const updated = Character.update(req.params.id, name || DEFAULT_NAME, data);
-  if (!updated) return res.status(404).json({ error: 'Character not found' });
+  const row = requireOwned(req, res);
+  if (!row) return;
+  Character.update(row.id, name || DEFAULT_NAME, data);
   res.json({ ok: true });
 }
 
 function duplicate(req, res) {
-  const row = Character.findById(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Character not found' });
+  const row = requireOwned(req, res);
+  if (!row) return;
   const data = JSON.parse(row.data);
   const newName = (data.name || row.name) + ' (Copy)';
   data.name = newName;
-  const id = Character.create(newName, data);
+  const id = Character.create(newName, data, req.user.id);
   res.json({ id });
 }
 
 function remove(req, res) {
-  const removed = Character.remove(req.params.id);
-  if (!removed) return res.status(404).json({ error: 'Character not found' });
+  const row = requireOwned(req, res);
+  if (!row) return;
+  Character.remove(row.id);
   res.json({ ok: true });
 }
 
