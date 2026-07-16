@@ -6,6 +6,8 @@
   <select id="profileSelect"></select>
   <button class="pbtn" id="newCharBtn">+ New</button>
   <button class="pbtn" id="dupCharBtn">Duplicate</button>
+  <button class="pbtn" id="importCharBtn" title="Import a character from a JSON file">Import</button>
+  <input type="file" id="importCharFile" accept=".json,application/json" hidden>
   <button class="pbtn danger" id="delCharBtn">Delete</button>
   <%- include('options-menu.html') %>
   <span class="save-status" id="saveStatus">Saved</span>

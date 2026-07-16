@@ -5,9 +5,9 @@ local SQLite database. Runs entirely on your own machine.
 
 ## Requirements
 
-- [Node.js](https://nodejs.org) 18 or newer
+- [Node.js](https://nodejs.org) 24 or newer — **or** [Docker](https://www.docker.com/) (see [Running with Docker](#running-with-docker) below, no Node install needed)
 
-## Setup
+## Install & run
 
 ```bash
 npm install
@@ -20,11 +20,18 @@ That's it — a file called `characters.db` will be created in this folder
 the first time you run it. That file *is* your database; back it up or
 copy it elsewhere if you want to keep a snapshot of your characters.
 
+Two environment variables are recognized (both optional):
+
+| Variable  | Default              | Purpose                       |
+|-----------|----------------------|-------------------------------|
+| `PORT`    | `3000`               | HTTP port the server binds to |
+| `DB_FILE` | `./characters.db`    | Path to the SQLite database   |
+
 ### Platform-specific setup
 
 #### Windows
 
-1. **Install Node.js** 18+ from [nodejs.org](https://nodejs.org) (pick the LTS version)
+1. **Install Node.js** 24+ from [nodejs.org](https://nodejs.org) (pick the LTS version)
    - During installation, check the box: *"Automatically install the necessary tools needed for Native Modules"*
 2. **Open PowerShell or Command Prompt** and navigate to the project folder:
    ```powershell
@@ -42,7 +49,7 @@ copy it elsewhere if you want to keep a snapshot of your characters.
    ```bash
    xcode-select --install
    ```
-2. **Install Node.js** 18+ via Homebrew (if not already installed):
+2. **Install Node.js** 24+ via Homebrew (if not already installed):
    ```bash
    brew install node
    ```
@@ -61,9 +68,9 @@ copy it elsewhere if you want to keep a snapshot of your characters.
    sudo apt update
    sudo apt install build-essential python3 git
    ```
-2. **Install Node.js** 18+:
+2. **Install Node.js** 24+:
    ```bash
-   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
    sudo apt install nodejs
    ```
 3. **Navigate to the project folder and start:**
@@ -74,7 +81,61 @@ copy it elsewhere if you want to keep a snapshot of your characters.
    ```
 4. Open **http://localhost:3000** in your browser
 
-> For other Linux distributions, ensure you have a C++ compiler (`g++`), Python 3, and Node.js 18+ installed, then run `npm install && npm start`.
+> For other Linux distributions, ensure you have a C++ compiler (`g++`), Python 3, and Node.js 24+ installed, then run `npm install && npm start`.
+
+## Running with Docker
+
+If you'd rather not install Node.js (or the C++ build tools that
+`better-sqlite3` needs), the included `Dockerfile` and
+`docker-compose.yml` run the whole thing in a container. You only need
+[Docker](https://docs.docker.com/get-docker/) (Docker Desktop on
+Windows/macOS, or Docker Engine with the compose plugin on Linux).
+
+### With Docker Compose (recommended)
+
+```bash
+docker compose up -d
+```
+
+Then open **http://localhost:3000**. The database is stored in a named
+Docker volume (`dnd-data`), so your characters survive rebuilds and
+container restarts.
+
+Useful commands:
+
+```bash
+docker compose logs -f     # watch server logs
+docker compose down        # stop (data is kept in the volume)
+docker compose up -d --build   # rebuild after pulling new code
+```
+
+To use a different host port, edit the `ports` mapping in
+`docker-compose.yml` (e.g. `"8080:3000"`).
+
+### With plain `docker`
+
+```bash
+docker build -t dnd-character-app .
+docker run -d --name dnd-character-app \
+  -p 3000:3000 \
+  -v dnd-data:/data \
+  --restart unless-stopped \
+  dnd-character-app
+```
+
+The image sets `DB_FILE=/data/characters.db`, so mounting a volume (or a
+host folder) at `/data` is what persists your characters. To keep the
+database in a folder on your machine instead of a named volume, use
+`-v /path/on/your/machine:/data`.
+
+### Backing up / moving your data
+
+The database is the single file `characters.db` inside the `/data`
+volume. To copy it out of a running container:
+
+```bash
+docker compose cp app:/data/characters.db ./characters-backup.db
+```
 
 ## What you get
 

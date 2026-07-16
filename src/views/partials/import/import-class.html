@@ -1,4 +1,4 @@
-<div class="panel">
+<div class="panel collapsible collapsed">
   <h2><span>Import Class</span><span class="rune">◈</span></h2>
   <div class="picker-hint">Add a homebrew or official class, using the same fields the built-in <span class="hl">Jaeger</span> class uses. Imported classes are saved to the database and shared across every character, then appear in the class picker on the Settings tab.</div>
   <div class="import-grid">
@@ -41,8 +41,8 @@
       <textarea id="impDesc" class="import-ta" style="min-height:60px;" placeholder="One-paragraph class summary."></textarea>
     </div>
     <div class="set-field full"><label>Features (one per line)</label>
-      <textarea id="impFeatures" class="import-ta" placeholder="level | name | description | use | cost&#10;1 | Flexible Combatant | Draw or stow two weapons at once. | passive&#10;3 | Piercing Gaze | Gain darkvision for 1 hour. | free | 1/long rest"></textarea>
-      <div class="import-note">Format: <span class="hl">level | name | description | use | cost</span>. Only level and name are required. <span class="hl">use</span> (reaction / bonus action / free / special) and <span class="hl">cost</span> surface the feature on the Actions tab.</div>
+      <textarea id="impFeatures" class="import-ta" placeholder="level | name | description | use | cost | choices&#10;1 | Flexible Combatant | Draw or stow two weapons at once. | passive&#10;2 | Fighting Style | Pick a style. | passive | | Archery; Defense; Dueling&#10;3 | Piercing Gaze | Gain darkvision for 1 hour. | free | 1/long rest"></textarea>
+      <div class="import-note">Format: <span class="hl">level | name | description | use | cost | choices</span>. Only level and name are required. <span class="hl">use</span> (reaction / bonus action / free / special) and <span class="hl">cost</span> surface the feature on the Actions tab. <span class="hl">choices</span> is a <span class="hl">semicolon-separated</span> list — a feature with choices prompts the character to pick one on the Settings tab. Leave a field empty to skip it (e.g. <span class="hl">2 | Fighting Style | | | | Archery; Defense</span>).</div>
     </div>
     <div class="full">
       <button class="add-btn" id="impSubmit">+ Import Class</button>

@@ -1,4 +1,4 @@
-<div class="panel">
+<div class="panel collapsible">
   <h2><span>How Imports Read JSON</span><span class="rune">◈</span></h2>
   <div class="picker-hint">Every entry has a <span class="hl">name</span>, an optional <span class="hl">source</span>, and a <span class="hl">data</span> object holding its fields. Subclasses and subspecies also need a <span class="hl">parent</span>. The <span class="hl">Paste JSON…</span> box on each import form takes a single entry; the <span class="hl">Bulk Import</span> tab takes many at once.</div>
   <ul class="ref-fields">
@@ -28,9 +28,44 @@
 }</pre>
 </div>
 
+<div class="panel collapsible">
+  <h2><span>Character</span><span class="rune">◈</span></h2>
+  <div class="picker-hint">Characters are imported from the <span class="hl">sheet page</span>, not this Import page — the <span class="hl">Import</span> button in the Profile bar reads a JSON file holding <span class="hl">one character</span>, saves it as a new profile, and loads it. The file is either a bare character object (below) or the <span class="hl">{ "name": …, "data": { … } }</span> wrapper the API returns, so a saved API response imports directly.</div>
+<pre class="json-ref">{
+  "name": "Tessa Brightblade",
+  "class": "Fighter",
+  "level": 5,
+  "race": "Human",
+  "background": "Soldier",
+  "alignment": "Lawful Good",
+  "xp": 6500,
+  "classes": [ { "name": "Fighter", "level": 5 } ],
+  "abilities": { "str": 16, "dex": 14, "con": 15, "int": 10, "wis": 12, "cha": 8 },
+  "saveProf": { "str": true, "con": true },
+  "ac": 18, "speed": 30,
+  "hpMax": 44, "hpCurrent": 44, "hpTemp": 0,
+  "hitDice": "5d10",
+  "attacks": [ { "name": "Longsword", "bonus": "+6", "dmg": "1d8+3 slashing" } ],
+  "currency": { "cp": 0, "sp": 30, "gp": 25 },
+  "inventory": [ { "name": "Rope (50 ft)", "qty": 1 } ],
+  "knownSpells": [],
+  "persTraits": "I face problems head-on."
+}</pre>
+  <ul class="ref-fields">
+    <li><b>Every field is optional</b> — anything missing gets the new-character default, and imports always create a <b>new profile</b> (an <code>id</code> in the file is ignored).</li>
+    <li><code>name</code> — the profile name. Missing or blank falls back to <b>Unnamed Adventurer</b>.</li>
+    <li><code>classes</code> — array of <code>{ "name", "level" }</code>; the first entry is the primary class. Keep the flat <code>class</code> / <code>level</code> fields matching the primary entry.</li>
+    <li><code>abilities</code> — scores keyed <code>str dex con int wis cha</code>.</li>
+    <li><code>saveProf</code> — saving-throw proficiencies, same six keys, <code>true</code> / <code>false</code>.</li>
+    <li><code>skillProf</code> — uses internal keys (<code>sk0</code>–<code>sk17</code>, skills in sheet order); easiest to tick on the <b>Skills</b> tab after importing.</li>
+    <li><code>knownSpells</code> — array of <code>{ "name", "level", "tags": [ … ] }</code>.</li>
+    <li><code>attacks</code> / <code>inventory</code> / <code>currency</code> — as shown; <code>persTraits</code>, <code>persIdeals</code>, <code>persBonds</code>, <code>persFlaws</code>, and <code>features</code> are free text.</li>
+  </ul>
+</div>
+
 <div class="grid grid-half">
   <div>
-    <div class="panel">
+    <div class="panel collapsible collapsed">
       <h2><span>Class</span><span class="rune">◇</span></h2>
 <pre class="json-ref">{
   "type": "class",
@@ -47,7 +82,8 @@
     "desc": "A master of invention.",
     "features": [
       { "lv": 1, "name": "Magical Tinkering" },
-      { "lv": 2, "name": "Infuse Item", "use": "special", "cost": "2 infusions" }
+      { "lv": 2, "name": "Infuse Item", "use": "special", "cost": "2 infusions" },
+      { "lv": 3, "name": "Fighting Style", "choices": ["Archery", "Defense", "Dueling"] }
     ]
   }
 }</pre>
@@ -59,12 +95,13 @@
         <li><code>subclassLevel</code> — the level a subclass is chosen (default 3).</li>
         <li><code>subclasses</code> — array of subclass names (optional).</li>
         <li><code>casting</code> — <code>{ "type": "none" | "full" | "half" | "pact", "ability": "int" | "wis" | "cha" }</code>.</li>
-        <li><code>features</code> — array of <code>{ lv, name, desc?, use?, cost? }</code>. <code>use</code> (reaction / bonus action / free / special) and <code>cost</code> surface it on the Actions tab.</li>
+        <li><code>features</code> — array of <code>{ lv, name, desc?, use?, cost?, choices? }</code>. <code>use</code> (reaction / bonus action / free / special) and <code>cost</code> surface it on the Actions tab.</li>
+        <li><code>choices</code> — array of option strings on a feature. A feature with <code>choices</code> prompts the character to <b>pick one</b> on the Settings tab, next to its class.</li>
         <li><code>desc</code> — one-paragraph summary (optional).</li>
       </ul>
     </div>
 
-    <div class="panel">
+    <div class="panel collapsible collapsed">
       <h2><span>Subclass</span><span class="rune">◇</span></h2>
 <pre class="json-ref">{
   "type": "subclass",
@@ -82,14 +119,14 @@
       <ul class="ref-fields">
         <li><code>parent</code> <span class="ref-req">required</span> — the class this attaches to.</li>
         <li><code>subclassLevel</code> — defaults to the parent class's subclass level.</li>
-        <li><code>features</code> — array of <code>{ lv, name, desc?, use?, cost? }</code>, same as a class.</li>
+        <li><code>features</code> — array of <code>{ lv, name, desc?, use?, cost?, choices? }</code>, same as a class.</li>
         <li><code>desc</code> — one-paragraph summary (optional).</li>
       </ul>
     </div>
   </div>
 
   <div>
-    <div class="panel">
+    <div class="panel collapsible collapsed">
       <h2><span>Species</span><span class="rune">◇</span></h2>
 <pre class="json-ref">{
   "type": "species",
@@ -118,7 +155,7 @@
       </ul>
     </div>
 
-    <div class="panel">
+    <div class="panel collapsible collapsed">
       <h2><span>Subspecies</span><span class="rune">◇</span></h2>
 <pre class="json-ref">{
   "type": "subspecies",
@@ -144,7 +181,7 @@
 </div>
 
 <div class="grid grid-half">
-  <div class="panel">
+  <div class="panel collapsible collapsed">
     <h2><span>Spell</span><span class="rune">◇</span></h2>
 <pre class="json-ref">{
   "type": "spell",
