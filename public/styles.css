@@ -541,30 +541,38 @@ textarea.trait{
 .tab-pane{ display:none; }
 .tab-pane.active{ display:block; }
 
-/* ---------- Feature choice prompts (Settings > Classes) ---------- */
+/* ---------- Feature choice pickers (Features tab + Settings > Classes) ---------- */
 .feat-choice-box:not(:empty){
   margin:-2px 0 12px 14px; padding:8px 10px;
   border-left:2px solid var(--border-glow);
-  display:flex; flex-direction:column; gap:6px;
+  display:flex; flex-direction:column; gap:10px;
 }
-.feat-choice-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.feat-choice-ctl{ display:flex; flex-direction:column; gap:6px; }
+.feat-item .feat-choice-ctl{ margin-top:8px; }
+.fc-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .feat-choice-label{ font-size:12px; color: var(--ink); min-width:0; }
-.feat-choice-row.pending .feat-choice-label{ color: var(--ink-dim); }
-.feat-choice select{
+.feat-choice-ctl.pending .feat-choice-label{ color: var(--ink-dim); }
+.feat-choice{
   font-size:12px; padding:4px 8px; border-radius:3px;
   background: var(--void-2); color: var(--ink);
   border:1px solid var(--border-glow);
 }
-.feat-choice-row.pending select{ border-color: var(--neon-pink, var(--neon-cyan)); }
+.feat-choice-ctl.pending .feat-choice{ border-style:dashed; }
+.fc-edit{ font-size:10px; padding:3px 8px; }
+.feat-choice-preview:empty{ display:none; }
+.feat-choice-preview{
+  padding:6px 10px; border-left:2px solid var(--border-glow);
+  background: rgba(0,255,213,0.04); border-radius:0 3px 3px 0;
+}
 .choice-badge{
   font-size:10px; letter-spacing:0.5px; padding:1px 6px; border-radius:3px;
   background: rgba(0,255,213,0.12); color: var(--neon-cyan);
   border:1px solid var(--border-glow);
 }
-.choice-badge.pending{
-  background:transparent; color: var(--ink-dim);
-  border-style:dashed;
-}
+.choice-badge.pending{ background:transparent; color: var(--ink-dim); border-style:dashed; }
+
+/* The custom-choice popup is a short form — the journal's tall entry box is wrong here. */
+.choice-modal-backdrop .app-field textarea{ min-height:96px; }
 
 /* ---------- Subclass / Subspecies reveal toggle (Import) ---------- */
 .subimport-toggle{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0 4px; }
@@ -572,7 +580,7 @@ textarea.trait{
 .subimport-wrap{ margin-top:12px; }
 .subimport-wrap[hidden]{ display:none; }
 
-/* ---------- Collapsible panels (Import page forms & JSON reference) ----------
+/* ---------- Collapsible panels (Import page's JSON Reference tab) ----------
    A .panel.collapsible folds down to its header; .collapsed hides everything
    but the h2. Wired in app.js bindCollapsiblePanels(). */
 .panel.collapsible > h2{ cursor:pointer; user-select:none; }
@@ -1124,40 +1132,41 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 }
 .journal-card-empty{ font-style:italic; color: var(--ink-dim); }
 
-/* Journal entry detail modal (editable sections) */
-.jrnl-modal-backdrop{
+/* Shared modal chrome: backdrop + centered panel with head / body / fields / foot.
+   Used by the Journal entry popup and the custom feature-choice popup. */
+.app-modal-backdrop{
   position:fixed; inset:0; z-index:1000; display:none;
   align-items:flex-start; justify-content:center; padding:6vh 16px;
   background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); overflow-y:auto;
 }
-.jrnl-modal-backdrop.open{ display:flex; }
-.jrnl-modal{ width:min(560px, 100%); max-height:88vh; display:flex; flex-direction:column; margin:0; }
-.jrnl-modal-head{
+.app-modal-backdrop.open{ display:flex; }
+.app-modal{ width:min(560px, 100%); max-height:88vh; display:flex; flex-direction:column; margin:0; }
+.app-modal-head{
   display:flex; align-items:center; gap:10px;
   padding-bottom:10px; margin-bottom:12px; border-bottom:1px solid var(--parchment-line);
 }
-.jrnl-modal-heading{
+.app-modal-heading{
   font-family:'Orbitron', sans-serif; font-size:13px; font-weight:700;
   letter-spacing:2px; text-transform:uppercase; color: var(--gold);
 }
-.jrnl-modal-date{ flex:1; font-size:10px; color: var(--ink-dim); letter-spacing:0.5px; }
-.jrnl-modal-close{ background:transparent; border:none; cursor:pointer; color: var(--ink-soft); font-size:16px; padding:2px 4px; }
-.jrnl-modal-close:hover{ color: var(--neon-magenta); }
-.jrnl-modal-body{ display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
-.jrnl-field{ display:flex; flex-direction:column; gap:5px; }
-.jrnl-field-label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color: var(--ink-soft); }
-.jrnl-field input, .jrnl-field textarea{
+.app-modal-date{ flex:1; font-size:10px; color: var(--ink-dim); letter-spacing:0.5px; }
+.app-modal-close{ background:transparent; border:none; cursor:pointer; color: var(--ink-soft); font-size:16px; padding:2px 4px; }
+.app-modal-close:hover{ color: var(--neon-magenta); }
+.app-modal-body{ display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
+.app-field{ display:flex; flex-direction:column; gap:5px; }
+.app-field-label{ font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color: var(--ink-soft); }
+.app-field input, .app-field textarea{
   width:100%; font-family:'JetBrains Mono', monospace; font-size:13px; line-height:1.5;
   padding:8px 10px; border:1px solid var(--parchment-line); border-radius:3px;
   background: rgba(255,255,255,0.06); color: var(--ink); resize:vertical;
 }
-.jrnl-field textarea{ min-height:200px; }
-.jrnl-modal-foot{
+.app-field textarea{ min-height:200px; }
+.app-modal-foot{
   display:flex; align-items:center; gap:12px;
   margin-top:14px; padding-top:12px; border-top:1px solid var(--parchment-line);
 }
-.jrnl-modal-status{ flex:1; font-size:11px; color: var(--neon-green); letter-spacing:0.5px; }
-.jrnl-modal-foot .add-btn{ margin-top:0; }
+.app-modal-status{ flex:1; font-size:11px; color: var(--neon-green); letter-spacing:0.5px; }
+.app-modal-foot .add-btn{ margin-top:0; }
 
 /* ---------- Corner FABs + popups (journal quick-note, dice roller) ---------- */
 .corner-fab{

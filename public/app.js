@@ -1166,10 +1166,10 @@ function renderFeatureChoices(i){
   bindFeatureChoiceControls(box);
 }
 
-// One pick-one control: the dropdown, the "Other…" name/description fields, and
-// the preview of whatever is currently picked. Shared by the Features and
-// Settings tabs; `i` indexes state.classes. `showLabel` is for Settings, where
-// the feature name isn't already on screen.
+// One pick-one control: the dropdown, an Edit button for a custom pick, and the
+// preview of whatever is currently picked. Shared by the Features and Settings
+// tabs; `i` indexes state.classes. `showLabel` is for Settings, where the
+// feature's name isn't already on screen. Picking "Other…" opens the popup.
 function choiceControlHtml(i, cf, choice, showLabel){
   const isCustom = !!(choice && choice.custom);
   const sel = choice ? (isCustom ? CHOICE_OTHER : choice.name) : '';
@@ -1178,15 +1178,12 @@ function choiceControlHtml(i, cf, choice, showLabel){
       ${showLabel ? `<label class="feat-choice-label" title="${esc(cf.f.desc||'')}">
         ${esc(cf.f.name)} <span class="chip-abbr">${esc(cf.owner)} · Lv ${cf.f.lv}</span>
       </label>` : ''}
-      <select class="feat-choice" data-i="${i}" data-key="${esc(cf.key)}">
+      <select class="feat-choice" data-i="${i}" data-key="${esc(cf.key)}" data-label="${esc(cf.f.name + ' — ' + cf.owner)}">
         <option value="">— choose —</option>
         ${cf.f.choices.map(c=>`<option value="${esc(c)}" ${sel===c?'selected':''}>${esc(c)}</option>`).join('')}
         <option value="${CHOICE_OTHER}" ${isCustom?'selected':''}>Other…</option>
       </select>
-    </div>
-    <div class="feat-choice-custom" ${isCustom?'':'hidden'}>
-      <input class="fc-name" placeholder="Name" value="${esc(isCustom ? choice.name : '')}">
-      <textarea class="fc-desc" placeholder="What does it do?">${esc(isCustom ? choice.desc : '')}</textarea>
+      <button type="button" class="pbtn fc-edit" ${isCustom?'':'hidden'}>Edit note…</button>
     </div>
     <div class="feat-choice-preview">${choicePreviewHtml(choice)}</div>
   </div>`;
@@ -1194,25 +1191,32 @@ function choiceControlHtml(i, cf, choice, showLabel){
 
 function bindFeatureChoiceControls(scope){
   scope.querySelectorAll('.feat-choice').forEach(sel=> sel.addEventListener('change', onFeatureChoiceChange));
-  scope.querySelectorAll('.fc-name, .fc-desc').forEach(inp=> inp.addEventListener('input', onCustomChoiceInput));
+  scope.querySelectorAll('.fc-edit').forEach(btn=> btn.addEventListener('click', e=>{
+    const sel = e.target.closest('.feat-choice-ctl').querySelector('.feat-choice');
+    openChoiceModal(sel.dataset.i, sel.dataset.key, sel.dataset.label);
+  }));
 }
 
-// Update one control in place. Never re-renders the select — that would drop
-// focus while the player is still working in it.
+// Update one control in place, without re-rendering its select.
 function refreshChoiceControl(ctl, choice){
   if(!ctl) return;
-  const isCustom = !!(choice && choice.custom);
-  const custom = ctl.querySelector('.feat-choice-custom');
-  if(custom){
-    custom.hidden = !isCustom;
-    if(isCustom){
-      custom.querySelector('.fc-name').value = choice.name || '';
-      custom.querySelector('.fc-desc').value = choice.desc || '';
-    }
-  }
+  const edit = ctl.querySelector('.fc-edit');
+  if(edit) edit.hidden = !(choice && choice.custom);
   const preview = ctl.querySelector('.feat-choice-preview');
   if(preview) preview.innerHTML = choicePreviewHtml(choice);
   ctl.classList.toggle('pending', !choice || !choice.name);
+}
+
+// Re-sync every rendered control for one pick — the Features and Settings tabs
+// each render their own, and both must reflect what the popup just saved.
+function syncChoiceControls(i, key){
+  const entry = state.classes[i];
+  const choice = entry ? normalizeChoice((entry.featureChoices||{})[key]) : null;
+  document.querySelectorAll('.feat-choice').forEach(sel=>{
+    if(String(sel.dataset.i) !== String(i) || sel.dataset.key !== key) return;
+    sel.value = choice ? (choice.custom ? CHOICE_OTHER : choice.name) : '';
+    refreshChoiceControl(sel.closest('.feat-choice-ctl'), choice);
+  });
 }
 
 function onFeatureChoiceChange(e){
@@ -1222,44 +1226,95 @@ function onFeatureChoiceChange(e){
   const key = sel.dataset.key;
   entry.featureChoices = entry.featureChoices || {};
   if(sel.value === CHOICE_OTHER){
-    // Keep whatever custom text was already there when re-picking Other…
+    // Keep any custom text already written when Other… is re-picked, then let
+    // the popup commit the change.
     const prev = normalizeChoice(entry.featureChoices[key]);
-    const keep = prev && prev.custom ? prev : { name:'', desc:'' };
-    entry.featureChoices[key] = { custom:true, name: keep.name, desc: keep.desc };
-  } else if(sel.value){
-    entry.featureChoices[key] = sel.value;
-  } else {
-    delete entry.featureChoices[key];
+    if(!prev || !prev.custom) entry.featureChoices[key] = { custom:true, name:'', desc:'' };
+    refreshChoiceControl(sel.closest('.feat-choice-ctl'), normalizeChoice(entry.featureChoices[key]));
+    openChoiceModal(sel.dataset.i, key, sel.dataset.label);
+    return;
   }
-  const ctl = sel.closest('.feat-choice-ctl');
-  const choice = normalizeChoice(entry.featureChoices[key]);
-  refreshChoiceControl(ctl, choice);
-  if(choice && choice.custom) ctl.querySelector('.fc-name').focus();
+  if(sel.value) entry.featureChoices[key] = sel.value;
+  else delete entry.featureChoices[key];
+  syncChoiceControls(sel.dataset.i, key);
   buildActions();
   save();
 }
 
-// Typing in the Other… fields updates state and the preview only — re-rendering
-// the surrounding list mid-keystroke would steal focus. The other tab picks the
-// change up when it's next opened (see bindTabs).
-function onCustomChoiceInput(e){
-  const ctl = e.target.closest('.feat-choice-ctl');
-  const sel = ctl.querySelector('.feat-choice');
-  const entry = state.classes[sel.dataset.i];
-  if(!entry || !entry.featureChoices) return;
-  const key = sel.dataset.key;
-  const cur = normalizeChoice(entry.featureChoices[key]);
-  if(!cur || !cur.custom) return;
-  entry.featureChoices[key] = {
-    custom: true,
-    name: ctl.querySelector('.fc-name').value.trim(),
-    desc: ctl.querySelector('.fc-desc').value.trim()
-  };
-  const choice = normalizeChoice(entry.featureChoices[key]);
-  const preview = ctl.querySelector('.feat-choice-preview');
-  if(preview) preview.innerHTML = choicePreviewHtml(choice);
-  ctl.classList.toggle('pending', !choice.name);
+// ---------- Custom choice popup ----------
+// "Other…" opens this dialog to name and describe a homebrew option. It writes
+// straight to the character; the picker just reflects what it saved.
+let choiceModalTarget = null;
+
+function setChoiceModalStatus(msg){
+  const el = document.getElementById('choiceModalStatus');
+  if(el) el.textContent = msg || '';
+}
+
+function openChoiceModal(i, key, featureLabel){
+  const backdrop = document.getElementById('choiceModalBackdrop');
+  const entry = state.classes[i];
+  if(!backdrop || !entry) return;
+  const cur = normalizeChoice((entry.featureChoices||{})[key]);
+  choiceModalTarget = { i, key };
+  document.getElementById('choiceModalFeature').textContent = featureLabel || '';
+  document.getElementById('choiceModalName').value = cur && cur.custom ? cur.name : '';
+  document.getElementById('choiceModalDesc').value = cur && cur.custom ? cur.desc : '';
+  setChoiceModalStatus('');
+  backdrop.classList.add('open');
+  backdrop.setAttribute('aria-hidden','false');
+  setTimeout(()=>{ const n = document.getElementById('choiceModalName'); if(n) n.focus(); }, 0);
+}
+
+function closeChoiceModal(){
+  choiceModalTarget = null;
+  const backdrop = document.getElementById('choiceModalBackdrop');
+  if(!backdrop) return;
+  backdrop.classList.remove('open');
+  backdrop.setAttribute('aria-hidden','true');
+}
+
+function saveChoiceModal(){
+  if(!choiceModalTarget) return;
+  const { i, key } = choiceModalTarget;
+  const entry = state.classes[i];
+  if(!entry) return closeChoiceModal();
+  const name = document.getElementById('choiceModalName').value.trim();
+  const desc = document.getElementById('choiceModalDesc').value.trim();
+  if(!name){ setChoiceModalStatus('Give it a name first.'); return; }
+  entry.featureChoices = entry.featureChoices || {};
+  entry.featureChoices[key] = { custom:true, name, desc };
+  syncChoiceControls(i, key);
+  buildActions();
   save();
+  closeChoiceModal();
+}
+
+// Drop the pick entirely, resetting the dropdown back to "— choose —".
+function clearChoiceModal(){
+  if(!choiceModalTarget) return;
+  const { i, key } = choiceModalTarget;
+  const entry = state.classes[i];
+  if(entry && entry.featureChoices){
+    delete entry.featureChoices[key];
+    if(!Object.keys(entry.featureChoices).length) delete entry.featureChoices;
+  }
+  syncChoiceControls(i, key);
+  buildActions();
+  save();
+  closeChoiceModal();
+}
+
+function bindChoiceModal(){
+  const backdrop = document.getElementById('choiceModalBackdrop');
+  if(!backdrop) return;
+  document.getElementById('choiceModalClose').addEventListener('click', closeChoiceModal);
+  document.getElementById('choiceModalSave').addEventListener('click', saveChoiceModal);
+  document.getElementById('choiceModalClear').addEventListener('click', clearChoiceModal);
+  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeChoiceModal(); });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && backdrop.classList.contains('open')) closeChoiceModal();
+  });
 }
 
 // `ctx` ({i, owner}) turns on the inline picker; without it the feature renders
@@ -1699,6 +1754,10 @@ function bindTabs(){
       // Rebuild on entry so the list reflects edits made on the other tabs.
       if(btn.dataset.tab==='actions') buildActions();
       if(btn.dataset.tab==='journal' && window.characterSheetApp.buildJournal) window.characterSheetApp.buildJournal();
+      // Feature choices are pickable on both of these tabs — rebuild so each
+      // shows what the other one chose.
+      if(btn.dataset.tab==='features') buildClassFeatures();
+      if(btn.dataset.tab==='settings') buildClassList();
     });
   });
   // Skills tab: the "Character Settings" hint link jumps to the settings tab.
@@ -3608,7 +3667,7 @@ const NOTES_PAGE_SIZE = 20;
 // Features and standard combat actions are deliberately absent: features are
 // reachable through the class/subclass entry that owns them (their text is folded
 // into that entry's haystack), so they don't clutter the results as separate rows.
-const NOTES_TYPES = ['All','Classes','Subclasses','Species','Subspecies','Spells','Alignments','Mastery'];
+const NOTES_TYPES = ['All','Classes','Subclasses','Species','Subspecies','Spells','Fighting Styles','Alignments','Mastery'];
 
 function notesEntry(type, name, badges, haystack, detail, edit){
   return { type, name, badges: badges.filter(Boolean).map(String),
@@ -3764,6 +3823,12 @@ function buildNotesIndex(){
        ${det.desc?`<div class="feat-desc">${esc(det.desc)}</div>`:''}`,
       editLink('spell', name, 'Edit spell in Library')));
   });
+
+  // Fighting styles — searchable by name, effect, or a class that can take one.
+  FIGHTING_STYLES.forEach(s=> ix.push(notesEntry('Fighting Styles', s.name, [s.source, s.classes.join(' / ')],
+    [s.desc, s.classes.join(' '), 'fighting style'].join(' '),
+    `<div class="nr-meta">Available to: ${esc(s.classes.join(', '))}</div>
+     <div class="feat-desc">${esc(s.desc)}</div>`)));
 
   ALIGNMENTS.forEach(a=> ix.push(notesEntry('Alignments', a.name, [a.abbr], a.desc+' '+a.eg,
     `<div class="feat-desc">${esc(a.desc)}</div><div class="nr-meta">e.g. ${esc(a.eg)}</div>`)));
@@ -4418,8 +4483,6 @@ function openLibraryEditParam(){
   if(type==='subspecies') setSubImportOpen('toggleSubspecies', 'subspeciesWrap', true);
   const anchor = document.getElementById(m.anchor);
   const panel = anchor && anchor.closest('.panel');
-  // Deep links land on an open form — toggle via the header so aria-expanded stays in sync.
-  if(panel && panel.classList.contains('collapsed')) panel.querySelector(':scope > h2').click();
   // The target form lives inside a tab pane — switch to that tab before scrolling.
   const pane = anchor && anchor.closest('.tab-pane');
   if(pane){
@@ -4431,9 +4494,9 @@ function openLibraryEditParam(){
   if(panel) setTimeout(()=> panel.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 }
 
-// Import-page panels marked .collapsible fold down to their header (a caret on
-// the rune shows state). Panels with .collapsed in the markup start folded, so
-// each tab opens as a clean stack of headers. Not persisted across reloads.
+// JSON Reference panels marked .collapsible fold down to their header (a caret
+// on the rune shows state). Panels with .collapsed in the markup start folded,
+// so the tab opens as a clean stack of headers. Not persisted across reloads.
 function bindCollapsiblePanels(){
   document.querySelectorAll('.panel.collapsible > h2').forEach(h2=>{
     const panel = h2.parentElement;
@@ -4493,6 +4556,7 @@ async function initSheetPage(){
   bindCornerLauncher(); // "⋯" quick-tools stack (Dice / Notes / Skills)
   bindPassiveSenseRows(); // Passive Senses rows open a quick-reference popup
   bindNotesModal(); // shared spell-detail popup, used by the Spells & Actions tabs
+  bindChoiceModal(); // "Other…" custom feature-choice popup
   buildClassFilterBar();
   buildSpellLevelSelects();
   setTagPicker('customSpellTagPicker', []);
