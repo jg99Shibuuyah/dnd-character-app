@@ -256,8 +256,175 @@ const SKILLS = [
   {name:'Survival', ability:'wis'},
 ];
 
-// Expands compact progression rows [level, ...feature names] into feature objects.
-function P(rows){ return rows.flatMap(([lv,...names])=>names.map(n=>({lv, name:n}))); }
+// Short reference blurbs for built-in class features, keyed by feature name.
+// P() attaches these so the Class Features panel shows more than a bare name.
+// Names shared by several classes (Extra Attack, Ability Score Improvement,
+// the generic "<subclass> feature" rows) use one general-purpose description.
+const FEATURE_DESC = {
+  // Shared / common
+  'Ability Score Improvement': "Increase one ability score by 2, or two scores by 1 each (to a maximum of 20). You can instead take a feat if your game uses them.",
+  'Extra Attack': "You can attack twice, instead of once, whenever you take the Attack action on your turn.",
+  'Extra Attack (2)': "You can attack three times whenever you take the Attack action on your turn.",
+  'Extra Attack (3)': "You can attack four times whenever you take the Attack action on your turn.",
+  'Fighting Style': "Adopt a fighting style as your specialty for an ongoing combat benefit, such as Archery, Defense, Dueling, or Great Weapon Fighting.",
+  'Evasion': "When you make a Dexterity saving throw against an effect for half damage, you instead take no damage on a success and only half on a failure.",
+  'Expertise': "Choose proficiencies to double your proficiency bonus for — typically skills (or a skill and thieves' tools).",
+  'Spellcasting': "You can cast spells from your class's list; your spellcasting ability, save DC, and slots are set by your class (manage them on the Spells tab).",
+  'Timeless Body': "The magic of your class slows your aging — you no longer suffer the frailties of old age and can't be aged magically.",
+  'Unarmored Defense': "While not wearing armor, your AC equals 10 + your Dexterity modifier + a class modifier (Constitution for the barbarian, who may still use a shield; Wisdom for the monk).",
+  'Archetype feature': "Your chosen archetype grants a feature at this level — see the subclass entry below.",
+  'Tradition feature': "Your chosen tradition grants a feature at this level — see the subclass entry below.",
+  // Barbarian
+  'Rage': "As a bonus action, rage for up to 1 minute: advantage on Strength checks and saves, bonus melee damage, and resistance to bludgeoning, piercing, and slashing damage.",
+  'Reckless Attack': "On your first attack of a turn you can attack recklessly, gaining advantage on melee Strength attacks that turn but giving attackers advantage against you until your next turn.",
+  'Danger Sense': "You have advantage on Dexterity saving throws against effects you can see, such as traps and spells, unless blinded, deafened, or incapacitated.",
+  'Primal Path': "Choose the subclass (Primal Path) that shapes your rage; it grants features as you level.",
+  'Path feature': "Your Primal Path grants a feature at this level — see the subclass entry below.",
+  'Fast Movement': "Your speed increases by 10 feet while you aren't wearing heavy armor.",
+  'Feral Instinct': "You have advantage on initiative rolls, and can act normally on a surprise round as long as you enter your rage.",
+  'Brutal Critical (1 die)': "You can roll one additional weapon damage die when determining the extra damage of a melee critical hit.",
+  'Brutal Critical (2 dice)': "You roll two additional weapon damage dice for a melee critical hit.",
+  'Brutal Critical (3 dice)': "You roll three additional weapon damage dice for a melee critical hit.",
+  'Relentless Rage': "If you drop to 0 hit points while raging without dying outright, make a DC 10 Constitution save to drop to 1 hit point instead (the DC rises with each use).",
+  'Persistent Rage': "Your rage ends early only if you fall unconscious or choose to end it.",
+  'Indomitable Might': "If your total for a Strength check is less than your Strength score, you can use that score in place of the total.",
+  'Primal Champion': "Your Strength and Constitution scores each increase by 4, to a maximum of 24.",
+  // Bard
+  'Bardic Inspiration (d6)': "As a bonus action, give a creature a d6 it can add to one ability check, attack roll, or saving throw within 10 minutes. Uses equal your Charisma modifier per rest.",
+  'Bardic Inspiration (d8)': "Your Bardic Inspiration die improves to a d8.",
+  'Bardic Inspiration (d10)': "Your Bardic Inspiration die improves to a d10.",
+  'Bardic Inspiration (d12)': "Your Bardic Inspiration die improves to a d12.",
+  'Jack of All Trades': "Add half your proficiency bonus (rounded down) to any ability check you make that doesn't already include your proficiency bonus.",
+  'Song of Rest (d6)': "During a short rest, you and allies who hear your performance regain an extra 1d6 hit points when spending Hit Dice.",
+  'Song of Rest (d8)': "Your Song of Rest healing die improves to a d8.",
+  'Song of Rest (d10)': "Your Song of Rest healing die improves to a d10.",
+  'Song of Rest (d12)': "Your Song of Rest healing die improves to a d12.",
+  'Bard College': "Choose the subclass (Bard College) that focuses your talents; it grants features as you level.",
+  'College feature': "Your Bard College grants a feature at this level — see the subclass entry below.",
+  'Font of Inspiration': "You regain all expended uses of Bardic Inspiration on a short or long rest, not just a long rest.",
+  'Countercharm': "As an action, perform until the end of your next turn; you and allies within 30 feet have advantage on saves against being frightened or charmed.",
+  'Magical Secrets': "Learn two spells of your choice from any class; they count as bard spells for you.",
+  'Superior Inspiration': "When you roll initiative and have no uses of Bardic Inspiration left, you regain one.",
+  // Cleric
+  'Divine Domain': "Choose the subclass (Divine Domain) tied to your deity; it grants domain spells and features as you level.",
+  'Domain feature': "Your Divine Domain grants a feature at this level — see the subclass entry below.",
+  'Channel Divinity (1/rest)': "You can channel divine energy for a special effect, such as Turn Undead, once per short or long rest.",
+  'Channel Divinity (2/rest)': "You can use Channel Divinity twice per short or long rest.",
+  'Channel Divinity (3/rest)': "You can use Channel Divinity three times per short or long rest.",
+  'Destroy Undead (CR 1/2)': "When an undead of CR 1/2 or lower fails its save against your Turn Undead, it is instantly destroyed.",
+  'Destroy Undead (CR 1)': "Your Turn Undead instantly destroys turned undead of CR 1 or lower.",
+  'Destroy Undead (CR 2)': "Your Turn Undead instantly destroys turned undead of CR 2 or lower.",
+  'Destroy Undead (CR 3)': "Your Turn Undead instantly destroys turned undead of CR 3 or lower.",
+  'Destroy Undead (CR 4)': "Your Turn Undead instantly destroys turned undead of CR 4 or lower.",
+  'Divine Intervention': "Implore your deity for aid; roll d100 at or below your cleric level to succeed. On success it works once per long rest, otherwise you can try again after a long rest.",
+  'Divine Intervention improvement': "Your Divine Intervention automatically succeeds, with no roll required.",
+  // Druid
+  'Druidic': "You know Druidic, the secret language of druids, and can leave and spot hidden messages left in it.",
+  'Wild Shape': "As an action, magically transform into a beast you've seen, for a number of hours equal to half your druid level (twice per rest).",
+  'Druid Circle': "Choose the subclass (Druid Circle) that defines your practice; it grants features as you level.",
+  'Circle feature': "Your Druid Circle grants a feature at this level — see the subclass entry below.",
+  'Wild Shape improvement': "Your Wild Shape can take more powerful beast forms, with a higher challenge rating and expanded movement options.",
+  'Beast Spells': "You can cast many of your druid spells while in a Wild Shape form.",
+  'Archdruid': "You can use Wild Shape an unlimited number of times, and ignore the verbal and somatic components of your druid spells.",
+  // Fighter
+  'Second Wind': "On your turn, use a bonus action to regain 1d10 + your fighter level hit points, once per short or long rest.",
+  'Action Surge': "On your turn, take one additional action, once per short or long rest.",
+  'Action Surge (2 uses)': "You can use Action Surge twice per rest, but only once on the same turn.",
+  'Martial Archetype': "Choose the subclass (Martial Archetype) that shapes your combat approach; it grants features as you level.",
+  'Indomitable': "Reroll a saving throw you fail, and must use the new roll, once per long rest.",
+  'Indomitable (2 uses)': "You can use Indomitable twice per long rest.",
+  'Indomitable (3 uses)': "You can use Indomitable three times per long rest.",
+  // Monk
+  'Martial Arts': "While unarmed or wielding a monk weapon, you can use Dexterity for attacks and damage, roll a Martial Arts die for damage, and make an unarmed strike as a bonus action.",
+  'Ki': "You gain a pool of ki points (equal to your monk level) to fuel Flurry of Blows, Patient Defense, and Step of the Wind; regained on a short or long rest.",
+  'Unarmored Movement': "Your speed increases while you wear no armor and wield no shield, with the bonus growing as you level.",
+  'Monastic Tradition': "Choose the subclass (Monastic Tradition) you follow; it grants features as you level.",
+  'Deflect Missiles': "Use your reaction to reduce ranged weapon damage against you; if you reduce it to 0 you can catch the missile and throw it back by spending 1 ki.",
+  'Slow Fall': "Use your reaction when you fall to reduce the falling damage you take by five times your monk level.",
+  'Stunning Strike': "When you hit with a melee attack, spend 1 ki to force a Constitution save or stun the target until the end of your next turn.",
+  'Ki-Empowered Strikes': "Your unarmed strikes count as magical for overcoming resistance and immunity to nonmagical attacks.",
+  'Stillness of Mind': "Use your action to end one effect on yourself that is causing you to be charmed or frightened.",
+  'Purity of Body': "You are immune to disease and poison.",
+  'Unarmored Movement improvement': "You can move along vertical surfaces and across liquids on your turn without falling during the move.",
+  'Tongue of the Sun and Moon': "You understand all spoken languages, and any creature that understands a language can understand you.",
+  'Diamond Soul': "You gain proficiency in all saving throws, and can spend 1 ki to reroll a saving throw you fail.",
+  'Empty Body': "Spend 4 ki to become invisible for 1 minute with resistance to all damage but force; you can also spend 8 ki to cast Astral Projection.",
+  'Perfect Self': "When you roll initiative and have no ki points remaining, you regain 4 ki points.",
+  // Paladin
+  'Divine Sense': "As an action, detect celestials, fiends, and undead within 60 feet and sense consecrated or desecrated places. Uses equal 1 + your Charisma modifier per long rest.",
+  'Lay on Hands': "You have a healing pool of 5 × your paladin level; as an action, touch a creature to restore hit points from it, or spend 5 to cure a disease or neutralize a poison.",
+  'Divine Smite': "When you hit with a melee weapon, expend a spell slot to deal an extra 2d8 radiant damage, plus 1d8 per slot level above 1st and extra against undead and fiends.",
+  'Divine Health': "The divine magic flowing through you makes you immune to disease.",
+  'Sacred Oath': "Choose the subclass (Sacred Oath) you swear; it grants oath spells, Channel Divinity options, and features as you level.",
+  'Oath feature': "Your Sacred Oath grants a feature at this level — see the subclass entry below.",
+  'Aura of Protection': "You and friendly creatures within 10 feet add your Charisma modifier (minimum +1) to saving throws while you're conscious.",
+  'Aura of Courage': "You and friendly creatures within 10 feet can't be frightened while you're conscious.",
+  'Improved Divine Smite': "Your melee weapon hits deal an extra 1d8 radiant damage.",
+  'Cleansing Touch': "As an action, end one spell on yourself or a willing creature you touch. Uses equal your Charisma modifier per long rest.",
+  'Aura improvements': "The range of your paladin auras increases from 10 to 30 feet.",
+  // Ranger
+  'Favored Enemy': "Choose a favored enemy type: you have advantage on Survival checks to track them and Intelligence checks to recall lore about them, and you learn a related language.",
+  'Natural Explorer': "Choose a favored terrain to gain exploration benefits there, such as not being slowed by difficult terrain and always knowing which way is north.",
+  'Ranger Archetype': "Choose the subclass (Ranger Archetype) that defines your training; it grants features as you level.",
+  'Primeval Awareness': "Expend a spell slot to sense whether certain creature types are present within 1 mile (6 miles in your favored terrain).",
+  "Land's Stride": "Moving through nonmagical difficult terrain costs you no extra movement, and you have advantage on saves against plants that impede movement.",
+  'Favored Enemy & Natural Explorer improvements': "You choose an additional favored enemy and an additional favored terrain, improving both features.",
+  'Hide in Plain Sight': "Spend 1 minute making camouflage to gain a +10 bonus to Stealth checks while you remain motionless against a solid surface.",
+  'Vanish': "You can use the Hide action as a bonus action, and you can't be tracked by nonmagical means unless you choose to leave a trail.",
+  'Feral Senses': "You gain preternatural senses that help you fight creatures you can't see and pinpoint invisible creatures within 30 feet.",
+  'Foe Slayer': "Once per turn, add your Wisdom modifier to the attack roll or damage roll of an attack against your favored enemy.",
+  // Rogue
+  'Sneak Attack (1d6, +1d6 every odd level)': "Once per turn, deal extra damage to a target you hit with a finesse or ranged weapon when you have advantage or an ally is adjacent — 1d6 at 1st level, rising 1d6 every odd rogue level.",
+  "Thieves' Cant": "You know Thieves' Cant, a secret mix of dialect, jargon, and code that lets you hide messages within seemingly normal conversation.",
+  'Cunning Action': "On each of your turns, use a bonus action to Dash, Disengage, or Hide.",
+  'Roguish Archetype': "Choose the subclass (Roguish Archetype) that shapes your talents; it grants features as you level.",
+  'Uncanny Dodge': "When an attacker you can see hits you, use your reaction to halve that attack's damage.",
+  'Reliable Talent': "Whenever you make an ability check using a skill or tool you're proficient in, treat a d20 roll of 9 or lower as a 10.",
+  'Blindsense': "You're aware of the location of any hidden or invisible creature within 10 feet of you.",
+  'Slippery Mind': "You gain proficiency in Wisdom saving throws.",
+  'Elusive': "No attack roll has advantage against you while you aren't incapacitated.",
+  'Stroke of Luck': "Once per short or long rest, turn a missed attack into a hit, or a failed ability check into a 20.",
+  // Sorcerer
+  'Sorcerous Origin': "Choose the subclass (Sorcerous Origin) that is the source of your innate magic; it grants features as you level.",
+  'Origin feature': "Your Sorcerous Origin grants a feature at this level — see the subclass entry below.",
+  'Font of Magic (Sorcery Points)': "You gain a pool of sorcery points (equal to your sorcerer level) that you can convert to and from spell slots and spend on Metamagic.",
+  'Metamagic': "Learn Metamagic options that let you spend sorcery points to bend your spells, such as Twinned, Quickened, or Subtle Spell.",
+  'Metamagic option': "You learn an additional Metamagic option of your choice.",
+  'Sorcerous Restoration': "You regain 4 expended sorcery points whenever you finish a short rest.",
+  // Warlock
+  'Otherworldly Patron': "Choose the subclass (Otherworldly Patron) that grants you power; it adds to your spell options and grants features as you level.",
+  'Pact Magic': "You cast spells using a small number of slots that are always your highest available level and recharge on a short or long rest.",
+  'Eldritch Invocations': "Learn Eldritch Invocations — fragments of forbidden knowledge that grant lasting magical abilities.",
+  'Pact Boon': "Choose a Pact Boon: Pact of the Chain (a special familiar), Pact of the Blade (summon a weapon), or Pact of the Tome (extra cantrips).",
+  'Patron feature': "Your Otherworldly Patron grants a feature at this level — see the subclass entry below.",
+  'Mystic Arcanum (6th level)': "Choose one 6th-level spell you can cast once per long rest without expending a spell slot.",
+  'Mystic Arcanum (7th level)': "Choose one 7th-level spell you can cast once per long rest without a slot.",
+  'Mystic Arcanum (8th level)': "Choose one 8th-level spell you can cast once per long rest without a slot.",
+  'Mystic Arcanum (9th level)': "Choose one 9th-level spell you can cast once per long rest without a slot.",
+  'Eldritch Master': "Once per long rest, spend 1 minute entreating your patron to regain all expended Pact Magic spell slots.",
+  // Wizard
+  'Arcane Recovery': "Once per day on a short rest, recover expended spell slots with a combined level up to half your wizard level (rounded up), none of 6th level or higher.",
+  'Arcane Tradition': "Choose the subclass (Arcane Tradition), a school of magic you specialize in; it grants features as you level.",
+  'Spell Mastery': "Choose a 1st- and a 2nd-level wizard spell in your spellbook that you can cast at their lowest level without expending a spell slot.",
+  'Signature Spells': "Choose two 3rd-level wizard spells you always have prepared and can each cast once per short rest without a slot.",
+  // Artificer
+  'Magical Tinkering': "Imbue a Tiny nonmagical object with a minor magical property, such as light, a recorded message, a smell, or a small sensory effect.",
+  'Infuse Item': "You learn magical infusions and can imbue mundane items with them after a long rest, creating replicable magic items.",
+  'Artificer Specialist': "Choose the subclass (Artificer Specialist) that defines your craft; it grants specialist spells and features as you level.",
+  'The Right Tool for the Job': "During a short or long rest, magically create one set of artisan's tools in an unoccupied space.",
+  'Tool Expertise': "You double your proficiency bonus for any ability check you make that uses your proficiency with a tool.",
+  'Flash of Genius': "When you or a creature within 30 feet makes an ability check or saving throw, use your reaction to add your Intelligence modifier (uses = INT modifier per long rest).",
+  'Magic Item Adept': "You can attune to up to four magic items at once, and craft common and uncommon magic items in a quarter of the usual time at half the cost.",
+  'Spell-Storing Item': "After a long rest, store a 1st- or 2nd-level artificer spell in an item so a holder can cast it without a slot a limited number of times.",
+  'Magic Item Savant': "You can attune to up to five magic items at once, and ignore all class, race, spell, and level requirements on attunement.",
+  'Magic Item Master': "You can attune to up to six magic items at once.",
+  'Soul of Artifice': "You gain a +1 bonus to all saving throws per magic item you're attuned to, and can drop to 1 hit point instead of 0 by ending one of your infusions.",
+  'Specialist feature': "Your Artificer Specialist grants a feature at this level — see the subclass entry below.",
+};
+
+// Expands compact progression rows [level, ...feature names] into feature
+// objects, attaching a reference description from FEATURE_DESC when one exists.
+function P(rows){ return rows.flatMap(([lv,...names])=>names.map(n=>({lv, name:n, desc:FEATURE_DESC[n]}))); }
 
 // Class registry: saving-throw proficiencies are applied automatically when a
 // class is picked in Settings. `features` feeds the class card in Settings,
@@ -4525,7 +4692,16 @@ let nrModalBound = false;
 const NR_WIN_MOBILE = 640; // viewport width at/below which windows go full-screen
 const NR_EDGE = 26;        // px from a viewport edge that arms a snap zone
 
-function nrIsMobile(){ return window.innerWidth <= NR_WIN_MOBILE; }
+// Viewport size, with fallbacks: some embedded/preview browsers report 0 for
+// innerWidth. Treat an unknown (0) viewport as desktop rather than mobile.
+function nrViewport(){
+  return {
+    w: window.innerWidth || document.documentElement.clientWidth || window.screen.width || 1024,
+    h: window.innerHeight || document.documentElement.clientHeight || window.screen.height || 768
+  };
+}
+
+function nrIsMobile(){ return nrViewport().w <= NR_WIN_MOBILE; }
 
 // Public entry point: spawn a NEW window for an entry (from a result/browse row
 // or a sheet spell/action). Returns the window object.
@@ -4581,13 +4757,26 @@ function nrNavigate(win, entry, mode){
     ? `<a class="pbtn nr-edit-link" href="${entry.edit.href}">✎ ${esc(entry.edit.label)}</a>
        <span class="nr-hint">opens the Library form with this entry loaded — re-import to save changes</span>`
     : '<span class="nr-hint">Built-in rule — not editable.</span>';
-  r.body.querySelectorAll('.nr-sub-link').forEach(chip=>chip.addEventListener('click', ()=>{
-    const target = NOTES_INDEX.find(e=>e.key===chip.dataset.key);
-    if(target) nrNavigate(win, target, 'push');
-  }));
+  // Click follows the link in this window (Back returns); Alt+click opens the
+  // target as its own new window instead, so both can sit side by side.
+  r.body.querySelectorAll('.nr-sub-link').forEach(chip=>{
+    chip.title = 'Click to view here — Alt+click opens a new window';
+    chip.addEventListener('click', ev=>{
+      const target = NOTES_INDEX.find(e=>e.key===chip.dataset.key);
+      if(!target) return;
+      if(ev.altKey) openNotesModal(target);
+      else nrNavigate(win, target, 'push');
+    });
+  });
   if(parentEntry){
     const link = r.badges.querySelector('.nr-parent-link');
-    if(link) link.addEventListener('click', ()=> nrNavigate(win, parentEntry, 'push'));
+    if(link){
+      link.title = `Open ${entry.parent.name} here — Alt+click opens a new window`;
+      link.addEventListener('click', ev=>{
+        if(ev.altKey) openNotesModal(parentEntry);
+        else nrNavigate(win, parentEntry, 'push');
+      });
+    }
   }
   r.body.scrollTop = 0;
 }
@@ -4613,8 +4802,8 @@ function nrCloseAllWindows(){
 // stacked windows don't hide each other.
 function nrPlaceWindow(win){
   if(nrIsMobile()){ win.el.classList.add('nr-window-max'); return; }
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const w = Math.min(460, vw - 40);
+  const { w:vw, h:vh } = nrViewport();
+  const w = Math.max(280, Math.min(460, vw - 40));
   const n = (nrWindows.length - 1) % 6;
   const x = Math.max(10, Math.round((vw - w) / 2 - 90) + n * 30);
   const y = Math.max(10, Math.round(vh / 2 - 260) + n * 30);
@@ -4641,7 +4830,7 @@ function nrEnableDrag(win){
     if(offX > rect.width) offX = rect.width / 2; // was snapped wider than restore
     let zone = null;
     const onMove = ev=>{
-      const vw = window.innerWidth, vh = window.innerHeight;
+      const { w:vw, h:vh } = nrViewport();
       const x = Math.max(-rect.width + 90, Math.min(ev.clientX - offX, vw - 90));
       const y = Math.max(0, Math.min(ev.clientY - offY, vh - 40));
       win.el.style.left = x + 'px';
@@ -4661,7 +4850,7 @@ function nrEnableDrag(win){
 }
 
 function nrSnapZoneFor(px, py){
-  const vw = window.innerWidth, vh = window.innerHeight;
+  const { w:vw, h:vh } = nrViewport();
   const L = px <= NR_EDGE, R = px >= vw - NR_EDGE;
   const T = py <= NR_EDGE, B = py >= vh - NR_EDGE;
   if(T && L) return 'tl';
@@ -4675,16 +4864,23 @@ function nrSnapZoneFor(px, py){
 }
 
 function nrZoneRect(zone){
-  const vw = window.innerWidth, vh = window.innerHeight, m = 6;
-  const halfW = vw / 2, halfH = vh / 2;
+  const { w:vw, h:vh } = nrViewport();
+  const m = 6;
+  // Clamped so a small viewport can never yield a negative (invalid) size.
+  const colW = Math.max(160, vw / 2 - 1.5 * m);
+  const rowH = Math.max(120, vh / 2 - 1.5 * m);
+  const fullW = Math.max(160, vw - 2 * m);
+  const fullH = Math.max(120, vh - 2 * m);
+  const rightX = Math.max(m, vw / 2 + m / 2);
+  const botY = Math.max(m, vh / 2 + m / 2);
   switch(zone){
-    case 'left':  return { left:m,          top:m,          width:halfW - 1.5*m, height:vh - 2*m };
-    case 'right': return { left:halfW + m/2, top:m,          width:halfW - 1.5*m, height:vh - 2*m };
-    case 'max':   return { left:m,          top:m,          width:vw - 2*m,      height:vh - 2*m };
-    case 'tl':    return { left:m,          top:m,          width:halfW - 1.5*m, height:halfH - 1.5*m };
-    case 'tr':    return { left:halfW + m/2, top:m,          width:halfW - 1.5*m, height:halfH - 1.5*m };
-    case 'bl':    return { left:m,          top:halfH + m/2, width:halfW - 1.5*m, height:halfH - 1.5*m };
-    case 'br':    return { left:halfW + m/2, top:halfH + m/2, width:halfW - 1.5*m, height:halfH - 1.5*m };
+    case 'left':  return { left:m,      top:m,    width:colW,  height:fullH };
+    case 'right': return { left:rightX, top:m,    width:colW,  height:fullH };
+    case 'max':   return { left:m,      top:m,    width:fullW, height:fullH };
+    case 'tl':    return { left:m,      top:m,    width:colW,  height:rowH };
+    case 'tr':    return { left:rightX, top:m,    width:colW,  height:rowH };
+    case 'bl':    return { left:m,      top:botY, width:colW,  height:rowH };
+    case 'br':    return { left:rightX, top:botY, width:colW,  height:rowH };
   }
   return null;
 }
@@ -4745,7 +4941,7 @@ function bindNotesModal(){
     }
   });
   window.addEventListener('resize', ()=>{
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const { w:vw, h:vh } = nrViewport();
     nrWindows.forEach(w=>{
       if(w.el.classList.contains('nr-window-max') !== nrIsMobile()){
         w.el.classList.toggle('nr-window-max', nrIsMobile());
@@ -4907,6 +5103,8 @@ const app = {
   bindBulkImport,
   submitBulkImport,
   exportLibraryJson,
+  bindSubImportToggles,
+  setSubImportOpen,
   fillClassForm,
   fillSpeciesForm,
   fillSubclassForm,

@@ -479,6 +479,12 @@ textarea.trait{
 .tab-pane{ display:none; }
 .tab-pane.active{ display:block; }
 
+/* ---------- Subclass / Subspecies reveal toggle (Import) ---------- */
+.subimport-toggle{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0 4px; }
+.subimport-hint{ font-size:12px; color: var(--ink-dim); }
+.subimport-wrap{ margin-top:12px; }
+.subimport-wrap[hidden]{ display:none; }
+
 /* ---------- JSON reference tab (Library) ---------- */
 .json-ref{
   font-family:'JetBrains Mono', monospace; font-size:12px; line-height:1.55;
@@ -918,6 +924,8 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
   display:flex; flex-direction:column;
   max-height:calc(100vh - 20px); overflow:hidden; margin-bottom:0;
   box-shadow: 0 10px 34px rgba(0,0,0,0.55);
+  /* Drag the bottom-right grip to resize. */
+  resize: both; min-width:280px; min-height:160px;
 }
 .nr-window.focused{ border-color: var(--neon-cyan); box-shadow: 0 0 0 1px var(--neon-cyan), 0 12px 40px rgba(0,0,0,0.6); }
 .nr-window.nr-window-snapped{ max-height:none; }
@@ -925,7 +933,7 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 /* Mobile: windows fill the screen and can't be dragged. */
 .nr-window.nr-window-max{
   left:0 !important; top:0 !important; width:100% !important; height:100% !important;
-  max-height:none; border-radius:0;
+  max-height:none; border-radius:0; resize:none;
 }
 /* Snap-preview highlight shown while dragging near an edge. */
 .nr-snap-zone{
