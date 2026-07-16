@@ -1100,8 +1100,11 @@ function choiceInfo(name){ return fightingStyleByName(name); }
 // The description and class availability shown under a picked option.
 function choicePreviewHtml(choice){
   if(!choice || !choice.name) return '';
+  // A custom pick reads "Other…" in the dropdown, so the preview is the only
+  // place its name appears — show that alongside whatever was written for it.
   if(choice.custom){
-    return choice.desc ? `<div class="feat-desc">${esc(choice.desc)}</div>` : '';
+    return `<div class="nr-meta"><b class="fc-custom-name">${esc(choice.name)}</b> <span class="chip-abbr">custom</span></div>
+      ${choice.desc ? `<div class="feat-desc">${esc(choice.desc)}</div>` : ''}`;
   }
   const info = choiceInfo(choice.name);
   if(!info) return '';
@@ -1166,6 +1169,12 @@ function renderFeatureChoices(i){
   bindFeatureChoiceControls(box);
 }
 
+// The Other… option carries the custom pick's name, so the dropdown reads back
+// what was chosen instead of a bare "Other…".
+function otherOptionLabel(choice){
+  return choice && choice.custom && choice.name ? 'Other… — ' + choice.name : 'Other…';
+}
+
 // One pick-one control: the dropdown, an Edit button for a custom pick, and the
 // preview of whatever is currently picked. Shared by the Features and Settings
 // tabs; `i` indexes state.classes. `showLabel` is for Settings, where the
@@ -1181,7 +1190,7 @@ function choiceControlHtml(i, cf, choice, showLabel){
       <select class="feat-choice" data-i="${i}" data-key="${esc(cf.key)}" data-label="${esc(cf.f.name + ' — ' + cf.owner)}">
         <option value="">— choose —</option>
         ${cf.f.choices.map(c=>`<option value="${esc(c)}" ${sel===c?'selected':''}>${esc(c)}</option>`).join('')}
-        <option value="${CHOICE_OTHER}" ${isCustom?'selected':''}>Other…</option>
+        <option value="${CHOICE_OTHER}" ${isCustom?'selected':''}>${esc(otherOptionLabel(choice))}</option>
       </select>
       <button type="button" class="pbtn fc-edit" ${isCustom?'':'hidden'}>Edit note…</button>
     </div>
@@ -1202,6 +1211,9 @@ function refreshChoiceControl(ctl, choice){
   if(!ctl) return;
   const edit = ctl.querySelector('.fc-edit');
   if(edit) edit.hidden = !(choice && choice.custom);
+  // The select isn't rebuilt here, so retitle the Other… option by hand.
+  const other = ctl.querySelector(`.feat-choice option[value="${CHOICE_OTHER}"]`);
+  if(other) other.textContent = otherOptionLabel(choice);
   const preview = ctl.querySelector('.feat-choice-preview');
   if(preview) preview.innerHTML = choicePreviewHtml(choice);
   ctl.classList.toggle('pending', !choice || !choice.name);
@@ -1337,8 +1349,12 @@ function buildClassFeatures(){
   const box = document.getElementById('classFeaturesList');
   if(!box) return;
   const picked = pickedClasses();
+  // Custom class features are listed even with no class picked, so they never
+  // vanish behind the empty-state message.
   if(!picked.length){
-    box.innerHTML = '<div class="action-empty">Select a class in Settings to see its features here.</div>';
+    box.innerHTML = '<div class="action-empty">Select a class in Settings to see its features here.</div>'
+      + customFeaturesHtml('class');
+    bindCustomFeatureRows(box);
     return;
   }
   box.innerHTML = picked.map(entry=>{
@@ -1369,8 +1385,9 @@ function buildClassFeatures(){
       }
     }
     return html;
-  }).join('');
+  }).join('') + customFeaturesHtml('class');
   bindFeatureChoiceControls(box);
+  bindCustomFeatureRows(box);
 }
 
 // ---------- Actions tab (derived from attacks, spells, and inventory) ----------
@@ -1756,7 +1773,7 @@ function bindTabs(){
       if(btn.dataset.tab==='journal' && window.characterSheetApp.buildJournal) window.characterSheetApp.buildJournal();
       // Feature choices are pickable on both of these tabs — rebuild so each
       // shows what the other one chose.
-      if(btn.dataset.tab==='features') buildClassFeatures();
+      if(btn.dataset.tab==='features') refreshFeatureLists();
       if(btn.dataset.tab==='settings') buildClassList();
     });
   });
@@ -2018,7 +2035,7 @@ function bindStaticInputs(){
   bind('statAC','ac',true); bind('statSpeed','speed',true);
   bind('hpMax','hpMax',true); bind('hpCurrent','hpCurrent',true); bind('hpTemp','hpTemp',true);
   bind('hitDice','hitDice');
-  bind('featuresText','features'); bind('persTraits','persTraits'); bind('persIdeals','persIdeals');
+  bind('persTraits','persTraits'); bind('persIdeals','persIdeals');
   bind('persBonds','persBonds'); bind('persFlaws','persFlaws');
 
   document.getElementById('spellSearch').addEventListener('input', ()=> buildSpellLibrary());
@@ -2057,7 +2074,6 @@ function applyStateToInputs(){
   document.getElementById('hpCurrent').value = state.hpCurrent;
   document.getElementById('hpTemp').value = state.hpTemp;
   document.getElementById('hitDice').value = state.hitDice;
-  document.getElementById('featuresText').value = state.features;
   document.getElementById('persTraits').value = state.persTraits;
   document.getElementById('persIdeals').value = state.persIdeals;
   document.getElementById('persBonds').value = state.persBonds;
@@ -2438,22 +2454,26 @@ function buildSpeciesTraits(){
   const box = document.getElementById('speciesTraitsList');
   if(!box) return;
   const sd = SPECIES_DATA[state.race];
-  if(!sd){
-    box.innerHTML = `<div class="action-empty">${state.race ? 'Custom species — import "'+state.race+'" on the Library tab to list its traits here.' : 'Pick a species in Settings to see its traits here.'}</div>`;
-    return;
-  }
   const traitRow = t=>`
     <div class="feat-item">
       <div class="feat-head"><span class="f-name">${t.name}</span></div>
       ${t.desc?`<div class="feat-desc">${t.desc}</div>`:''}
     </div>`;
-  let html = (sd.traits||[]).map(traitRow).join('');
-  // Append the selected subrace's traits under a labelled divider.
-  const ss = state.subrace ? SUBSPECIES_DATA[subspKey(state.race, state.subrace)] : null;
-  if(ss && Array.isArray(ss.traits) && ss.traits.length){
-    html += `<div class="subrace-divider">${esc(state.subrace)} <span class="chip-abbr">subrace</span></div>` + ss.traits.map(traitRow).join('');
+  let html;
+  if(!sd){
+    html = `<div class="action-empty">${state.race ? 'Custom species — import "'+state.race+'" on the Library tab to list its traits here.' : 'Pick a species in Settings to see its traits here.'}</div>`;
+  } else {
+    html = (sd.traits||[]).map(traitRow).join('');
+    // Append the selected subrace's traits under a labelled divider.
+    const ss = state.subrace ? SUBSPECIES_DATA[subspKey(state.race, state.subrace)] : null;
+    if(ss && Array.isArray(ss.traits) && ss.traits.length){
+      html += `<div class="subrace-divider">${esc(state.subrace)} <span class="chip-abbr">subrace</span></div>` + ss.traits.map(traitRow).join('');
+    }
+    if(!html) html = '<div class="action-empty">No traits listed for this species.</div>';
   }
-  box.innerHTML = html || '<div class="action-empty">No traits listed for this species.</div>';
+  // Custom traits append in every case, including the no-species empty state.
+  box.innerHTML = html + customFeaturesHtml('species');
+  bindCustomFeatureRows(box);
 }
 
 // ---------- Backgrounds (character selection + Features tab) ----------
@@ -2506,6 +2526,150 @@ function renderBackgroundInfo(){
     ${bd.feature?`<div class="ci-row"><span class="ci-key">feature</span><span>${esc(bd.feature.name)}</span></div>`:''}
     <div class="ci-row"><span class="ci-key">source</span><span>${bd.custom?'Imported · '+bd.source:'Official · '+bd.source}</span></div>
     ${bd.desc?`<div class="ci-desc">${esc(bd.desc)}</div>`:''}`;
+}
+
+// ---------- Custom features & traits ----------
+// Player-authored entries added on the Features tab. `cat` decides which list
+// each one joins — the class features, the species traits, or the standalone
+// "Other" list — and they're stored on the character as state.customFeatures.
+const CUSTOM_FEAT_CATS = { class:'Class Features', species:'Species Traits', other:'Other Features & Traits' };
+
+function newFeatureId(){ return 'cf' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function ensureCustomFeatures(){
+  if(!Array.isArray(state.customFeatures)) state.customFeatures = [];
+  // One-time migration: "Other Features & Traits" used to be a free-text box, and
+  // an imported character can still carry that field. Move anything written there
+  // into the list rather than dropping it on the floor.
+  if(typeof state.features === 'string' && state.features.trim()){
+    state.customFeatures.push({ id:newFeatureId(), cat:'other', name:'Notes', desc:state.features.trim() });
+    state.features = '';
+  }
+  return state.customFeatures;
+}
+
+function customFeaturesFor(cat){
+  return ensureCustomFeatures().filter(f=> f.cat === cat);
+}
+
+function customFeatItem(cf){
+  return `<div class="feat-item" data-cf="${esc(cf.id)}">
+    <div class="feat-head">
+      <span class="f-name">${esc(cf.name)}</span>
+      <span class="action-badge dim">custom</span>
+      <span class="cf-edit" data-id="${esc(cf.id)}" title="Edit this feature">✎</span>
+      <span class="row-del cf-del" data-id="${esc(cf.id)}" title="Remove this feature">✕</span>
+    </div>
+    ${cf.desc?`<div class="feat-desc">${esc(cf.desc)}</div>`:''}
+  </div>`;
+}
+
+// Custom rows appended to a built-in list, under a divider that marks them apart
+// from the class/species entries above.
+function customFeaturesHtml(cat){
+  const list = customFeaturesFor(cat);
+  if(!list.length) return '';
+  return `<div class="subrace-divider">Custom <span class="chip-abbr">added by you</span></div>`
+    + list.map(customFeatItem).join('');
+}
+
+function bindCustomFeatureRows(scope){
+  scope.querySelectorAll('.cf-edit').forEach(b=> b.addEventListener('click', e=> editCustomFeature(e.target.dataset.id)));
+  scope.querySelectorAll('.cf-del').forEach(b=> b.addEventListener('click', e=> deleteCustomFeature(e.target.dataset.id)));
+}
+
+function renderOtherFeatures(){
+  const box = document.getElementById('otherFeaturesList');
+  if(!box) return;
+  const list = customFeaturesFor('other');
+  box.innerHTML = list.length ? list.map(customFeatItem).join('')
+    : '<div class="action-empty">Nothing here yet — add a feat, boon, or custom trait below.</div>';
+  bindCustomFeatureRows(box);
+}
+
+// Every list a custom feature can land in.
+function refreshFeatureLists(){
+  buildClassFeatures();
+  buildSpeciesTraits();
+  renderOtherFeatures();
+}
+
+// ---------- Add / edit feature form (Features tab) ----------
+// The same form adds and edits: ✎ on a row loads it here and the button becomes
+// Save Changes until the edit is committed or cancelled.
+let editingFeatureId = null;
+
+function setCfMsg(kind, text){
+  const m = document.getElementById('cfMsg');
+  if(!m) return;
+  m.className = 'import-msg ' + kind;
+  m.textContent = text || '';
+}
+
+function resetCustomFeatureForm(){
+  editingFeatureId = null;
+  const name = document.getElementById('cfName');
+  const desc = document.getElementById('cfDesc');
+  if(name) name.value = '';
+  if(desc) desc.value = '';
+  const submit = document.getElementById('cfSubmit');
+  if(submit) submit.textContent = '+ Add Feature';
+  const cancel = document.getElementById('cfCancel');
+  if(cancel) cancel.style.display = 'none';
+}
+
+function editCustomFeature(id){
+  const cf = ensureCustomFeatures().find(f=> f.id === id);
+  if(!cf) return;
+  editingFeatureId = id;
+  document.getElementById('cfCat').value = cf.cat;
+  document.getElementById('cfName').value = cf.name;
+  document.getElementById('cfDesc').value = cf.desc || '';
+  document.getElementById('cfSubmit').textContent = 'Save Changes';
+  document.getElementById('cfCancel').style.display = '';
+  setCfMsg('ok', `Editing "${cf.name}" — change it and press Save Changes.`);
+  document.getElementById('cfName').focus();
+}
+
+function deleteCustomFeature(id){
+  const list = ensureCustomFeatures();
+  const cf = list.find(f=> f.id === id);
+  if(!cf) return;
+  if(!confirm(`Remove "${cf.name}" from ${CUSTOM_FEAT_CATS[cf.cat]||'your features'}?`)) return;
+  state.customFeatures = list.filter(f=> f.id !== id);
+  if(editingFeatureId === id){ resetCustomFeatureForm(); setCfMsg('', ''); }
+  refreshFeatureLists();
+  save();
+}
+
+function submitCustomFeature(){
+  const cat = document.getElementById('cfCat').value;
+  const name = document.getElementById('cfName').value.trim();
+  const desc = document.getElementById('cfDesc').value.trim();
+  if(!name) return setCfMsg('err', 'Give the feature a name.');
+  if(!CUSTOM_FEAT_CATS[cat]) return setCfMsg('err', 'Pick which list it goes in.');
+  ensureCustomFeatures();
+  if(editingFeatureId){
+    const cf = state.customFeatures.find(f=> f.id === editingFeatureId);
+    if(cf){ cf.cat = cat; cf.name = name; cf.desc = desc; }
+  } else {
+    state.customFeatures.push({ id:newFeatureId(), cat, name, desc });
+  }
+  const verb = editingFeatureId ? 'Saved' : 'Added';
+  resetCustomFeatureForm();
+  setCfMsg('ok', `${verb} "${name}" to ${CUSTOM_FEAT_CATS[cat]}.`);
+  refreshFeatureLists();
+  save();
+}
+
+function bindCustomFeatureForm(){
+  const submit = document.getElementById('cfSubmit');
+  if(!submit) return;
+  submit.addEventListener('click', submitCustomFeature);
+  document.getElementById('cfCancel').addEventListener('click', ()=>{
+    resetCustomFeatureForm();
+    setCfMsg('', '');
+  });
 }
 
 // Features & Traits tab: the selected background's feature + equipment notes.
@@ -4275,6 +4439,7 @@ function renderCharacter(){
   renderClassInfoStack();
   buildSkillPicker();
   buildClassFeatures();
+  renderOtherFeatures(); // custom entries also append to the class/species lists above
   buildActions();
   applyStateToInputs();
   refreshTagPickers(); // known-spell tags feed the dropdown option pool
@@ -4412,6 +4577,12 @@ const app = {
   exportLibraryJson,
   bindSubImportToggles,
   setSubImportOpen,
+  bindCustomFeatureForm,
+  submitCustomFeature,
+  editCustomFeature,
+  deleteCustomFeature,
+  renderOtherFeatures,
+  refreshFeatureLists,
   fillClassForm,
   fillSpeciesForm,
   fillSubclassForm,
@@ -4557,6 +4728,7 @@ async function initSheetPage(){
   bindPassiveSenseRows(); // Passive Senses rows open a quick-reference popup
   bindNotesModal(); // shared spell-detail popup, used by the Spells & Actions tabs
   bindChoiceModal(); // "Other…" custom feature-choice popup
+  bindCustomFeatureForm(); // Features tab: add / edit your own features
   buildClassFilterBar();
   buildSpellLevelSelects();
   setTagPicker('customSpellTagPicker', []);

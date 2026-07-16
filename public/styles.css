@@ -570,6 +570,13 @@ textarea.trait{
   border:1px solid var(--border-glow);
 }
 .choice-badge.pending{ background:transparent; color: var(--ink-dim); border-style:dashed; }
+.fc-custom-name{ color: var(--neon-cyan); font-weight:600; }
+
+/* ---------- Player-added features (Features & Traits) ---------- */
+/* The row controls sit at the far right, away from the name and badges. */
+.feat-item .cf-edit{ margin-left:auto; cursor:pointer; color: var(--neon-cyan); font-weight:700; }
+.feat-item .cf-edit:hover{ text-shadow: var(--glow-cyan); }
+.feat-item .cf-del{ padding:0 2px; }
 
 /* The custom-choice popup is a short form — the journal's tall entry box is wrong here. */
 .choice-modal-backdrop .app-field textarea{ min-height:96px; }

@@ -30,6 +30,18 @@
       "autoPort": true
     },
     {
+      "name": "worktree-multiuser-b",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/82977615-bee2-4ba8-a096-ab91d64870f0/scratchpad/multiuser.db",
+        "PORT=4181",
+        "node",
+        "/Users/jg/Projects/D&D/app/dnd-character-app/.claude/worktrees/session-2026-07-15/src/server.js"
+      ],
+      "port": 4181,
+      "autoPort": true
+    },
+    {
       "name": "worktree-multiuser",
       "runtimeExecutable": "env",
       "runtimeArgs": [
