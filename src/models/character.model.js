@@ -1,25 +1,29 @@
 const db = require('../db');
 
 const statements = {
-  list: db.prepare('SELECT id, name, data, updated_at FROM characters ORDER BY updated_at DESC'),
+  listByUser: db.prepare(
+    'SELECT id, name, data, updated_at FROM characters WHERE user_id = ? ORDER BY updated_at DESC'
+  ),
   get: db.prepare('SELECT * FROM characters WHERE id = ?'),
-  insert: db.prepare('INSERT INTO characters (name, data) VALUES (?, ?)'),
+  insert: db.prepare('INSERT INTO characters (name, data, user_id) VALUES (?, ?, ?)'),
   update: db.prepare(
     `UPDATE characters SET name = ?, data = ?, updated_at = datetime('now') WHERE id = ?`
   ),
   remove: db.prepare('DELETE FROM characters WHERE id = ?')
 };
 
-function list() {
-  return statements.list.all();
+// Characters are always listed per owner; ownership checks for get/update/
+// remove live in the controller, which needs the loaded row anyway.
+function listByUser(userId) {
+  return statements.listByUser.all(userId);
 }
 
 function findById(id) {
   return statements.get.get(id);
 }
 
-function create(name, data) {
-  const info = statements.insert.run(name, JSON.stringify(data));
+function create(name, data, userId) {
+  const info = statements.insert.run(name, JSON.stringify(data), userId);
   return info.lastInsertRowid;
 }
 
@@ -33,4 +37,4 @@ function remove(id) {
   return result.changes > 0;
 }
 
-module.exports = { list, findById, create, update, remove };
+module.exports = { listByUser, findById, create, update, remove };

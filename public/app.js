@@ -1491,10 +1491,16 @@ function defaultCharacter(){
 
 let state = defaultCharacter();
 
-// Which page this script is running on: 'sheet' (index), 'import', or 'library'.
-// Standalone pages set data-page on <body>; shared handlers check this to skip
-// character-sheet-only work (autosave, sheet panel rebuilds).
+// Which page this script is running on: 'sheet' (index), 'import', 'library',
+// or 'sessions'. Standalone pages set data-page on <body>; shared handlers
+// check this to skip character-sheet-only work (autosave, sheet panel rebuilds).
 const PAGE = document.body.dataset.page || 'sheet';
+
+// DM read-only mode: /?view=<id> shows another player's sheet. The server only
+// honors the read for that session's DM; this flag additionally freezes the UI
+// (save() no-ops, inputs disabled, profile bar controls hidden).
+const VIEW_CHARACTER_ID = PAGE==='sheet' ? new URLSearchParams(location.search).get('view') : null;
+const VIEW_ONLY = !!VIEW_CHARACTER_ID;
 
 function mod(score){ return Math.floor((score-10)/2); }
 function fmt(n){ return (n>=0?'+':'') + n; }
@@ -2775,6 +2781,11 @@ function bindSidebar(){
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') setOpen(false); });
   const current = sidebar.querySelector(`.side-link[data-page="${PAGE}"]`);
   if(current) current.classList.add('active');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn) logoutBtn.addEventListener('click', async ()=>{
+    await fetch('/api/auth/logout', { method:'POST' });
+    location.href = '/login';
+  });
 }
 
 // ---------- Options menu & themes ----------
@@ -3051,12 +3062,22 @@ function applyStateToInputs(){
 }
 
 // ---------- API helpers ----------
+// A 401 means the login cookie expired mid-session — bounce to the sign-in
+// page instead of letting callers choke on an error payload.
+function apiGuard(r){
+  if(r.status===401){ location.href='/login'; throw new Error('Not signed in'); }
+  return r;
+}
 async function apiListCharacters(){
-  const r = await fetch('/api/characters');
+  const r = apiGuard(await fetch('/api/characters'));
   return r.json();
 }
 async function apiGetCharacter(id){
-  const r = await fetch('/api/characters/'+id);
+  const r = apiGuard(await fetch('/api/characters/'+id));
+  if(!r.ok){
+    const body = await r.json().catch(()=>({}));
+    throw new Error(body.error || 'Could not load character');
+  }
   return r.json();
 }
 async function apiCreateCharacter(name, data){
@@ -4346,6 +4367,7 @@ function setSaveStatus(status){
 let saveTimeout=null;
 function save(){
   if(PAGE!=='sheet') return; // no character is loaded on standalone pages
+  if(VIEW_ONLY) return; // DM viewing another player's sheet — never write back
   clearTimeout(saveTimeout);
   setSaveStatus('saving');
   saveTimeout = setTimeout(async ()=>{
@@ -5212,6 +5234,30 @@ function initImportPage(){
 
 // The character sheet (index): loads a character and wires every tab.
 async function initSheetPage(){
+  if(VIEW_ONLY){
+    document.body.classList.add('view-only');
+    try{
+      await loadCharacter(VIEW_CHARACTER_ID);
+    }catch(err){
+      alert(err.message || 'You do not have access to that character sheet.');
+      location.href = '/sessions';
+      return;
+    }
+    // Banner instead of the profile switcher; no autosave, no profile bar.
+    const bar = document.querySelector('.profile-bar');
+    if(bar){
+      const banner = document.createElement('span');
+      banner.className = 'view-banner';
+      banner.textContent = `Viewing "${state.name}" — read-only`;
+      bar.appendChild(banner);
+    }
+    bindTabs();
+    bindNotesModal();
+    buildClassFilterBar();
+    buildSpellLevelSelects();
+    setTagPicker('customSpellTagPicker', []);
+    return;
+  }
   const list = await apiListCharacters();
   if(list.length>0){
     await loadCharacter(list[0].id);
@@ -5242,6 +5288,7 @@ async function init(){
   await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)
   if(PAGE==='import'){ initImportPage(); return; }
   if(PAGE==='library'){ initNotesPage(); return; } // the Library page's search needs the registries loaded
+  if(PAGE==='sessions'){ if(window.initSessionsPage) await window.initSessionsPage(); return; } // modules/sessions.js
   await initSheetPage();
 }
 

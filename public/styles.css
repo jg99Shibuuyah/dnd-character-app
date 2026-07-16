@@ -1203,3 +1203,110 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 }
 .dice-total-label{ font-family:'JetBrains Mono', monospace; font-size:12px; color: var(--ink-soft); overflow-wrap:anywhere; }
 .dice-total-val{ font-family:'JetBrains Mono', monospace; font-size:22px; font-weight:700; color: var(--neon-cyan); text-shadow: var(--glow-cyan); }
+
+/* ---------- Auth pages (login / register / reset) ---------- */
+.auth-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+.auth-panel{ width:100%; max-width:420px; }
+.auth-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.auth-tab{
+  flex:1; cursor:pointer; font-family:'Orbitron', sans-serif; font-size:11px;
+  letter-spacing:1px; text-transform:uppercase; padding:8px 4px;
+  border:1px solid var(--parchment-line); border-radius:3px;
+  background: rgba(255,255,255,0.03); color: var(--ink-soft);
+}
+.auth-tab.on{ color: var(--neon-cyan); border-color: var(--neon-cyan); box-shadow: 0 0 8px rgba(0,255,213,0.25); }
+.auth-form{ display:flex; flex-direction:column; gap:12px; }
+.auth-form label{
+  display:flex; flex-direction:column; gap:4px;
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--ink-soft);
+}
+.auth-form input{
+  font-size:14px; padding:8px 10px; border:1px solid var(--parchment-line);
+  border-radius:3px; background: rgba(255,255,255,0.04); color: var(--ink);
+}
+.auth-form input:focus{ outline:none; border-color: var(--border-glow); }
+.auth-hint{ text-transform:none; letter-spacing:0; color: var(--ink-dim); }
+.auth-note{ font-size:12px; color: var(--ink-soft); line-height:1.5; }
+.auth-submit{ padding:9px; font-size:13px; }
+.auth-link{
+  cursor:pointer; background:none; border:none; padding:2px;
+  font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-soft);
+  text-decoration:underline;
+}
+.auth-link:hover{ color: var(--neon-cyan); }
+.auth-error{ margin-top:12px; font-size:12px; color: var(--crimson-bright); }
+.auth-ok{ margin-top:12px; font-size:12px; color: var(--neon-green); }
+
+/* ---------- Sidebar account footer ---------- */
+.sidebar-account{
+  margin-top:auto; padding:14px; border-top:1px solid var(--parchment-line);
+  display:flex; flex-direction:column; gap:8px;
+}
+.sidebar-user{ font-size:11px; color: var(--ink-soft); overflow-wrap:anywhere; }
+.sidebar-user strong{ color: var(--ink); }
+
+/* ---------- Sessions page ---------- */
+.sessions-actions{ display:flex; flex-direction:column; gap:10px; }
+.sessions-form{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.sessions-form input, .sessions-form select{
+  font-size:13px; padding:7px 10px; border:1px solid var(--parchment-line);
+  border-radius:3px; background: rgba(255,255,255,0.04); color: var(--ink);
+}
+.sessions-form input:focus{ outline:none; border-color: var(--border-glow); }
+.sessions-error{ margin-top:10px; font-size:12px; color: var(--crimson-bright); }
+.session-list{ display:flex; flex-direction:column; gap:8px; }
+.session-empty{ font-size:12px; color: var(--ink-soft); }
+.session-row{
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap; cursor:pointer;
+  text-align:left; padding:10px 12px; border:1px solid var(--parchment-line);
+  border-radius:3px; background: rgba(255,255,255,0.03); color: var(--ink);
+  font-family:'JetBrains Mono', monospace; font-size:13px;
+}
+.session-row:hover{ border-color: var(--border-glow); }
+.session-name{ font-weight:700; }
+.session-badge{
+  font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1px;
+  text-transform:uppercase; padding:2px 8px; border-radius:3px;
+  border:1px solid var(--parchment-line); color: var(--ink-soft);
+}
+.session-badge.dm{ color: var(--neon-magenta); border-color: var(--neon-magenta); text-shadow: 0 0 6px rgba(255,42,109,0.4); }
+.session-count{ font-size:11px; color: var(--ink-soft); }
+.session-code{ font-size:11px; color: var(--neon-cyan); letter-spacing:1px; margin-left:auto; }
+.session-code.big{ font-size:14px; font-weight:700; letter-spacing:2px; }
+.session-meta{ font-size:12px; color: var(--ink-soft); margin-bottom:12px; }
+.session-members{ width:100%; border-collapse:collapse; font-size:13px; }
+.session-members th{
+  text-align:left; font-family:'Orbitron', sans-serif; font-size:10px;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft);
+  padding:6px 8px; border-bottom:1px solid var(--parchment-line);
+}
+.session-members td{ padding:8px; border-bottom:1px dashed var(--parchment-line); }
+.session-members tr:last-child td{ border-bottom:none; }
+.session-dim{ color: var(--ink-dim); }
+.session-view{ text-decoration:none; font-size:11px; }
+.session-detail-actions{
+  display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;
+  margin-top:14px; padding-top:12px; border-top:1px solid var(--parchment-line);
+}
+.session-detail-actions label{
+  display:flex; flex-direction:column; gap:4px;
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--ink-soft);
+}
+.session-detail-actions select{
+  font-size:13px; padding:7px 10px; border:1px solid var(--parchment-line);
+  border-radius:3px; background: rgba(255,255,255,0.04); color: var(--ink);
+}
+
+/* ---------- DM read-only sheet view (/?view=<id>) ---------- */
+.view-banner{
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1px;
+  text-transform:uppercase; color: var(--neon-yellow); margin-left:8px;
+}
+/* Hide editing controls; keep the sidebar toggle + options menu usable. */
+.view-only #profileSelect, .view-only #newCharBtn, .view-only #dupCharBtn,
+.view-only #delCharBtn, .view-only .profile-bar label, .view-only #saveStatus{ display:none; }
+/* Freeze the sheet itself: tabs still switch, but fields don't take input. */
+.view-only .tab-pane input, .view-only .tab-pane select, .view-only .tab-pane textarea,
+.view-only .tab-pane button:not(.tab-btn){ pointer-events:none; opacity:0.75; }

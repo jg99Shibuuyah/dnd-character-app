@@ -1,10 +1,16 @@
 <!-- Slide-in navigation drawer, shared by every page. Opened with the ☰ button
      in the top bar; the backdrop or Escape closes it. Wired in app.js: bindSidebar(),
-     which also marks the current page's link active via body[data-page]. -->
+     which also marks the current page's link active via body[data-page].
+     Every page route passes { user } (see src/app.js) for the account footer. -->
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <nav class="sidebar" id="sidebar" aria-label="Pages">
   <div class="sidebar-head">Character Ledger</div>
   <a class="side-link" data-page="sheet" href="/">Character Sheet</a>
+  <a class="side-link" data-page="sessions" href="/sessions">Sessions</a>
   <a class="side-link" data-page="library" href="/library">Library</a>
   <a class="side-link" data-page="import" href="/import">Import</a>
+  <div class="sidebar-account">
+    <span class="sidebar-user">Signed in as <strong><%= user.username %></strong></span>
+    <button class="pbtn" id="logoutBtn" type="button">Sign out</button>
+  </div>
 </nav>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Ledger — Sessions</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="sessions">
+<%- include('partials/sidebar.html') %>
+<div class="sheet">
+
+  <%- include('partials/page-bar.html', { title: 'Sessions' }) %>
+
+  <div class="panel">
+    <h2><span>Start or join a session</span></h2>
+    <div class="sessions-actions">
+      <form id="createSessionForm" class="sessions-form">
+        <input id="newSessionName" placeholder="New session name" maxlength="60" required>
+        <button class="pbtn" type="submit">Create (you become the DM)</button>
+      </form>
+      <form id="joinSessionForm" class="sessions-form">
+        <input id="joinCode" placeholder="Join code, e.g. K7MPQ2" maxlength="6" required>
+        <select id="joinCharacter"></select>
+        <button class="pbtn" type="submit">Join as player</button>
+      </form>
+    </div>
+    <div class="sessions-error" id="sessionsError" hidden></div>
+  </div>
+
+  <div class="panel">
+    <h2><span>Your sessions</span></h2>
+    <div id="sessionList" class="session-list"></div>
+  </div>
+
+  <div class="panel" id="sessionDetailPanel" hidden>
+    <h2><span id="sessionDetailTitle">Session</span></h2>
+    <div class="session-meta" id="sessionMeta"></div>
+    <div id="sessionMembers"></div>
+    <div class="session-detail-actions">
+      <label id="attachWrap">Your character in this session
+        <select id="attachCharacter"></select>
+      </label>
+      <button class="pbtn danger" id="leaveSessionBtn" hidden>Leave session</button>
+      <button class="pbtn danger" id="deleteSessionBtn" hidden>Delete session</button>
+    </div>
+  </div>
+
+  <div class="footer-note">Sessions link players together — the DM can open every attached character sheet; players only see each other's name, class and level.</div>
+</div>
+
+<script src="/app.js"></script>
+<script src="/modules/sessions.js"></script>
+</body>
+</html>
