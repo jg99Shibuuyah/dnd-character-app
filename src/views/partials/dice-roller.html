@@ -1,10 +1,7 @@
-<!-- Floating 2D dice roller with the standard D&D dice set (d4–d20 + d100).
-     Sits beside the journal FAB, bottom-right. Rolls are ephemeral (not saved).
-     Dice tiles and results are rendered by modules/dice.js. -->
-<button id="diceFab" class="corner-fab dice-fab" title="Dice roller" aria-label="Open dice roller">
-  <span class="corner-fab-glyph">🎲</span>
-</button>
-
+<!-- Floating 2D dice roller popup with the standard D&D dice set (d4–d20 + d100).
+     Rolls are ephemeral (not saved). Opened from the quick-tools launcher
+     (partials/corner-launcher.html, which owns the #diceFab button); dice tiles
+     and results are rendered by modules/dice.js. -->
 <div id="dicePopup" class="corner-popup" role="dialog" aria-label="Dice roller">
   <div class="corner-popup-head">
     <div class="corner-popup-title"><span>Dice</span><span class="rune">◈</span></div>

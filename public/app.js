@@ -226,6 +226,35 @@ const ALIGNMENTS = [
   {abbr:'—',  name:'Unaligned',      desc:'Lacks the capacity for moral judgment and simply acts by its nature.',       eg:'Most beasts and mindless creatures'},
 ];
 
+// Weapon Mastery properties (2024 rules) with the weapons that carry each one.
+// Used by the Library reference panel and the Library search index.
+const MASTERY_PROPERTIES = [
+  {name:'Cleave',
+   desc:"If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.",
+   weapons:['Greataxe','Halberd']},
+  {name:'Graze',
+   desc:"If your attack roll with this weapon misses a creature, you can deal damage to that creature equal to the ability modifier you used to make the attack roll. This damage is the same type dealt by the weapon, and the damage can be increased only by increasing the ability modifier.",
+   weapons:['Glaive','Greatsword']},
+  {name:'Nick',
+   desc:"When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.",
+   weapons:['Dagger','Light Hammer','Scimitar','Sickle']},
+  {name:'Push',
+   desc:"If you hit a creature with this weapon, you can push the creature up to 10 feet straight away from yourself if it is Large or smaller.",
+   weapons:['Greatclub','Heavy Crossbow','Pike','Warhammer']},
+  {name:'Sap',
+   desc:"If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.",
+   weapons:['Flail','Longsword','Mace','Morningstar','Spear','War Pick']},
+  {name:'Slow',
+   desc:"If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn't exceed 10 feet.",
+   weapons:['Club','Javelin','Light Crossbow','Longbow','Musket','Sling','Whip']},
+  {name:'Topple',
+   desc:"If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.",
+   weapons:['Battleaxe','Lance','Maul','Quarterstaff','Trident']},
+  {name:'Vex',
+   desc:"If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.",
+   weapons:['Blowgun','Dart','Hand Crossbow','Handaxe','Pistol','Rapier','Shortbow','Shortsword']},
+];
+
 const ABILITIES = [
   {key:'str', name:'Strength'},
   {key:'dex', name:'Dexterity'},
@@ -256,11 +285,59 @@ const SKILLS = [
   {name:'Survival', ability:'wis'},
 ];
 
-// Short reference blurbs for built-in class features, keyed by feature name.
-// P() attaches these so the Class Features panel shows more than a bare name.
+// Quick-reference blurbs for the Skills tab popups (openSkillDetail).
+const SKILL_DESC = {
+  'Acrobatics': "Staying on your feet in tricky situations: keeping your balance on ice or a narrow ledge, tumbling past enemies, flips and dives, or wriggling free of a grapple with agility.",
+  'Animal Handling': "Calming a spooked animal, reading a beast's intentions, keeping your mount under control during a risky maneuver, or training and directing animals.",
+  'Arcana': "Recalling lore about spells, magic items, eldritch symbols, magical traditions, the planes of existence, and their inhabitants.",
+  'Athletics': "Feats of raw physical power: climbing a sheer cliff, long or high jumps, swimming against a current, or grappling and shoving in combat.",
+  'Deception': "Convincingly hiding the truth — fast-talking a guard, keeping a straight face while lying, wearing a disguise, or running a con.",
+  'History': "Recalling lore about historical events, legendary people, ancient kingdoms, past wars, and lost civilizations.",
+  'Insight': "Reading body language, speech habits, and behavior to judge someone's true intentions — sensing a lie or predicting a move.",
+  'Intimidation': "Influencing others through threats, hostile posturing, or overt displays of force — from staring down a thug to interrogating a prisoner.",
+  'Investigation': "Looking for clues and making deductions: searching a room for a hidden compartment, working out how a trap is triggered, or appraising a suspicious document.",
+  'Medicine': "Stabilizing a dying companion at 0 HP, diagnosing an illness, or determining what killed someone.",
+  'Nature': "Recalling lore about terrain, plants and animals, weather patterns, and natural cycles.",
+  'Perception': "Spotting, hearing, or otherwise noticing things: an ambush in the brush, a whispered conversation, or a creature sneaking up on you. Your passive Perception (10 + bonus) is what you notice without looking.",
+  'Performance': "Delighting an audience with music, dance, acting, storytelling, or another kind of entertainment.",
+  'Persuasion': "Influencing others with tact, social graces, or good-faith argument — negotiating a deal, inspiring a crowd, or requesting an audience.",
+  'Religion': "Recalling lore about deities, rites and prayers, religious hierarchies, holy symbols, and cult practices.",
+  'Sleight of Hand': "Manual trickery and legerdemain: lifting a coin purse, palming an object, or planting something on someone unnoticed.",
+  'Stealth': "Concealing yourself and moving silently — slipping past guards, hiding from a pursuer, or sneaking up on a target.",
+  'Survival': "Following tracks, hunting and foraging, navigating wilderness, predicting the weather, and avoiding quicksand, pits, and other natural hazards.",
+};
+
+// Quick-reference blurbs for the Passive Senses popups on the Skills tab
+// (openPassiveDetail). Keyed by the underlying skill name.
+const PASSIVE_SENSE_INFO = {
+  'Perception': {
+    desc: "What you notice without actively looking or listening — your always-on awareness. The DM compares it against a creature's Stealth check or a hidden threat's DC instead of asking you to roll.",
+    example: "A goblin sneaks up on the camp with a Stealth total of 13. Your passive Perception is 14, so the DM tells you that you hear a twig snap behind the tents — no roll needed.",
+  },
+  'Investigation': {
+    desc: "What you deduce or piece together without deliberately searching — spotting that something is off about a room, a document, or a mechanism just by being there.",
+    example: "Walking down a dungeon corridor, your passive Investigation of 15 beats the trap's DC 14, so the DM mentions the faint seams of a pressure plate in the floor ahead.",
+  },
+  'Insight': {
+    desc: "Your ongoing read on people — noticing shifty behavior, nerves, or an act without stopping to study anyone. The DM checks it against a liar's Deception when you aren't actively probing.",
+    example: "A merchant lies about the sword's origin with a Deception total of 12. Your passive Insight is 13, so the DM notes he keeps glancing at the door as he talks.",
+  },
+};
+
+// Reference detail for the built-in classes, whose features are stored
+// name-only. The single source of truth for a class feature's blurb and its
+// action cost: P() attaches it so the Class Features panel shows more than a
+// bare name, and (for entries with a non-passive `use`) the Actions tab picks
+// it up the same way it does the homebrew Jaeger's inline features.
+//
+// A value is either a plain description string (passive features) or
+// {use, cost, desc} for anything that takes an action or has limited uses.
+// Keys match the full feature name; an entry keyed by the base name (with the
+// parenthetical stripped) also applies to every variant, so 'Bardic Inspiration'
+// carries the use/cost for the d6/d8/d10/d12 rows while each keeps its own desc.
 // Names shared by several classes (Extra Attack, Ability Score Improvement,
 // the generic "<subclass> feature" rows) use one general-purpose description.
-const FEATURE_DESC = {
+const FEATURE_INFO = {
   // Shared / common
   'Ability Score Improvement': "Increase one ability score by 2, or two scores by 1 each (to a maximum of 20). You can instead take a feat if your game uses them.",
   'Extra Attack': "You can attack twice, instead of once, whenever you take the Attack action on your turn.",
@@ -275,8 +352,8 @@ const FEATURE_DESC = {
   'Archetype feature': "Your chosen archetype grants a feature at this level — see the subclass entry below.",
   'Tradition feature': "Your chosen tradition grants a feature at this level — see the subclass entry below.",
   // Barbarian
-  'Rage': "As a bonus action, rage for up to 1 minute: advantage on Strength checks and saves, bonus melee damage, and resistance to bludgeoning, piercing, and slashing damage.",
-  'Reckless Attack': "On your first attack of a turn you can attack recklessly, gaining advantage on melee Strength attacks that turn but giving attackers advantage against you until your next turn.",
+  'Rage': {use:'bonus action', cost:'uses/rest', desc:"As a bonus action, rage for up to 1 minute: advantage on Strength checks and saves, bonus melee damage, and resistance to bludgeoning, piercing, and slashing damage."},
+  'Reckless Attack': {use:'special', desc:"On your first attack of a turn you can attack recklessly, gaining advantage on melee Strength attacks that turn but giving attackers advantage against you until your next turn."},
   'Danger Sense': "You have advantage on Dexterity saving throws against effects you can see, such as traps and spells, unless blinded, deafened, or incapacitated.",
   'Primal Path': "Choose the subclass (Primal Path) that shapes your rage; it grants features as you level.",
   'Path feature': "Your Primal Path grants a feature at this level — see the subclass entry below.",
@@ -285,16 +362,18 @@ const FEATURE_DESC = {
   'Brutal Critical (1 die)': "You can roll one additional weapon damage die when determining the extra damage of a melee critical hit.",
   'Brutal Critical (2 dice)': "You roll two additional weapon damage dice for a melee critical hit.",
   'Brutal Critical (3 dice)': "You roll three additional weapon damage dice for a melee critical hit.",
-  'Relentless Rage': "If you drop to 0 hit points while raging without dying outright, make a DC 10 Constitution save to drop to 1 hit point instead (the DC rises with each use).",
+  'Relentless Rage': {use:'special', desc:"If you drop to 0 hit points while raging without dying outright, make a DC 10 Constitution save to drop to 1 hit point instead (the DC rises with each use)."},
   'Persistent Rage': "Your rage ends early only if you fall unconscious or choose to end it.",
   'Indomitable Might': "If your total for a Strength check is less than your Strength score, you can use that score in place of the total.",
   'Primal Champion': "Your Strength and Constitution scores each increase by 4, to a maximum of 24.",
   // Bard
+  'Bardic Inspiration': {use:'bonus action', cost:'CHA mod/rest'}, // base entry: use/cost for every die-size row
   'Bardic Inspiration (d6)': "As a bonus action, give a creature a d6 it can add to one ability check, attack roll, or saving throw within 10 minutes. Uses equal your Charisma modifier per rest.",
   'Bardic Inspiration (d8)': "Your Bardic Inspiration die improves to a d8.",
   'Bardic Inspiration (d10)': "Your Bardic Inspiration die improves to a d10.",
   'Bardic Inspiration (d12)': "Your Bardic Inspiration die improves to a d12.",
   'Jack of All Trades': "Add half your proficiency bonus (rounded down) to any ability check you make that doesn't already include your proficiency bonus.",
+  'Song of Rest': {use:'special', cost:'on a short rest'}, // base entry: use/cost for every die-size row
   'Song of Rest (d6)': "During a short rest, you and allies who hear your performance regain an extra 1d6 hit points when spending Hit Dice.",
   'Song of Rest (d8)': "Your Song of Rest healing die improves to a d8.",
   'Song of Rest (d10)': "Your Song of Rest healing die improves to a d10.",
@@ -302,12 +381,14 @@ const FEATURE_DESC = {
   'Bard College': "Choose the subclass (Bard College) that focuses your talents; it grants features as you level.",
   'College feature': "Your Bard College grants a feature at this level — see the subclass entry below.",
   'Font of Inspiration': "You regain all expended uses of Bardic Inspiration on a short or long rest, not just a long rest.",
-  'Countercharm': "As an action, perform until the end of your next turn; you and allies within 30 feet have advantage on saves against being frightened or charmed.",
+  'Countercharm': {use:'action', desc:"As an action, perform until the end of your next turn; you and allies within 30 feet have advantage on saves against being frightened or charmed."},
   'Magical Secrets': "Learn two spells of your choice from any class; they count as bard spells for you.",
   'Superior Inspiration': "When you roll initiative and have no uses of Bardic Inspiration left, you regain one.",
   // Cleric
   'Divine Domain': "Choose the subclass (Divine Domain) tied to your deity; it grants domain spells and features as you level.",
   'Domain feature': "Your Divine Domain grants a feature at this level — see the subclass entry below.",
+  'Channel Divinity': {use:'action', cost:'uses/rest'}, // base entry: use/cost for every uses-per-rest row
+  'Destroy Undead': {use:'special'},                    // base entry: rider on Turn Undead
   'Channel Divinity (1/rest)': "You can channel divine energy for a special effect, such as Turn Undead, once per short or long rest.",
   'Channel Divinity (2/rest)': "You can use Channel Divinity twice per short or long rest.",
   'Channel Divinity (3/rest)': "You can use Channel Divinity three times per short or long rest.",
@@ -316,79 +397,80 @@ const FEATURE_DESC = {
   'Destroy Undead (CR 2)': "Your Turn Undead instantly destroys turned undead of CR 2 or lower.",
   'Destroy Undead (CR 3)': "Your Turn Undead instantly destroys turned undead of CR 3 or lower.",
   'Destroy Undead (CR 4)': "Your Turn Undead instantly destroys turned undead of CR 4 or lower.",
-  'Divine Intervention': "Implore your deity for aid; roll d100 at or below your cleric level to succeed. On success it works once per long rest, otherwise you can try again after a long rest.",
+  'Divine Intervention': {use:'action', cost:'1/long rest', desc:"Implore your deity for aid; roll d100 at or below your cleric level to succeed. On success it works once per long rest, otherwise you can try again after a long rest."},
   'Divine Intervention improvement': "Your Divine Intervention automatically succeeds, with no roll required.",
   // Druid
   'Druidic': "You know Druidic, the secret language of druids, and can leave and spot hidden messages left in it.",
-  'Wild Shape': "As an action, magically transform into a beast you've seen, for a number of hours equal to half your druid level (twice per rest).",
+  'Wild Shape': {use:'action', cost:'2/rest', desc:"As an action, magically transform into a beast you've seen, for a number of hours equal to half your druid level (twice per rest)."},
   'Druid Circle': "Choose the subclass (Druid Circle) that defines your practice; it grants features as you level.",
   'Circle feature': "Your Druid Circle grants a feature at this level — see the subclass entry below.",
   'Wild Shape improvement': "Your Wild Shape can take more powerful beast forms, with a higher challenge rating and expanded movement options.",
   'Beast Spells': "You can cast many of your druid spells while in a Wild Shape form.",
   'Archdruid': "You can use Wild Shape an unlimited number of times, and ignore the verbal and somatic components of your druid spells.",
   // Fighter
-  'Second Wind': "On your turn, use a bonus action to regain 1d10 + your fighter level hit points, once per short or long rest.",
-  'Action Surge': "On your turn, take one additional action, once per short or long rest.",
-  'Action Surge (2 uses)': "You can use Action Surge twice per rest, but only once on the same turn.",
+  'Second Wind': {use:'bonus action', cost:'1/rest', desc:"On your turn, use a bonus action to regain 1d10 + your fighter level hit points, once per short or long rest."},
+  'Action Surge': {use:'special', cost:'1/rest', desc:"On your turn, take one additional action, once per short or long rest."},
+  'Action Surge (2 uses)': {use:'special', cost:'2/rest', desc:"You can use Action Surge twice per rest, but only once on the same turn."},
   'Martial Archetype': "Choose the subclass (Martial Archetype) that shapes your combat approach; it grants features as you level.",
-  'Indomitable': "Reroll a saving throw you fail, and must use the new roll, once per long rest.",
-  'Indomitable (2 uses)': "You can use Indomitable twice per long rest.",
-  'Indomitable (3 uses)': "You can use Indomitable three times per long rest.",
+  'Indomitable': {use:'special', cost:'1/long rest', desc:"Reroll a saving throw you fail, and must use the new roll, once per long rest."},
+  'Indomitable (2 uses)': {use:'special', cost:'2/long rest', desc:"You can use Indomitable twice per long rest."},
+  'Indomitable (3 uses)': {use:'special', cost:'3/long rest', desc:"You can use Indomitable three times per long rest."},
   // Monk
-  'Martial Arts': "While unarmed or wielding a monk weapon, you can use Dexterity for attacks and damage, roll a Martial Arts die for damage, and make an unarmed strike as a bonus action.",
-  'Ki': "You gain a pool of ki points (equal to your monk level) to fuel Flurry of Blows, Patient Defense, and Step of the Wind; regained on a short or long rest.",
+  'Martial Arts': {use:'bonus action', desc:"While unarmed or wielding a monk weapon, you can use Dexterity for attacks and damage, roll a Martial Arts die for damage, and make an unarmed strike as a bonus action."},
+  'Ki': {use:'special', desc:"You gain a pool of ki points (equal to your monk level) to fuel Flurry of Blows, Patient Defense, and Step of the Wind; regained on a short or long rest."},
   'Unarmored Movement': "Your speed increases while you wear no armor and wield no shield, with the bonus growing as you level.",
   'Monastic Tradition': "Choose the subclass (Monastic Tradition) you follow; it grants features as you level.",
-  'Deflect Missiles': "Use your reaction to reduce ranged weapon damage against you; if you reduce it to 0 you can catch the missile and throw it back by spending 1 ki.",
-  'Slow Fall': "Use your reaction when you fall to reduce the falling damage you take by five times your monk level.",
-  'Stunning Strike': "When you hit with a melee attack, spend 1 ki to force a Constitution save or stun the target until the end of your next turn.",
+  'Deflect Missiles': {use:'reaction', desc:"Use your reaction to reduce ranged weapon damage against you; if you reduce it to 0 you can catch the missile and throw it back by spending 1 ki."},
+  'Slow Fall': {use:'reaction', desc:"Use your reaction when you fall to reduce the falling damage you take by five times your monk level."},
+  'Stunning Strike': {use:'special', cost:'1 ki', desc:"When you hit with a melee attack, spend 1 ki to force a Constitution save or stun the target until the end of your next turn."},
   'Ki-Empowered Strikes': "Your unarmed strikes count as magical for overcoming resistance and immunity to nonmagical attacks.",
-  'Stillness of Mind': "Use your action to end one effect on yourself that is causing you to be charmed or frightened.",
+  'Stillness of Mind': {use:'action', desc:"Use your action to end one effect on yourself that is causing you to be charmed or frightened."},
   'Purity of Body': "You are immune to disease and poison.",
   'Unarmored Movement improvement': "You can move along vertical surfaces and across liquids on your turn without falling during the move.",
   'Tongue of the Sun and Moon': "You understand all spoken languages, and any creature that understands a language can understand you.",
-  'Diamond Soul': "You gain proficiency in all saving throws, and can spend 1 ki to reroll a saving throw you fail.",
-  'Empty Body': "Spend 4 ki to become invisible for 1 minute with resistance to all damage but force; you can also spend 8 ki to cast Astral Projection.",
+  'Diamond Soul': {use:'special', cost:'1 ki', desc:"You gain proficiency in all saving throws, and can spend 1 ki to reroll a saving throw you fail."},
+  'Empty Body': {use:'action', cost:'4 ki', desc:"Spend 4 ki to become invisible for 1 minute with resistance to all damage but force; you can also spend 8 ki to cast Astral Projection."},
   'Perfect Self': "When you roll initiative and have no ki points remaining, you regain 4 ki points.",
   // Paladin
-  'Divine Sense': "As an action, detect celestials, fiends, and undead within 60 feet and sense consecrated or desecrated places. Uses equal 1 + your Charisma modifier per long rest.",
-  'Lay on Hands': "You have a healing pool of 5 × your paladin level; as an action, touch a creature to restore hit points from it, or spend 5 to cure a disease or neutralize a poison.",
-  'Divine Smite': "When you hit with a melee weapon, expend a spell slot to deal an extra 2d8 radiant damage, plus 1d8 per slot level above 1st and extra against undead and fiends.",
+  'Divine Sense': {use:'action', cost:'1+CHA/long rest', desc:"As an action, detect celestials, fiends, and undead within 60 feet and sense consecrated or desecrated places. Uses equal 1 + your Charisma modifier per long rest."},
+  'Lay on Hands': {use:'action', cost:'5 × level pool', desc:"You have a healing pool of 5 × your paladin level; as an action, touch a creature to restore hit points from it, or spend 5 to cure a disease or neutralize a poison."},
+  'Divine Smite': {use:'special', cost:'1 spell slot', desc:"When you hit with a melee weapon, expend a spell slot to deal an extra 2d8 radiant damage, plus 1d8 per slot level above 1st and extra against undead and fiends."},
   'Divine Health': "The divine magic flowing through you makes you immune to disease.",
   'Sacred Oath': "Choose the subclass (Sacred Oath) you swear; it grants oath spells, Channel Divinity options, and features as you level.",
   'Oath feature': "Your Sacred Oath grants a feature at this level — see the subclass entry below.",
   'Aura of Protection': "You and friendly creatures within 10 feet add your Charisma modifier (minimum +1) to saving throws while you're conscious.",
   'Aura of Courage': "You and friendly creatures within 10 feet can't be frightened while you're conscious.",
   'Improved Divine Smite': "Your melee weapon hits deal an extra 1d8 radiant damage.",
-  'Cleansing Touch': "As an action, end one spell on yourself or a willing creature you touch. Uses equal your Charisma modifier per long rest.",
+  'Cleansing Touch': {use:'action', cost:'CHA mod/long rest', desc:"As an action, end one spell on yourself or a willing creature you touch. Uses equal your Charisma modifier per long rest."},
   'Aura improvements': "The range of your paladin auras increases from 10 to 30 feet.",
   // Ranger
   'Favored Enemy': "Choose a favored enemy type: you have advantage on Survival checks to track them and Intelligence checks to recall lore about them, and you learn a related language.",
   'Natural Explorer': "Choose a favored terrain to gain exploration benefits there, such as not being slowed by difficult terrain and always knowing which way is north.",
   'Ranger Archetype': "Choose the subclass (Ranger Archetype) that defines your training; it grants features as you level.",
-  'Primeval Awareness': "Expend a spell slot to sense whether certain creature types are present within 1 mile (6 miles in your favored terrain).",
+  'Primeval Awareness': {use:'action', cost:'1 spell slot', desc:"Expend a spell slot to sense whether certain creature types are present within 1 mile (6 miles in your favored terrain)."},
   "Land's Stride": "Moving through nonmagical difficult terrain costs you no extra movement, and you have advantage on saves against plants that impede movement.",
   'Favored Enemy & Natural Explorer improvements': "You choose an additional favored enemy and an additional favored terrain, improving both features.",
-  'Hide in Plain Sight': "Spend 1 minute making camouflage to gain a +10 bonus to Stealth checks while you remain motionless against a solid surface.",
-  'Vanish': "You can use the Hide action as a bonus action, and you can't be tracked by nonmagical means unless you choose to leave a trail.",
+  'Hide in Plain Sight': {use:'special', cost:'1 min to prepare', desc:"Spend 1 minute making camouflage to gain a +10 bonus to Stealth checks while you remain motionless against a solid surface."},
+  'Vanish': {use:'bonus action', desc:"You can use the Hide action as a bonus action, and you can't be tracked by nonmagical means unless you choose to leave a trail."},
   'Feral Senses': "You gain preternatural senses that help you fight creatures you can't see and pinpoint invisible creatures within 30 feet.",
-  'Foe Slayer': "Once per turn, add your Wisdom modifier to the attack roll or damage roll of an attack against your favored enemy.",
+  'Foe Slayer': {use:'special', cost:'1/turn', desc:"Once per turn, add your Wisdom modifier to the attack roll or damage roll of an attack against your favored enemy."},
   // Rogue
+  'Sneak Attack': {use:'special', cost:'1/turn'}, // base entry: use/cost for the dice-scaling row
   'Sneak Attack (1d6, +1d6 every odd level)': "Once per turn, deal extra damage to a target you hit with a finesse or ranged weapon when you have advantage or an ally is adjacent — 1d6 at 1st level, rising 1d6 every odd rogue level.",
   "Thieves' Cant": "You know Thieves' Cant, a secret mix of dialect, jargon, and code that lets you hide messages within seemingly normal conversation.",
-  'Cunning Action': "On each of your turns, use a bonus action to Dash, Disengage, or Hide.",
+  'Cunning Action': {use:'bonus action', desc:"On each of your turns, use a bonus action to Dash, Disengage, or Hide."},
   'Roguish Archetype': "Choose the subclass (Roguish Archetype) that shapes your talents; it grants features as you level.",
-  'Uncanny Dodge': "When an attacker you can see hits you, use your reaction to halve that attack's damage.",
+  'Uncanny Dodge': {use:'reaction', desc:"When an attacker you can see hits you, use your reaction to halve that attack's damage."},
   'Reliable Talent': "Whenever you make an ability check using a skill or tool you're proficient in, treat a d20 roll of 9 or lower as a 10.",
   'Blindsense': "You're aware of the location of any hidden or invisible creature within 10 feet of you.",
   'Slippery Mind': "You gain proficiency in Wisdom saving throws.",
   'Elusive': "No attack roll has advantage against you while you aren't incapacitated.",
-  'Stroke of Luck': "Once per short or long rest, turn a missed attack into a hit, or a failed ability check into a 20.",
+  'Stroke of Luck': {use:'special', cost:'1/rest', desc:"Once per short or long rest, turn a missed attack into a hit, or a failed ability check into a 20."},
   // Sorcerer
   'Sorcerous Origin': "Choose the subclass (Sorcerous Origin) that is the source of your innate magic; it grants features as you level.",
   'Origin feature': "Your Sorcerous Origin grants a feature at this level — see the subclass entry below.",
-  'Font of Magic (Sorcery Points)': "You gain a pool of sorcery points (equal to your sorcerer level) that you can convert to and from spell slots and spend on Metamagic.",
-  'Metamagic': "Learn Metamagic options that let you spend sorcery points to bend your spells, such as Twinned, Quickened, or Subtle Spell.",
+  'Font of Magic (Sorcery Points)': {use:'bonus action', desc:"You gain a pool of sorcery points (equal to your sorcerer level) that you can convert to and from spell slots and spend on Metamagic."},
+  'Metamagic': {use:'special', cost:'sorcery points', desc:"Learn Metamagic options that let you spend sorcery points to bend your spells, such as Twinned, Quickened, or Subtle Spell."},
   'Metamagic option': "You learn an additional Metamagic option of your choice.",
   'Sorcerous Restoration': "You regain 4 expended sorcery points whenever you finish a short rest.",
   // Warlock
@@ -397,25 +479,26 @@ const FEATURE_DESC = {
   'Eldritch Invocations': "Learn Eldritch Invocations — fragments of forbidden knowledge that grant lasting magical abilities.",
   'Pact Boon': "Choose a Pact Boon: Pact of the Chain (a special familiar), Pact of the Blade (summon a weapon), or Pact of the Tome (extra cantrips).",
   'Patron feature': "Your Otherworldly Patron grants a feature at this level — see the subclass entry below.",
+  'Mystic Arcanum': {use:'special', cost:'1/long rest'}, // base entry: use/cost for every arcanum row
   'Mystic Arcanum (6th level)': "Choose one 6th-level spell you can cast once per long rest without expending a spell slot.",
   'Mystic Arcanum (7th level)': "Choose one 7th-level spell you can cast once per long rest without a slot.",
   'Mystic Arcanum (8th level)': "Choose one 8th-level spell you can cast once per long rest without a slot.",
   'Mystic Arcanum (9th level)': "Choose one 9th-level spell you can cast once per long rest without a slot.",
-  'Eldritch Master': "Once per long rest, spend 1 minute entreating your patron to regain all expended Pact Magic spell slots.",
+  'Eldritch Master': {use:'special', cost:'1/long rest', desc:"Once per long rest, spend 1 minute entreating your patron to regain all expended Pact Magic spell slots."},
   // Wizard
-  'Arcane Recovery': "Once per day on a short rest, recover expended spell slots with a combined level up to half your wizard level (rounded up), none of 6th level or higher.",
+  'Arcane Recovery': {use:'special', cost:'1/day', desc:"Once per day on a short rest, recover expended spell slots with a combined level up to half your wizard level (rounded up), none of 6th level or higher."},
   'Arcane Tradition': "Choose the subclass (Arcane Tradition), a school of magic you specialize in; it grants features as you level.",
-  'Spell Mastery': "Choose a 1st- and a 2nd-level wizard spell in your spellbook that you can cast at their lowest level without expending a spell slot.",
-  'Signature Spells': "Choose two 3rd-level wizard spells you always have prepared and can each cast once per short rest without a slot.",
+  'Spell Mastery': {use:'special', cost:'at will', desc:"Choose a 1st- and a 2nd-level wizard spell in your spellbook that you can cast at their lowest level without expending a spell slot."},
+  'Signature Spells': {use:'special', cost:'1/rest each', desc:"Choose two 3rd-level wizard spells you always have prepared and can each cast once per short rest without a slot."},
   // Artificer
-  'Magical Tinkering': "Imbue a Tiny nonmagical object with a minor magical property, such as light, a recorded message, a smell, or a small sensory effect.",
-  'Infuse Item': "You learn magical infusions and can imbue mundane items with them after a long rest, creating replicable magic items.",
+  'Magical Tinkering': {use:'action', desc:"Imbue a Tiny nonmagical object with a minor magical property, such as light, a recorded message, a smell, or a small sensory effect."},
+  'Infuse Item': {use:'special', cost:'on a long rest', desc:"You learn magical infusions and can imbue mundane items with them after a long rest, creating replicable magic items."},
   'Artificer Specialist': "Choose the subclass (Artificer Specialist) that defines your craft; it grants specialist spells and features as you level.",
-  'The Right Tool for the Job': "During a short or long rest, magically create one set of artisan's tools in an unoccupied space.",
+  'The Right Tool for the Job': {use:'special', cost:'on a rest', desc:"During a short or long rest, magically create one set of artisan's tools in an unoccupied space."},
   'Tool Expertise': "You double your proficiency bonus for any ability check you make that uses your proficiency with a tool.",
-  'Flash of Genius': "When you or a creature within 30 feet makes an ability check or saving throw, use your reaction to add your Intelligence modifier (uses = INT modifier per long rest).",
+  'Flash of Genius': {use:'reaction', cost:'INT mod/long rest', desc:"When you or a creature within 30 feet makes an ability check or saving throw, use your reaction to add your Intelligence modifier (uses = INT modifier per long rest)."},
   'Magic Item Adept': "You can attune to up to four magic items at once, and craft common and uncommon magic items in a quarter of the usual time at half the cost.",
-  'Spell-Storing Item': "After a long rest, store a 1st- or 2nd-level artificer spell in an item so a holder can cast it without a slot a limited number of times.",
+  'Spell-Storing Item': {use:'special', cost:'on a long rest', desc:"After a long rest, store a 1st- or 2nd-level artificer spell in an item so a holder can cast it without a slot a limited number of times."},
   'Magic Item Savant': "You can attune to up to five magic items at once, and ignore all class, race, spell, and level requirements on attunement.",
   'Magic Item Master': "You can attune to up to six magic items at once.",
   'Soul of Artifice': "You gain a +1 bonus to all saving throws per magic item you're attuned to, and can drop to 1 hit point instead of 0 by ending one of your infusions.",
@@ -423,8 +506,17 @@ const FEATURE_DESC = {
 };
 
 // Expands compact progression rows [level, ...feature names] into feature
-// objects, attaching a reference description from FEATURE_DESC when one exists.
-function P(rows){ return rows.flatMap(([lv,...names])=>names.map(n=>({lv, name:n, desc:FEATURE_DESC[n]}))); }
+// objects, attaching name/use/cost/desc from FEATURE_INFO. A base-name entry
+// (parenthetical stripped) supplies shared use/cost to every variant; the
+// full-name entry wins where both set the same field.
+const featInfo = v => typeof v === 'string' ? {desc:v} : v;
+function P(rows){
+  return rows.flatMap(([lv,...names])=>names.map(n=>{
+    const base = n.replace(/\s*\(.*\)\s*$/,'').trim();
+    const {use, cost, desc} = Object.assign({}, featInfo(FEATURE_INFO[base]), featInfo(FEATURE_INFO[n]));
+    return {lv, name:n, use, cost, desc};
+  }));
+}
 
 // Class registry: saving-throw proficiencies are applied automatically when a
 // class is picked in Settings. `features` feeds the class card in Settings,
@@ -528,7 +620,7 @@ const CLASS_LIKE_SOURCES = CLASS_SOURCES; // shared list, reused by species
 const SPECIES_DATA = {
   Human:{ source:'5E', size:'Medium', speed:30, darkvision:0, asi:'+1 to all abilities', languages:'Common + one', desc:'Ambitious and adaptable, humans are the most widespread of the common peoples.',
     traits:[{name:'Versatile', desc:'A +1 bonus to every ability score (or extra skill/feat in variant rules).'}] },
-  Elf:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX', languages:'Common, Elvish', desc:'Graceful, long-lived folk with a keen mind and an affinity for magic.', subraces:['High Elf','Wood Elf','Drow (Dark Elf)'],
+  Elf:{ source:'5E', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX', languages:'Common, Elvish', skills:['Perception'], desc:'Graceful, long-lived folk with a keen mind and an affinity for magic.', subraces:['High Elf','Wood Elf','Drow (Dark Elf)'],
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft as if bright, and darkness as dim.'},{name:'Keen Senses', desc:'Proficiency in the Perception skill.'},{name:'Fey Ancestry', desc:'Advantage on saves against being charmed; magic can\'t put you to sleep.'},{name:'Trance', desc:'Meditate 4 hours instead of sleeping 8 for a long rest.'}] },
   Dwarf:{ source:'5E', size:'Medium', speed:25, darkvision:60, asi:'+2 CON', languages:'Common, Dwarvish', desc:'Stout and hardy, dwarves are skilled warriors, miners, and workers of stone and metal.', subraces:['Hill Dwarf','Mountain Dwarf'],
     traits:[{name:'Darkvision', desc:'See in dim light within 60 ft.'},{name:'Dwarven Resilience', desc:'Advantage on saves vs poison and resistance to poison damage.'},{name:'Stonecunning', desc:'Add double proficiency on History checks about stonework.'}] },
@@ -608,7 +700,7 @@ const SPECIES_DATA = {
       {name:'Eldritch Curse', desc:'Immune to any spell that would alter your form (Alter Self, Polymorph, etc.).'},
       {name:'Born of Madness', desc:'Good alignment: advantage on saves against madness. Evil: disadvantage on madness saves but +PB to DEX saving throws.'}
     ] },
-  'Elf (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX (not CON w/ optional rule)', languages:'Common, Elvish', desc:'Luyarnha\'s founding elves — wood elves whose skins turned stone-gray and obsidian with urbanization, first acolytes of the Radiant One, driven above all to stave off their race\'s extinction. Uses the standard 5E elf mechanics.',
+  'Elf (Eldritch Hunt)':{ source:'Homebrew', size:'Medium', speed:30, darkvision:60, asi:'+2 DEX (not CON w/ optional rule)', languages:'Common, Elvish', skills:['Perception'], desc:'Luyarnha\'s founding elves — wood elves whose skins turned stone-gray and obsidian with urbanization, first acolytes of the Radiant One, driven above all to stave off their race\'s extinction. Uses the standard 5E elf mechanics.',
     traits:[
       {name:'Standard Elf Traits', desc:'Darkvision 60 ft, Keen Senses, Fey Ancestry, and Trance, as the 5E elf.'},
       {name:'Frail Constitution (optional rule)', desc:'Elven bodies are meek and frail: no racial or subrace ability score increase may be applied to Constitution.'}
@@ -628,6 +720,54 @@ const SPECIES_DATA = {
     ] },
 };
 Object.values(SPECIES_DATA).forEach(sd=>{ if(!sd.source) sd.source='5E'; sd.builtin=true; });
+
+// ---------- Backgrounds ----------
+// Character backgrounds (PHB-style, per the dnd5e wikidot reference pages).
+// `skills` are fixed proficiencies the background GRANTS (auto-applied to the
+// sheet while selected — see grantedSkillSources). `languages`/`tools`/
+// `equipment` are informational text; `feature` shows on Features & Traits.
+const BACKGROUND_DATA = {
+  Acolyte:{ source:'5E', skills:['Insight','Religion'], languages:'Two of your choice', equipment:'Holy symbol, prayer book or prayer wheel, 5 sticks of incense, vestments, common clothes, pouch with 15 gp',
+    desc:'You have spent your life in service to a temple, learning its rites and acting as an intermediary between the divine and the mortal world.',
+    feature:{name:'Shelter of the Faithful', desc:'You command the respect of those who share your faith and can perform your deity\'s ceremonies. You and your companions can receive free healing and care at a temple of your faith (you must provide any material components), and followers of your religion will support you at a modest lifestyle. You also have ties to a specific temple whose priests will assist you, so long as the request is not hazardous and you remain in good standing.'} },
+  Charlatan:{ source:'5E', skills:['Deception','Sleight of Hand'], tools:'Disguise kit, forgery kit', equipment:'Fine clothes, disguise kit, con tools of your choice, pouch with 15 gp',
+    desc:'You have always had a way with people, and know exactly what makes them tick — usually to relieve them of their valuables.',
+    feature:{name:'False Identity', desc:'You have a second identity — documentation, established acquaintances, and disguises included. You can also forge documents (official papers and personal letters) as long as you have seen an example.'} },
+  Criminal:{ source:'5E', skills:['Deception','Stealth'], tools:"One type of gaming set, thieves' tools", equipment:'Crowbar, dark common clothes with a hood, pouch with 15 gp',
+    desc:'You are an experienced criminal with a history of breaking the law and contacts deep in the underworld.',
+    feature:{name:'Criminal Contact', desc:'You have a reliable and trustworthy contact who acts as your liaison to a network of other criminals. You know how to get messages to and from your contact, even over great distances.'} },
+  Entertainer:{ source:'5E', skills:['Acrobatics','Performance'], tools:'Disguise kit, one musical instrument', equipment:'Musical instrument, an admirer\'s favor, costume, pouch with 15 gp',
+    desc:'You thrive in front of an audience, making the world your stage — poet, singer, dancer, or acrobat.',
+    feature:{name:'By Popular Demand', desc:'You can always find a place to perform. There you receive free lodging and food of a modest or comfortable standard as long as you perform each night, and your performance makes you something of a local figure.'} },
+  'Folk Hero':{ source:'5E', skills:['Animal Handling','Survival'], tools:"One type of artisan's tools, vehicles (land)", equipment:"Artisan's tools, shovel, iron pot, common clothes, pouch with 10 gp",
+    desc:'You come from humble ranks, but you are destined for much more — the people of your home village regard you as their champion.',
+    feature:{name:'Rustic Hospitality', desc:'Since you come from the ranks of the common folk, you fit in among them with ease. You can find a place to hide, rest, or recuperate among commoners, who will shield you from the law or anyone searching for you (though not at the risk of their lives).'} },
+  'Guild Artisan':{ source:'5E', skills:['Insight','Persuasion'], tools:"One type of artisan's tools", languages:'One of your choice', equipment:"Artisan's tools, letter of introduction from your guild, traveler's clothes, pouch with 15 gp",
+    desc:'You are a member of an artisan\'s guild, skilled in a particular field and closely associated with other artisans.',
+    feature:{name:'Guild Membership', desc:'Your guild offers lodging and food when necessary and will pay for your funeral if needed. Fellow members will provide access to powerful political figures — for a price. You must pay dues of 5 gp per month to stay in good standing.'} },
+  Hermit:{ source:'5E', skills:['Medicine','Religion'], tools:'Herbalism kit', languages:'One of your choice', equipment:'Scroll case of notes, winter blanket, common clothes, herbalism kit, 5 gp',
+    desc:'You lived in seclusion — in a sheltered community or entirely alone — seeking quiet, solitude, and answers.',
+    feature:{name:'Discovery', desc:'Your seclusion gave you access to a unique and powerful discovery — a great truth about the cosmos, a hidden site, or a long-forgotten fact. Work out its exact nature with your DM.'} },
+  Noble:{ source:'5E', skills:['History','Persuasion'], tools:'One type of gaming set', languages:'One of your choice', equipment:'Fine clothes, signet ring, scroll of pedigree, purse with 25 gp',
+    desc:'You understand wealth, power, and privilege — your family owns land, collects taxes, and wields real political influence.',
+    feature:{name:'Position of Privilege', desc:'Thanks to your noble birth, people are inclined to think the best of you. You are welcome in high society, and people assume you have the right to be wherever you are. Common folk accommodate you, and you can secure an audience with a local noble if needed.'} },
+  Outlander:{ source:'5E', skills:['Athletics','Survival'], tools:'One musical instrument', languages:'One of your choice', equipment:"Staff, hunting trap, animal trophy, traveler's clothes, pouch with 10 gp",
+    desc:'You grew up in the wilds, far from civilization — the wilderness is in your blood, wherever you go.',
+    feature:{name:'Wanderer', desc:'You have an excellent memory for maps and geography, and can always recall the general layout of terrain, settlements, and features around you. You can also find food and fresh water for yourself and up to five others each day, provided the land offers it.'} },
+  Sage:{ source:'5E', skills:['Arcana','History'], languages:'Two of your choice', equipment:'Bottle of ink, quill, small knife, letter from a dead colleague with an unanswered question, common clothes, pouch with 10 gp',
+    desc:'You spent years learning the lore of the multiverse, studying manuscripts and the greatest experts on your subjects of interest.',
+    feature:{name:'Researcher', desc:'When you attempt to learn or recall a piece of lore and don\'t know it, you often know where and from whom you can obtain it — a library, scriptorium, university, or a sage or other learned person. Unearthing the deepest secrets of the multiverse may require an adventure or a whole campaign.'} },
+  Sailor:{ source:'5E', skills:['Athletics','Perception'], tools:"Navigator's tools, vehicles (water)", equipment:'Belaying pin (club), 50 ft of silk rope, lucky charm, common clothes, pouch with 10 gp',
+    desc:'You sailed on a seagoing vessel for years, weathering storms, monsters of the deep, and those who wanted to sink your craft.',
+    feature:{name:"Ship's Passage", desc:'When you need to, you can secure free passage on a sailing ship for yourself and your companions. In return, you and your companions are expected to assist the crew during the voyage.'} },
+  Soldier:{ source:'5E', skills:['Athletics','Intimidation'], tools:'One type of gaming set, vehicles (land)', equipment:'Insignia of rank, trophy from a fallen enemy, set of bone dice or deck of cards, common clothes, pouch with 10 gp',
+    desc:'War has been your life for as long as you care to remember — you trained, drilled, and fought as part of an army.',
+    feature:{name:'Military Rank', desc:'You have a military rank from your career as a soldier. Soldiers loyal to your former organization still recognize your authority and influence, and will defer to you if of a lower rank. You can requisition simple equipment or horses for temporary use and gain access to friendly military encampments and fortresses.'} },
+  Urchin:{ source:'5E', skills:['Sleight of Hand','Stealth'], tools:"Disguise kit, thieves' tools", equipment:'Small knife, map of your home city, pet mouse, token of your parents, common clothes, pouch with 10 gp',
+    desc:'You grew up on the streets alone, orphaned and poor, learning to fend for yourself.',
+    feature:{name:'City Secrets', desc:'You know the secret patterns and flow of cities and can find passages through the urban sprawl that others would miss. When not in combat, you and companions you lead can travel between any two locations in a city twice as fast as your speed would normally allow.'} },
+};
+Object.values(BACKGROUND_DATA).forEach(bd=>{ if(!bd.source) bd.source='5E'; bd.builtin=true; });
 
 // ---------- Subclasses ----------
 // Detailed, imported subclasses keyed by "Parent::Name". Built-in classes list
@@ -650,7 +790,7 @@ const SUBCLASS_DATA = {
     features:[
       {lv:3, name:'Tools of the Trade', use:'passive', desc:"You gain proficiency with heavy armor and smith's tools (or another set of artisan's tools if already proficient)."},
       {lv:3, name:'Armorer Spells', use:'passive', desc:'Always prepared: L3 Magic Missile, Thunderwave; L5 Mirror Image, Shatter; L9 Hypnotic Pattern, Lightning Bolt; L13 Fire Shield, Greater Invisibility; L17 Passwall, Wall of Force.'},
-      {lv:3, name:'Arcane Armor', use:'bonus', desc:"Turn a suit of armor into Arcane Armor (don/doff as an action). It requires no Strength, can't be removed against your will, replaces missing limbs, and serves as a spellcasting focus."},
+      {lv:3, name:'Arcane Armor', use:'bonus action', desc:"Turn a suit of armor into Arcane Armor (don/doff as an action). It requires no Strength, can't be removed against your will, replaces missing limbs, and serves as a spellcasting focus."},
       {lv:3, name:'Armor Model', use:'passive', desc:'Choose a model when you don the armor (change on a rest): Guardian — Thunder Gauntlets (1d8 force, disadvantage vs others) and Defensive Field (bonus action temp HP); or Infiltrator — Lightning Launcher (1d6 lightning ranged), Powered Steps (+5 speed), and Dampening Field (advantage on Stealth).'},
       {lv:5, name:'Extra Attack', use:'passive', desc:'You can attack twice, rather than once, whenever you take the Attack action on your turn.'},
       {lv:9, name:'Armor Modifications', use:'passive', desc:'Your Arcane Armor counts as four separate infusable items (armor, boots, helmet, and the special weapon), and you can infuse more items and know more infusions.'},
@@ -917,7 +1057,7 @@ const SUBCLASS_DATA = {
       {lv:3, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with medium armor, shields, and martial weapons."},
       {lv:3, name:'Combat Inspiration', use:'passive', desc:"A creature that has a Bardic Inspiration die from you can add it to a weapon damage roll, or use its reaction to add it to AC against one attack."},
       {lv:6, name:'Extra Attack', use:'passive', desc:"You can attack twice, rather than once, whenever you take the Attack action on your turn."},
-      {lv:14, name:'Battle Magic', use:'bonus', desc:"When you use your action to cast a bard spell, you can make one weapon attack as a bonus action."},
+      {lv:14, name:'Battle Magic', use:'bonus action', desc:"When you use your action to cast a bard spell, you can make one weapon attack as a bonus action."},
     ] },
   'Cleric::Knowledge':{ parent:'Cleric', name:'Knowledge', source:'5E', subclassLevel:1,
     desc:"The Knowledge domain values learning and understanding above all, holding that the mysteries of the multiverse are the truest source of power.",
@@ -988,7 +1128,7 @@ const SUBCLASS_DATA = {
     features:[
       {lv:1, name:'Domain Spells', use:'passive', desc:"Always prepared: L1 Divine Favor, Shield of Faith; L3 Magic Weapon, Spiritual Weapon; L5 Crusader's Mantle, Spirit Guardians; L7 Freedom of Movement, Stoneskin; L9 Flame Strike, Hold Monster."},
       {lv:1, name:'Bonus Proficiencies', use:'passive', desc:"You gain proficiency with martial weapons and heavy armor."},
-      {lv:1, name:'War Priest', use:'bonus', cost:'WIS mod/long rest', desc:"When you take the Attack action, you can make one weapon attack as a bonus action."},
+      {lv:1, name:'War Priest', use:'bonus action', cost:'WIS mod/long rest', desc:"When you take the Attack action, you can make one weapon attack as a bonus action."},
       {lv:2, name:'Channel Divinity: Guided Strike', use:'special', cost:'1 Channel Divinity', desc:"Gain a +10 bonus to an attack roll (you can do this after you see the roll but before it hits or misses)."},
       {lv:6, name:"Channel Divinity: War God's Blessing", use:'reaction', cost:'1 Channel Divinity', desc:"When a creature within 30 ft makes an attack roll, grant it a +10 bonus to the roll."},
       {lv:8, name:'Divine Strike', use:'passive', desc:"Once on each of your turns when you hit with a weapon attack, deal an extra 1d8 damage of the weapon's type (2d8 at 14th level)."},
@@ -1007,7 +1147,7 @@ const SUBCLASS_DATA = {
   'Druid::Circle of the Moon':{ parent:'Druid', name:'Circle of the Moon', source:'5E', subclassLevel:2,
     desc:"Druids of the Circle of the Moon are fierce guardians of the wilds who harness the moon's mystic power to take on the most dangerous animal forms.",
     features:[
-      {lv:2, name:'Combat Wild Shape', use:'bonus', desc:"You can use Wild Shape as a bonus action. While transformed, you can use a bonus action to expend a spell slot and regain 1d8 hit points per slot level."},
+      {lv:2, name:'Combat Wild Shape', use:'bonus action', desc:"You can use Wild Shape as a bonus action. While transformed, you can use a bonus action to expend a spell slot and regain 1d8 hit points per slot level."},
       {lv:2, name:'Circle Forms', use:'passive', desc:"You can Wild Shape into beasts with a challenge rating as high as 1 (rising to CR = druid level / 3 at higher levels)."},
       {lv:6, name:'Primal Strike', use:'passive', desc:"Your attacks in beast form count as magical for overcoming resistance and immunity to nonmagical attacks."},
       {lv:10, name:'Elemental Wild Shape', use:'special', desc:"You can expend two uses of Wild Shape at once to transform into an air, earth, fire, or water elemental."},
@@ -1037,10 +1177,10 @@ const SUBCLASS_DATA = {
     features:[
       {lv:3, name:'Spellcasting', use:'passive', desc:"You learn wizard spells (Intelligence-based), drawn mostly from the abjuration and evocation schools, with cantrips and spell slots per the Eldritch Knight table."},
       {lv:3, name:'Weapon Bond', use:'passive', desc:"Bond with up to two weapons. You can't be disarmed of a bonded weapon while conscious, and you can summon it to your hand as a bonus action if it's on the same plane."},
-      {lv:7, name:'War Magic', use:'bonus', desc:"When you use your action to cast a cantrip, you can make one weapon attack as a bonus action."},
+      {lv:7, name:'War Magic', use:'bonus action', desc:"When you use your action to cast a cantrip, you can make one weapon attack as a bonus action."},
       {lv:10, name:'Eldritch Strike', use:'passive', desc:"When you hit a creature with a weapon attack, it has disadvantage on the next saving throw it makes against a spell you cast before the end of your next turn."},
       {lv:15, name:'Arcane Charge', use:'passive', desc:"When you use Action Surge, you can teleport up to 30 ft to an unoccupied space you can see, before or after the extra action."},
-      {lv:18, name:'Improved War Magic', use:'bonus', desc:"When you use your action to cast a spell, you can make one weapon attack as a bonus action."},
+      {lv:18, name:'Improved War Magic', use:'bonus action', desc:"When you use your action to cast a spell, you can make one weapon attack as a bonus action."},
     ] },
   'Monk::Way of the Open Hand':{ parent:'Monk', name:'Way of the Open Hand', source:'5E', subclassLevel:3,
     desc:"Monks of the Way of the Open Hand are the ultimate masters of unarmed combat, manipulating a foe's ki and body to devastating effect.",
@@ -1054,7 +1194,7 @@ const SUBCLASS_DATA = {
     desc:"Monks of the Way of Shadow follow a tradition that values stealth and subterfuge, practicing ninja-like arts to move unseen and strike from darkness.",
     features:[
       {lv:3, name:'Shadow Arts', use:'special', cost:'2 ki', desc:"You can spend ki to cast Darkness, Darkvision, Pass without Trace, or Silence, and you learn the Minor Illusion cantrip."},
-      {lv:6, name:'Shadow Step', use:'bonus', desc:"When you're in dim light or darkness, teleport up to 60 ft to an unoccupied space in dim light or darkness, then gain advantage on the first melee attack you make before the end of the turn."},
+      {lv:6, name:'Shadow Step', use:'bonus action', desc:"When you're in dim light or darkness, teleport up to 60 ft to an unoccupied space in dim light or darkness, then gain advantage on the first melee attack you make before the end of the turn."},
       {lv:11, name:'Cloak of Shadows', use:'action', desc:"When in dim light or darkness, become invisible until you attack, cast a spell, or move into bright light."},
       {lv:17, name:'Opportunist', use:'reaction', desc:"When a creature within 5 ft of you is hit by an attack from a creature other than you, make a melee attack against that creature."},
     ] },
@@ -1091,7 +1231,7 @@ const SUBCLASS_DATA = {
     features:[
       {lv:3, name:'Oath Spells', use:'passive', desc:"Always prepared: L3 Bane, Hunter's Mark; L5 Hold Person, Misty Step; L9 Haste, Protection from Energy; L13 Banishment, Dimension Door; L17 Hold Monster, Scrying."},
       {lv:3, name:'Channel Divinity: Abjure Enemy', use:'action', cost:'1 Channel Divinity', desc:"One creature within 60 ft must make a WIS save or be frightened for 1 minute; its speed is reduced to 0 while frightened this way (halved on a success)."},
-      {lv:3, name:'Channel Divinity: Vow of Enmity', use:'bonus', cost:'1 Channel Divinity', desc:"Gain advantage on attack rolls against one creature within 10 ft for 1 minute or until it drops to 0 HP."},
+      {lv:3, name:'Channel Divinity: Vow of Enmity', use:'bonus action', cost:'1 Channel Divinity', desc:"Gain advantage on attack rolls against one creature within 10 ft for 1 minute or until it drops to 0 HP."},
       {lv:7, name:'Relentless Avenger', use:'passive', desc:"When you hit a creature with an opportunity attack, you can move up to half your speed immediately without provoking opportunity attacks."},
       {lv:15, name:'Soul of Vengeance', use:'reaction', desc:"When a creature under your Vow of Enmity makes an attack, use your reaction to make a melee attack against it."},
       {lv:20, name:'Avenging Angel', use:'action', cost:'1/long rest', desc:"For 1 hour, gain a 60-ft flying speed and an aura that frightens enemies within 30 ft (WIS save)."},
@@ -1108,14 +1248,14 @@ const SUBCLASS_DATA = {
     desc:"The Beast Master embodies a friendship between the civilized races and the beasts of the world, bonding with an animal companion that fights at their side.",
     features:[
       {lv:3, name:"Ranger's Companion", use:'passive', desc:"Gain a beast companion of CR 1/4 or lower (Small or Medium). It acts on your initiative, adds your proficiency bonus to its AC, attacks, and damage, and obeys your commands."},
-      {lv:7, name:'Exceptional Training', use:'bonus', desc:"On any turn your companion doesn't attack, you can command it to Dash, Disengage, Dodge, or Help as a bonus action. Its attacks also count as magical."},
+      {lv:7, name:'Exceptional Training', use:'bonus action', desc:"On any turn your companion doesn't attack, you can command it to Dash, Disengage, Dodge, or Help as a bonus action. Its attacks also count as magical."},
       {lv:11, name:'Bestial Fury', use:'passive', desc:"When you command your companion to take the Attack action, it can make two attacks."},
       {lv:15, name:'Share Spells', use:'passive', desc:"When you cast a spell targeting yourself, you can also affect your companion if it's within 30 ft."},
     ] },
   'Rogue::Thief':{ parent:'Rogue', name:'Thief', source:'5E', subclassLevel:3,
     desc:"The Thief hones skills in the larcenous and adventurous arts, gaining agility, stealth, and a knack for getting out of tight spots.",
     features:[
-      {lv:3, name:'Fast Hands', use:'bonus', desc:"You can use your Cunning Action bonus action to make a Sleight of Hand check, use thieves' tools to disarm a trap or open a lock, or use an object."},
+      {lv:3, name:'Fast Hands', use:'bonus action', desc:"You can use your Cunning Action bonus action to make a Sleight of Hand check, use thieves' tools to disarm a trap or open a lock, or use an object."},
       {lv:3, name:'Second-Story Work', use:'passive', desc:"Climbing no longer costs extra movement, and your running jump distance is measured using your DEX modifier instead of STR."},
       {lv:9, name:'Supreme Sneak', use:'passive', desc:"You have advantage on Dexterity (Stealth) checks on any turn you move no more than half your speed."},
       {lv:13, name:'Use Magic Device', use:'passive', desc:"You ignore all class, race, and level requirements on the use of magic items."},
@@ -1136,7 +1276,7 @@ const SUBCLASS_DATA = {
       {lv:3, name:'Spellcasting', use:'passive', desc:"You learn wizard spells (Intelligence-based), drawn mostly from the enchantment and illusion schools, with cantrips and spell slots per the Arcane Trickster table (you always know Mage Hand)."},
       {lv:3, name:'Mage Hand Legerdemain', use:'passive', desc:"Your Mage Hand is invisible, and you can use it to perform Sleight of Hand tasks such as stowing/retrieving objects, picking locks, and disarming traps at range."},
       {lv:9, name:'Magical Ambush', use:'passive', desc:"If you're hidden from a creature when you cast a spell on it, it has disadvantage on any saving throw it makes against the spell this turn."},
-      {lv:13, name:'Versatile Trickster', use:'bonus', desc:"You can use your Mage Hand to distract a creature within 5 ft of the hand, gaining advantage on attack rolls against that creature until the end of the turn."},
+      {lv:13, name:'Versatile Trickster', use:'bonus action', desc:"You can use your Mage Hand to distract a creature within 5 ft of the hand, gaining advantage on attack rolls against that creature until the end of the turn."},
       {lv:17, name:'Spell Thief', use:'reaction', cost:'1/long rest', desc:"When a creature casts a spell targeting you or including you, force it to make a save; on a failure you negate the spell and steal knowledge of it for 8 hours."},
     ] },
   'Sorcerer::Draconic Bloodline':{ parent:'Sorcerer', name:'Draconic Bloodline', source:'5E', subclassLevel:1,
@@ -1145,7 +1285,7 @@ const SUBCLASS_DATA = {
       {lv:1, name:'Dragon Ancestor', use:'passive', desc:"Choose a type of dragon as your ancestor, which sets your associated damage type. You can speak, read, and write Draconic and double your proficiency bonus on CHA checks when interacting with dragons."},
       {lv:1, name:'Draconic Resilience', use:'passive', desc:"Your hit point maximum increases by 1 per sorcerer level, and when you aren't wearing armor your AC equals 13 + your DEX modifier."},
       {lv:6, name:'Elemental Affinity', use:'passive', desc:"When you cast a spell that deals your ancestry's damage type, add your CHA modifier to one damage roll. You can also spend 1 sorcery point to gain resistance to that damage type for 1 hour."},
-      {lv:14, name:'Dragon Wings', use:'bonus', desc:"You can sprout draconic wings, gaining a flying speed equal to your current speed (while you aren't wearing armor that lacks accommodation for wings)."},
+      {lv:14, name:'Dragon Wings', use:'bonus action', desc:"You can sprout draconic wings, gaining a flying speed equal to your current speed (while you aren't wearing armor that lacks accommodation for wings)."},
       {lv:18, name:'Draconic Presence', use:'action', cost:'5 sorcery points', desc:"Radiate an aura of awe or fear to 60 ft for 1 minute; each hostile creature that starts its turn there must make a WIS save or be charmed or frightened."},
     ] },
   'Sorcerer::Wild Magic':{ parent:'Sorcerer', name:'Wild Magic', source:'5E', subclassLevel:1,
@@ -1398,50 +1538,74 @@ const PACT_SLOTS = {
   13:{n:3,l:5},14:{n:3,l:5},15:{n:3,l:5},16:{n:3,l:5},17:{n:4,l:5},18:{n:4,l:5},19:{n:4,l:5},20:{n:4,l:5}
 };
 
-// Action/reaction metadata for the SRD classes (whose features are stored
-// name-only). Attaching this lets the Actions tab and Features tab surface the
-// same use/cost/desc detail the homebrew Jaeger already carries. Keyed by the
-// feature's base name (parentheticals stripped).
-const FEATURE_META = {
-  'Rage':{use:'bonus action', cost:'uses/rest', desc:'Advantage on STR checks & saves, bonus melee damage, and resistance to bludgeoning/piercing/slashing.'},
-  'Second Wind':{use:'bonus action', cost:'1/rest', desc:'Regain 1d10 + fighter level hit points.'},
-  'Action Surge':{use:'special', cost:'1/rest', desc:'Take one additional action on your turn.'},
-  'Reckless Attack':{use:'special', desc:'Attack with advantage on STR melee attacks this turn; attacks against you have advantage until your next turn.'},
-  'Bardic Inspiration':{use:'bonus action', cost:'CHA mod/rest', desc:'Give a creature a Bardic Inspiration die to add to one check, attack, or save.'},
-  'Channel Divinity':{use:'action', cost:'uses/rest', desc:'Invoke a divine effect (Turn Undead plus a domain option).'},
-  'Wild Shape':{use:'action', cost:'2/rest', desc:'Transform into a beast you have seen.'},
-  'Cunning Action':{use:'bonus action', desc:'Dash, Disengage, or Hide as a bonus action.'},
-  'Sneak Attack':{use:'special', cost:'1/turn', desc:'Extra damage once per turn when you have advantage or an ally is adjacent to the target.'},
-  'Lay on Hands':{use:'action', desc:'Spend from a pool of healing equal to 5 × paladin level to restore HP or cure disease/poison.'},
-  'Divine Sense':{use:'action', cost:'1+CHA/long rest', desc:'Detect celestials, fiends, and undead within 60 ft until your next turn.'},
-  'Divine Smite':{use:'special', desc:'On a melee hit, expend a spell slot to deal 2d8 radiant (+1d8 per slot level above 1st).'},
-  'Metamagic':{use:'special', desc:'Spend sorcery points to alter a spell (Twin, Quicken, Careful, etc.).'},
-  'Font of Magic':{use:'bonus action', desc:'Convert sorcery points to spell slots (or slots to points).'},
-  'Mystic Arcanum':{use:'special', cost:'1/long rest', desc:'Cast one high-level warlock spell without a slot.'},
-  'Ki':{use:'special', desc:'Spend Ki on Flurry of Blows, Patient Defense, or Step of the Wind (bonus action).'},
-  'Deflect Missiles':{use:'reaction', desc:'Reduce ranged weapon damage by 1d10 + DEX + monk level; may throw it back.'},
-  'Stunning Strike':{use:'special', cost:'1 ki', desc:'On a melee hit, force a CON save or stun the target until your next turn.'},
-  'Arcane Recovery':{use:'special', cost:'1/day', desc:'On a short rest, recover spell slots totaling up to half your wizard level.'},
-  "Hunter's Pursuit":{use:'special', cost:'1 FP'}
-};
-Object.values(CLASS_DATA).forEach(cd=>{
-  (cd.features||[]).forEach(f=>{
-    const base = f.name.replace(/\s*\(.*\)\s*$/,'').trim();
-    const meta = FEATURE_META[f.name] || FEATURE_META[base];
-    if(meta){
-      if(meta.use && !f.use) f.use = meta.use;
-      if(meta.cost && !f.cost) f.cost = meta.cost;
-      if(meta.desc && !f.desc) f.desc = meta.desc;
-    }
-  });
-});
+// ---------- Fighting styles ----------
+// The shared option table behind every "Fighting Style" feature. `classes` is
+// the list of classes that can take each style: it drives which options a class
+// is offered, and is shown on the style's Library entry and choice preview.
+// Descriptions are summaries of the rule, not the published text.
+const FIGHTING_STYLES = [
+  { name:'Archery', classes:['Fighter','Ranger'], source:'5E',
+    desc:"You gain a +2 bonus to attack rolls you make with ranged weapons." },
+  { name:'Blind Fighting', classes:['Fighter','Paladin','Ranger'], source:'5E',
+    desc:"You have blindsight out to 10 ft: within that range you can see anything that isn't behind total cover, even if blinded or in darkness, and you can spot invisible creatures unless they hide from you." },
+  { name:'Defense', classes:['Fighter','Paladin','Ranger'], source:'5E',
+    desc:"While you are wearing armor, you gain a +1 bonus to AC." },
+  { name:'Druidic Warrior', classes:['Ranger'], source:'5E',
+    desc:"You learn two druid cantrips of your choice. They count as ranger spells for you and use Wisdom as their spellcasting ability. You can replace one of them when you gain a ranger level." },
+  { name:'Dueling', classes:['Fighter','Paladin','Ranger'], source:'5E',
+    desc:"When wielding a melee weapon in one hand and no other weapon, you gain a +2 bonus to damage rolls with that weapon." },
+  { name:'Great Weapon Fighting', classes:['Fighter','Paladin'], source:'5E',
+    desc:"When you roll a 1 or 2 on a damage die for an attack with a two-handed or versatile melee weapon held in two hands, you can reroll it once and must use the new roll." },
+  { name:'Interception', classes:['Fighter','Paladin'], source:'5E',
+    desc:"As a reaction, when a creature you can see hits a target within 5 ft of you, reduce the damage by 1d10 + your proficiency bonus. You must be wielding a shield or a simple or martial weapon." },
+  { name:'Protection', classes:['Fighter','Paladin'], source:'5E',
+    desc:"As a reaction, when a creature you can see attacks a target within 5 ft of you, impose disadvantage on the attack roll. You must be wielding a shield." },
+  { name:'Superior Technique', classes:['Fighter'], source:'5E',
+    desc:"You learn one Battle Master maneuver and gain one superiority die (a d6) to fuel it, regained on a short or long rest." },
+  { name:'Thrown Weapon Fighting', classes:['Fighter','Ranger'], source:'5E',
+    desc:"You can draw a thrown weapon as part of the attack you make with it, and you gain a +2 bonus to damage rolls with thrown weapons." },
+  { name:'Two-Weapon Fighting', classes:['Fighter','Ranger'], source:'5E',
+    desc:"When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack." },
+  { name:'Unarmed Fighting', classes:['Fighter'], source:'5E',
+    desc:"Your unarmed strikes deal 1d6 bludgeoning damage (1d8 with no weapon or shield in either hand). At the start of each of your turns you deal 1d4 bludgeoning damage to a creature you are grappling." }
+];
 
-// Snapshots of the built-in registries, taken after source tagging and
-// FEATURE_META enrichment. When a custom import overrides a built-in entry
-// (same name) and is later deleted, the original is restored from here.
+function fightingStylesFor(className){
+  return FIGHTING_STYLES.filter(s=> s.classes.includes(className));
+}
+
+function fightingStyleByName(name){
+  return FIGHTING_STYLES.find(s=> s.name === name) || null;
+}
+
+// Offer each class only the styles it can actually take. Runs before the
+// BUILTIN_CLASSES snapshot below so restoring a deleted override keeps them.
+// Homebrew classes that list their own styles in the feature text (the Jaeger)
+// are left alone — their options aren't in this table.
+(function attachFightingStyleChoices(){
+  const applies = f=> /^(Additional )?Fighting Style$/.test(f.name);
+  Object.entries(CLASS_DATA).forEach(([className, cd])=>{
+    const opts = fightingStylesFor(className);
+    if(!opts.length) return;
+    (cd.features||[]).filter(applies).forEach(f=>{ f.choices = opts.map(s=>s.name); });
+  });
+  // Subclass features that grant another style (e.g. the Champion at level 10)
+  // draw from their parent class's list.
+  Object.values(SUBCLASS_DATA).forEach(sc=>{
+    const opts = fightingStylesFor(sc.parent);
+    if(!opts.length) return;
+    (sc.features||[]).filter(applies).forEach(f=>{ f.choices = opts.map(s=>s.name); });
+  });
+})();
+
+// Snapshots of the built-in registries, taken after source tagging (class
+// feature use/cost/desc is attached up front by P() from FEATURE_INFO). When a
+// custom import overrides a built-in entry (same name) and is later deleted,
+// the original is restored from here.
 const BUILTIN_CLASSES = JSON.parse(JSON.stringify(CLASS_DATA));
 const BUILTIN_SPECIES = JSON.parse(JSON.stringify(SPECIES_DATA));
 const BUILTIN_SUBSPECIES = JSON.parse(JSON.stringify(SUBSPECIES_DATA));
+const BUILTIN_BACKGROUNDS = JSON.parse(JSON.stringify(BACKGROUND_DATA));
 
 // Imported spells (global, DB-backed), keyed by name. A custom spell with the
 // same name as a built-in SPELL_DATA entry shadows it in the Spell Library.
@@ -1568,6 +1732,24 @@ function equipSkillBonus(skillName){
   equippedEquip().forEach(it=> (it.skills||[]).forEach(s=>{ if(s.name===skillName) n += Number(s.bonus)||0; }));
   return n;
 }
+
+// ---------- Granted skill proficiencies ----------
+// Species and backgrounds GRANT fixed skill proficiencies (classes only offer
+// choices — those stay manual picks in Settings). Grants are computed live from
+// the current species/background, never written into state.skillProf, so
+// switching background/species adds and removes them automatically.
+function grantedSkillSources(skillName){
+  const out = [];
+  const sd = SPECIES_DATA[state.race];
+  if(sd && Array.isArray(sd.skills) && sd.skills.includes(skillName)) out.push({ by: state.race, kind: 'species' });
+  const bd = BACKGROUND_DATA[state.background];
+  if(bd && Array.isArray(bd.skills) && bd.skills.includes(skillName)) out.push({ by: state.background, kind: 'background' });
+  return out;
+}
+// Effective proficiency for SKILLS[i]: manually toggled OR granted.
+function skillProficient(i){
+  return !!state.skillProf['sk'+i] || grantedSkillSources(SKILLS[i].name).length>0;
+}
 function equipmentAttacks(){
   return equippedEquip()
     .filter(it=> it.attack && (it.attack.dmg || it.attack.bonus))
@@ -1642,15 +1824,160 @@ function buildSkills(){
   SKILLS.forEach((s,i)=>{
     const key = 'sk'+i;
     if(!(key in state.skillProf)) state.skillProf[key]=false;
-    const row = el('div','check-row');
+    const granted = grantedSkillSources(s.name);
+    const prof = state.skillProf[key] || granted.length>0;
+    const row = el('div','check-row skill-row'+(prof?' proficient':'')+(granted.length?' granted':''));
+    row.title = 'Click for a quick description';
     row.innerHTML = `
-      <span class="prof-dot ${state.skillProf[key]?'on':''}"></span>
+      <span class="prof-dot ${prof?'on':''}${granted.length?' granted':''}"></span>
       <span class="abbr-tag">${s.ability.toUpperCase()}</span>
       <span class="name">${s.name}</span>
+      ${granted.map(g=>`<span class="grant-tag">${esc(g.kind)}</span>`).join('')}
       <span class="bonus" id="skillBonus_${key}">+0</span>
     `;
+    row.addEventListener('click', ()=> openSkillDetail(i));
     panel.appendChild(row);
   });
+  const count = document.getElementById('skillProfCount');
+  if(count) count.textContent = `${SKILLS.filter((s,i)=>skillProficient(i)).length} / ${SKILLS.length}`;
+}
+
+// Small floating legend explaining the skill-proficiency markers (opened from
+// the "?" buttons on the Skills tab and the Settings skill picker — same
+// draggable window system as the dice roller and notes popups).
+function openSkillLegend(){
+  openNotesModal({
+    name: 'Skill Proficiencies — Legend',
+    badges: ['Reference'],
+    detail: `
+      <div class="legend-row"><span class="prof-dot on"></span><span>Proficient — your proficiency bonus is added to the skill.</span></div>
+      <div class="legend-row"><span class="prof-dot on granted"></span><span>Granted proficiency — applied automatically by your <span class="hl">species</span> or <span class="hl">background</span>. Locked: it goes away only if you change the source in Settings.</span></div>
+      <div class="legend-row"><span class="skill-chip classpick legend-chip">chip</span><span>Offered by your <span class="hl">class</span> — pick your allowed number of these in Settings (the class decides how many).</span></div>
+      <div class="legend-row"><span class="skill-chip on legend-chip">chip</span><span>Toggled on manually — proficiencies from feats, training, or DM fiat.</span></div>
+      <div class="legend-row"><span class="grant-tag">background</span><span>Tag showing where a granted proficiency comes from.</span></div>
+      <p class="nr-hint">Skill bonuses everywhere on the sheet update automatically: ability modifier + proficiency bonus (if proficient) + equipped-gear bonuses.</p>`
+  });
+}
+
+function bindSkillLegendButtons(){
+  document.querySelectorAll('.skill-legend-btn').forEach(btn=>
+    btn.addEventListener('click', e=>{ e.stopPropagation(); openSkillLegend(); }));
+}
+
+// ---------- Quick-tools launcher (bottom-right "⋯" FAB) ----------
+// Expands into a collapsible stack of tools: Dice, Notes, Skills. Dice/Notes
+// popups are toggled by their own modules (bound to #diceFab / #journalFab);
+// the Skills quick-reference popup is owned here. Picking a tool collapses
+// the stack so its popup isn't covered.
+function renderSkillsPop(){
+  const list = document.getElementById('skillsPopList');
+  if(!list) return;
+  const pb = profBonus(state.level);
+  const eff = effectiveAbilities();
+  list.innerHTML = SKILLS.map((s,i)=>{
+    const granted = grantedSkillSources(s.name);
+    const prof = skillProficient(i);
+    const bonus = mod(eff[s.ability]) + (prof?pb:0) + equipSkillBonus(s.name);
+    return `<div class="check-row skill-row${prof?' proficient':''}${granted.length?' granted':''}" data-i="${i}" title="Click for a quick description">
+      <span class="prof-dot ${prof?'on':''}${granted.length?' granted':''}"></span>
+      <span class="abbr-tag">${s.ability.toUpperCase()}</span>
+      <span class="name">${s.name}</span>
+      ${granted.map(g=>`<span class="grant-tag">${esc(g.kind)}</span>`).join('')}
+      <span class="bonus">${fmt(bonus)}</span>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.skill-row').forEach(row=>
+    row.addEventListener('click', ()=> openSkillDetail(Number(row.dataset.i))));
+}
+
+function toggleSkillsPopup(open){
+  const popup = document.getElementById('skillsPopup');
+  const fab = document.getElementById('skillsFab');
+  if(!popup) return;
+  const willOpen = open!==undefined ? open : !popup.classList.contains('open');
+  popup.classList.toggle('open', willOpen);
+  if(fab) fab.classList.toggle('open', willOpen);
+  if(willOpen){
+    // Mutually exclusive with the dice / journal popups so they don't overlap.
+    ['dicePopup','diceFab','journalPopup','journalFab'].forEach(id=>{
+      const n = document.getElementById(id); if(n) n.classList.remove('open');
+    });
+    renderSkillsPop();
+  }
+}
+
+function bindCornerLauncher(){
+  const stack = document.getElementById('fabStack');
+  const launcher = document.getElementById('fabLauncher');
+  if(!stack || !launcher) return;
+  const setOpen = open=>{
+    stack.classList.toggle('open', open);
+    launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  launcher.addEventListener('click', ()=> setOpen(!stack.classList.contains('open')));
+  // Any tool pick collapses the stack (each item's own handler opens its popup).
+  stack.querySelectorAll('.fab-item').forEach(btn=>
+    btn.addEventListener('click', ()=> setOpen(false)));
+  document.getElementById('skillsFab').addEventListener('click', ()=> toggleSkillsPopup());
+  document.getElementById('skillsPopClose').addEventListener('click', ()=> toggleSkillsPopup(false));
+  document.addEventListener('keydown', e=>{
+    if(e.key!=='Escape') return;
+    const popup = document.getElementById('skillsPopup');
+    if(popup && popup.classList.contains('open')) toggleSkillsPopup(false);
+    else setOpen(false);
+  });
+}
+
+// Floating quick-reference popup for one skill (reuses the Notes window system).
+function openSkillDetail(i){
+  const s = SKILLS[i];
+  const key = 'sk'+i;
+  const pb = profBonus(state.level);
+  const m = mod(effectiveAbilities()[s.ability]);
+  const granted = grantedSkillSources(s.name);
+  const prof = !!state.skillProf[key] || granted.length>0;
+  const gear = equipSkillBonus(s.name);
+  const total = m + (prof?pb:0) + gear;
+  const parts = [`${s.ability.toUpperCase()} ${fmt(m)}`];
+  if(prof) parts.push(`proficiency ${fmt(pb)}`);
+  if(gear) parts.push(`gear ${fmt(gear)}`);
+  openNotesModal({
+    name: s.name,
+    badges: ['Skill', s.ability.toUpperCase(), prof ? 'Proficient' : 'Not proficient'],
+    detail: `<p>${SKILL_DESC[s.name]||''}</p>
+      <p><strong>Bonus ${fmt(total)}</strong> = ${parts.join(' + ')}</p>
+      ${granted.map(g=>`<p class="nr-hint">Proficiency granted by your ${esc(g.kind)} — <span class="hl">${esc(g.by)}</span>.</p>`).join('')}
+      ${prof ? '' : '<p class="nr-hint">Not proficient — toggle skill proficiencies on the Character Settings tab.</p>'}`
+  });
+}
+
+// Floating quick-reference popup for a passive sense (Skills tab). Shows the
+// current score with its breakdown plus a short description and play example.
+function openPassiveDetail(skillName){
+  const info = PASSIVE_SENSE_INFO[skillName];
+  if(!info) return;
+  const i = SKILLS.findIndex(s=>s.name===skillName);
+  const s = SKILLS[i];
+  const pb = profBonus(state.level);
+  const m = mod(effectiveAbilities()[s.ability]);
+  const prof = skillProficient(i);
+  const gear = equipSkillBonus(s.name);
+  const bonus = m + (prof?pb:0) + gear;
+  const parts = ['10', `${s.ability.toUpperCase()} ${fmt(m)}`];
+  if(prof) parts.push(`proficiency ${fmt(pb)}`);
+  if(gear) parts.push(`gear ${fmt(gear)}`);
+  openNotesModal({
+    name: 'Passive ' + skillName,
+    badges: ['Passive Sense', s.ability.toUpperCase(), prof ? 'Proficient' : 'Not proficient'],
+    detail: `<p>${info.desc}</p>
+      <p><strong>Score ${10 + bonus}</strong> = ${parts.join(' + ')}</p>
+      <p class="nr-hint"><span class="hl">Example:</span> ${info.example}</p>`
+  });
+}
+
+function bindPassiveSenseRows(){
+  document.querySelectorAll('.passive-row').forEach(row=>
+    row.addEventListener('click', ()=> openPassiveDetail(row.dataset.passive)));
 }
 
 function buildAttacks(){
@@ -2172,6 +2499,13 @@ function buildClassList(){
       </select>` : ''}
     `;
     wrap.appendChild(row);
+
+    // Always present (possibly empty) so a level change can refill it in place
+    // without rebuilding the row and stealing focus from the level input.
+    const box = el('div','feat-choice-box');
+    box.dataset.i = i;
+    wrap.appendChild(box);
+    renderFeatureChoices(i);
   });
   if(state.classes.length===0){
     wrap.innerHTML = '<div class="action-empty">No classes yet — add one below.</div>';
@@ -2184,6 +2518,7 @@ function buildClassList(){
   }));
   wrap.querySelectorAll('.mc-subclass').forEach(sel=>sel.addEventListener('change', e=>{
     state.classes[e.target.dataset.i].subclass = e.target.value;
+    buildClassList(); // the new subclass may bring its own choice prompts
     renderClassInfoStack();
     buildClassFeatures();
     buildActions();
@@ -2194,6 +2529,7 @@ function buildClassList(){
     const lvl = Math.max(1, Math.min(20, parseInt(e.target.value)||1));
     state.classes[e.target.dataset.i].level = lvl;
     applyClassesToState();
+    renderFeatureChoices(e.target.dataset.i); // a new level can unlock more choices
     renderClassInfoStack();
     buildClassFeatures();
     buildSpellSlots();
@@ -2299,14 +2635,20 @@ function buildSkillPicker(){
   const picked = pickedClasses();
   const primary = picked[0] && CLASS_DATA[picked[0].name];
   const hint = document.getElementById('skillHint');
+  const parts = [];
   if(primary && primary.skills!=='any'){
-    hint.innerHTML = `<span class="hl">${picked[0].name}</span> (primary) grants <span class="hl">${primary.choose}</span> picks from the dashed chips.${picked.length>1?' Multiclass dips grant fewer skills (PHB) — ':' '}Any chip can be toggled for proficiencies from backgrounds, feats, or DM fiat.`;
+    parts.push(`<span class="hl">${picked[0].name}</span> (primary) grants <span class="hl">${primary.choose}</span> picks from the dashed chips.${picked.length>1?' Multiclass dips grant fewer skills (PHB).':''}`);
   } else if(primary){
-    hint.innerHTML = `<span class="hl">${picked[0].name}</span> (primary) grants <span class="hl">${primary.choose}</span> picks from any skill.`;
-  } else {
-    hint.textContent = 'Toggle the skills this character is proficient in — bonuses on the Character tab update automatically.';
+    parts.push(`<span class="hl">${picked[0].name}</span> (primary) grants <span class="hl">${primary.choose}</span> picks from any skill.`);
   }
+  const grantedNames = SKILLS.map(s=>s.name).filter(n=>grantedSkillSources(n).length);
+  if(grantedNames.length){
+    parts.push(`Solid chips are <span class="hl">granted automatically</span> by your species / background (${grantedNames.map(esc).join(', ')}).`);
+  }
+  parts.push('Any other chip can be toggled for proficiencies from feats or DM fiat — click <span class="hl">?</span> above for the legend.');
+  if(hint) hint.innerHTML = parts.join(' ');
   const wrap = document.getElementById('skillPicker');
+  if(!wrap) return;
   wrap.innerHTML='';
   SKILLS.forEach((s,i)=>{
     const key='sk'+i;
@@ -2315,25 +2657,236 @@ function buildSkillPicker(){
       const cd = CLASS_DATA[c.name];
       return cd.skills!=='any' && cd.skills.includes(s.name);
     });
-    const chip = el('div', 'skill-chip'+(state.skillProf[key]?' on':'')+(fromClass?' classpick':''));
-    chip.innerHTML = `${s.name}<span class="chip-abbr">${s.ability}</span>`;
-    chip.addEventListener('click', ()=>{
-      state.skillProf[key] = !state.skillProf[key];
-      chip.classList.toggle('on', state.skillProf[key]);
-      buildSkills(); recalc(); save();
-    });
+    const granted = grantedSkillSources(s.name);
+    const chip = el('div', 'skill-chip'
+      + (state.skillProf[key]||granted.length ? ' on':'')
+      + (fromClass ? ' classpick':'')
+      + (granted.length ? ' granted':''));
+    chip.innerHTML = `${s.name}<span class="chip-abbr">${s.ability}</span>`
+      + granted.map(g=>`<span class="chip-grant">${esc(g.kind)}</span>`).join('');
+    if(granted.length){
+      // Granted proficiencies are locked on — remove the source to remove them.
+      chip.title = granted.map(g=>`Granted by your ${g.kind} — ${g.by}`).join('; ');
+      chip.addEventListener('click', ()=>{
+        chip.classList.add('shake');
+        setTimeout(()=>chip.classList.remove('shake'), 350);
+      });
+    } else {
+      chip.addEventListener('click', ()=>{
+        state.skillProf[key] = !state.skillProf[key];
+        chip.classList.toggle('on', state.skillProf[key]);
+        buildSkills(); recalc(); save();
+      });
+    }
     wrap.appendChild(chip);
   });
 }
 
-function featItem(f){
+// ---------- Feature choices ----------
+// A feature with a `choices` list is a pick-one, offered on both the Features
+// tab (inline on the feature) and the Settings tab (under its class row).
+// The pick is stored per class entry in state.classes[i].featureChoices, keyed
+// owner::feature (owner is the class or subclass granting it). A stored value is
+// either the option name (a listed choice) or {custom:true, name, desc} for an
+// "Other…" entry the player wrote themselves.
+const CHOICE_OTHER = '__other';
+
+function featureChoiceKey(owner, name){ return owner + '::' + name; }
+
+function hasChoices(f){ return Array.isArray(f.choices) && f.choices.length > 0; }
+
+function normalizeChoice(v){
+  if(!v) return null;
+  if(typeof v === 'string') return { name:v, desc:'', custom:false };
+  return { name: v.name||'', desc: v.desc||'', custom: !!v.custom };
+}
+
+function chosenFeatureOption(entry, owner, f){
+  return normalizeChoice((entry.featureChoices || {})[featureChoiceKey(owner, f.name)]);
+}
+
+// Reference detail for a listed option. Only fighting styles have a table today;
+// anything else is a bare name and previews as nothing.
+function choiceInfo(name){ return fightingStyleByName(name); }
+
+// The description and class availability shown under a picked option.
+function choicePreviewHtml(choice){
+  if(!choice || !choice.name) return '';
+  if(choice.custom){
+    return choice.desc ? `<div class="feat-desc">${esc(choice.desc)}</div>` : '';
+  }
+  const info = choiceInfo(choice.name);
+  if(!info) return '';
+  return `<div class="feat-desc">${esc(info.desc)}</div>
+    <div class="nr-meta">Available to: ${esc(info.classes.join(', '))}</div>`;
+}
+
+// Every choice-offering feature unlocked at this entry's level, from the class
+// and its selected subclass.
+function choiceFeaturesFor(entry){
+  const out = [];
+  const cd = CLASS_DATA[entry.name];
+  if(!cd) return out;
+  const lvl = entry.level || 1;
+  const collect = (owner, feats)=> (feats||[]).forEach(f=>{
+    if(hasChoices(f) && f.lv <= lvl) out.push({ owner, f, key: featureChoiceKey(owner, f.name) });
+  });
+  collect(entry.name, cd.features);
+  if(entry.subclass){
+    const sc = SUBCLASS_DATA[subKey(entry.name, entry.subclass)];
+    if(sc) collect(entry.subclass, sc.features);
+  }
+  return out;
+}
+
+// Drop picks that no longer belong to the entry's class/subclass, or whose stored
+// option is no longer offered. Level is ignored on purpose: dropping to a lower
+// level shouldn't discard a pick the character makes again on the way back up.
+function pruneFeatureChoices(entry){
+  const fc = entry.featureChoices;
+  if(!fc) return;
+  const valid = new Map();
+  const collect = (owner, feats)=> (feats||[]).forEach(f=>{
+    if(hasChoices(f)) valid.set(featureChoiceKey(owner, f.name), f.choices);
+  });
+  const cd = CLASS_DATA[entry.name];
+  if(cd) collect(entry.name, cd.features);
+  if(entry.subclass){
+    const sc = SUBCLASS_DATA[subKey(entry.name, entry.subclass)];
+    if(sc) collect(entry.subclass, sc.features);
+  }
+  Object.keys(fc).forEach(k=>{
+    const opts = valid.get(k);
+    if(!opts){ delete fc[k]; return; } // the feature itself is gone
+    const c = normalizeChoice(fc[k]);
+    // A custom "Other…" pick is the player's own text — keep it as long as the
+    // feature exists. A listed pick only survives while it's still offered.
+    if(!c || (!c.custom && !opts.includes(c.name))) delete fc[k];
+  });
+  if(!Object.keys(fc).length) delete entry.featureChoices;
+}
+
+// Fill one class row's choice box with a pick-one control per unlocked
+// choice-feature. Re-rendered on its own so level edits keep the list stable.
+function renderFeatureChoices(i){
+  const entry = state.classes[i];
+  const box = document.querySelector(`.feat-choice-box[data-i="${i}"]`);
+  if(!box || !entry) return;
+  pruneFeatureChoices(entry);
+  box.innerHTML = choiceFeaturesFor(entry).map(cf=>
+    choiceControlHtml(i, cf, chosenFeatureOption(entry, cf.owner, cf.f), true)).join('');
+  bindFeatureChoiceControls(box);
+}
+
+// One pick-one control: the dropdown, the "Other…" name/description fields, and
+// the preview of whatever is currently picked. Shared by the Features and
+// Settings tabs; `i` indexes state.classes. `showLabel` is for Settings, where
+// the feature name isn't already on screen.
+function choiceControlHtml(i, cf, choice, showLabel){
+  const isCustom = !!(choice && choice.custom);
+  const sel = choice ? (isCustom ? CHOICE_OTHER : choice.name) : '';
+  return `<div class="feat-choice-ctl${choice && choice.name ? '' : ' pending'}">
+    <div class="fc-head">
+      ${showLabel ? `<label class="feat-choice-label" title="${esc(cf.f.desc||'')}">
+        ${esc(cf.f.name)} <span class="chip-abbr">${esc(cf.owner)} · Lv ${cf.f.lv}</span>
+      </label>` : ''}
+      <select class="feat-choice" data-i="${i}" data-key="${esc(cf.key)}">
+        <option value="">— choose —</option>
+        ${cf.f.choices.map(c=>`<option value="${esc(c)}" ${sel===c?'selected':''}>${esc(c)}</option>`).join('')}
+        <option value="${CHOICE_OTHER}" ${isCustom?'selected':''}>Other…</option>
+      </select>
+    </div>
+    <div class="feat-choice-custom" ${isCustom?'':'hidden'}>
+      <input class="fc-name" placeholder="Name" value="${esc(isCustom ? choice.name : '')}">
+      <textarea class="fc-desc" placeholder="What does it do?">${esc(isCustom ? choice.desc : '')}</textarea>
+    </div>
+    <div class="feat-choice-preview">${choicePreviewHtml(choice)}</div>
+  </div>`;
+}
+
+function bindFeatureChoiceControls(scope){
+  scope.querySelectorAll('.feat-choice').forEach(sel=> sel.addEventListener('change', onFeatureChoiceChange));
+  scope.querySelectorAll('.fc-name, .fc-desc').forEach(inp=> inp.addEventListener('input', onCustomChoiceInput));
+}
+
+// Update one control in place. Never re-renders the select — that would drop
+// focus while the player is still working in it.
+function refreshChoiceControl(ctl, choice){
+  if(!ctl) return;
+  const isCustom = !!(choice && choice.custom);
+  const custom = ctl.querySelector('.feat-choice-custom');
+  if(custom){
+    custom.hidden = !isCustom;
+    if(isCustom){
+      custom.querySelector('.fc-name').value = choice.name || '';
+      custom.querySelector('.fc-desc').value = choice.desc || '';
+    }
+  }
+  const preview = ctl.querySelector('.feat-choice-preview');
+  if(preview) preview.innerHTML = choicePreviewHtml(choice);
+  ctl.classList.toggle('pending', !choice || !choice.name);
+}
+
+function onFeatureChoiceChange(e){
+  const sel = e.target;
+  const entry = state.classes[sel.dataset.i];
+  if(!entry) return;
+  const key = sel.dataset.key;
+  entry.featureChoices = entry.featureChoices || {};
+  if(sel.value === CHOICE_OTHER){
+    // Keep whatever custom text was already there when re-picking Other…
+    const prev = normalizeChoice(entry.featureChoices[key]);
+    const keep = prev && prev.custom ? prev : { name:'', desc:'' };
+    entry.featureChoices[key] = { custom:true, name: keep.name, desc: keep.desc };
+  } else if(sel.value){
+    entry.featureChoices[key] = sel.value;
+  } else {
+    delete entry.featureChoices[key];
+  }
+  const ctl = sel.closest('.feat-choice-ctl');
+  const choice = normalizeChoice(entry.featureChoices[key]);
+  refreshChoiceControl(ctl, choice);
+  if(choice && choice.custom) ctl.querySelector('.fc-name').focus();
+  buildActions();
+  save();
+}
+
+// Typing in the Other… fields updates state and the preview only — re-rendering
+// the surrounding list mid-keystroke would steal focus. The other tab picks the
+// change up when it's next opened (see bindTabs).
+function onCustomChoiceInput(e){
+  const ctl = e.target.closest('.feat-choice-ctl');
+  const sel = ctl.querySelector('.feat-choice');
+  const entry = state.classes[sel.dataset.i];
+  if(!entry || !entry.featureChoices) return;
+  const key = sel.dataset.key;
+  const cur = normalizeChoice(entry.featureChoices[key]);
+  if(!cur || !cur.custom) return;
+  entry.featureChoices[key] = {
+    custom: true,
+    name: ctl.querySelector('.fc-name').value.trim(),
+    desc: ctl.querySelector('.fc-desc').value.trim()
+  };
+  const choice = normalizeChoice(entry.featureChoices[key]);
+  const preview = ctl.querySelector('.feat-choice-preview');
+  if(preview) preview.innerHTML = choicePreviewHtml(choice);
+  ctl.classList.toggle('pending', !choice.name);
+  save();
+}
+
+// `ctx` ({i, owner}) turns on the inline picker; without it the feature renders
+// read-only (the Library's detail popups pass nothing).
+function featItem(f, choice, ctx){
+  const showPicker = ctx && hasChoices(f);
   return `<div class="feat-item">
     <div class="feat-head">
       <span class="f-lvl">LV ${f.lv}</span>
       <span class="f-name">${esc(f.name)}</span>
       ${f.use && f.use!=='passive' ? `<span class="action-badge">${esc(f.use)}${f.cost?' · '+esc(f.cost):''}</span>`:''}
+      ${hasChoices(f) && !showPicker && choice && choice.name ? `<span class="choice-badge">${esc(choice.name)}</span>` : ''}
     </div>
     ${f.desc?`<div class="feat-desc">${esc(f.desc)}</div>`:''}
+    ${showPicker ? choiceControlHtml(ctx.i, { key: featureChoiceKey(ctx.owner, f.name), owner: ctx.owner, f }, choice, false) : ''}
   </div>`;
 }
 
@@ -2351,8 +2904,12 @@ function buildClassFeatures(){
     const all = cd.features||[];
     const feats = all.filter(f=>f.lv<=lvl);
     const upcoming = all.length - feats.length;
+    // The picker writes back to state.classes, so it needs that array's index —
+    // pickedClasses() is filtered, so its own index would be wrong.
+    const ci = state.classes.indexOf(entry);
+    pruneFeatureChoices(entry);
     let html = `<div class="known-spell-group-label">${esc(entry.name)} ${entry.level}</div>`
-      + (feats.length ? feats.map(featItem).join('') : '<div class="action-empty">No features at this level.</div>')
+      + (feats.length ? feats.map(f=>featItem(f, chosenFeatureOption(entry, entry.name, f), { i:ci, owner:entry.name })).join('') : '<div class="action-empty">No features at this level.</div>')
       + (upcoming>0?`<div class="action-empty">+ ${upcoming} more at higher ${esc(entry.name)} levels.</div>`:'');
     // Chosen subclass features (imported detail, gated by class level).
     if(entry.subclass){
@@ -2362,7 +2919,7 @@ function buildClassFeatures(){
       if(sfeatsAll.length){
         const sfeats = sfeatsAll.filter(f=>f.lv<=lvl);
         const sUpcoming = sfeatsAll.length - sfeats.length;
-        html += (sfeats.length ? sfeats.map(featItem).join('') : '<div class="action-empty">No subclass features unlocked at this level yet.</div>')
+        html += (sfeats.length ? sfeats.map(f=>featItem(f, chosenFeatureOption(entry, entry.subclass, f), { i:ci, owner:entry.subclass })).join('') : '<div class="action-empty">No subclass features unlocked at this level yet.</div>')
           + (sUpcoming>0?`<div class="action-empty">+ ${sUpcoming} more at higher levels.</div>`:'');
       } else {
         html += '<div class="action-empty">No feature detail imported — add it on the Library tab.</div>';
@@ -2370,6 +2927,7 @@ function buildClassFeatures(){
     }
     return html;
   }).join('');
+  bindFeatureChoiceControls(box);
 }
 
 // ---------- Actions tab (derived from attacks, spells, and inventory) ----------
@@ -2755,6 +3313,13 @@ function bindTabs(){
       if(btn.dataset.tab==='journal' && window.characterSheetApp.buildJournal) window.characterSheetApp.buildJournal();
     });
   });
+  // Skills tab: the "Character Settings" hint link jumps to the settings tab.
+  const toSettings = document.getElementById('skillsToSettings');
+  if(toSettings) toSettings.addEventListener('click', e=>{
+    e.preventDefault();
+    const btn = document.querySelector('.tab-btn[data-tab="settings"]');
+    if(btn) btn.click();
+  });
 }
 
 // ---------- Sidebar navigation drawer ----------
@@ -2932,6 +3497,8 @@ function bindOptionsMenu(){
 function recalc(){
   const pb = profBonus(state.level);
   document.getElementById('profBonusDisplay').textContent = fmt(pb);
+  const pbSkills = document.getElementById('profBonusSkills');
+  if(pbSkills) pbSkills.textContent = fmt(pb);
   document.getElementById('sealLevel').textContent = state.level;
 
   // Effective scores fold in bonuses/overrides from equipped gear.
@@ -2952,9 +3519,14 @@ function recalc(){
   SKILLS.forEach((s,i)=>{
     const key = 'sk'+i;
     const m = mod(eff[s.ability]);
-    const bonus = m + (state.skillProf[key] ? pb : 0) + equipSkillBonus(s.name);
+    const bonus = m + (skillProficient(i) ? pb : 0) + equipSkillBonus(s.name);
     const elBonus = document.getElementById('skillBonus_'+key);
     if(elBonus) elBonus.textContent = fmt(bonus);
+    // Passive senses on the Skills tab: 10 + the skill's bonus.
+    if(s.name==='Perception'||s.name==='Investigation'||s.name==='Insight'){
+      const pEl = document.getElementById('passive'+s.name);
+      if(pEl) pEl.textContent = 10 + bonus;
+    }
   });
 
   document.getElementById('statInit').textContent = fmt(mod(eff.dex));
@@ -2989,7 +3561,7 @@ function bindStaticInputs(){
     });
   };
   bind('charName','name');
-  bind('charBackground','background'); bind('charAlignment','alignment'); // charRace handled by buildSpeciesSelect
+  bind('charAlignment','alignment'); // charRace / charBackground handled by buildSpeciesSelect / buildBackgroundSelect
   bind('charXP','xp',true);
   document.getElementById('addClassBtn').addEventListener('click', ()=>{
     ensureClasses();
@@ -3113,6 +3685,22 @@ async function apiDeleteSpecies(id){
   const r = await fetch('/api/species/'+id, { method:'DELETE' });
   return r.json();
 }
+async function apiListBackgrounds(){
+  const r = await fetch('/api/backgrounds');
+  return r.json();
+}
+async function apiImportBackground(payload){
+  const r = await fetch('/api/backgrounds', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error||('HTTP '+r.status)); }
+  return r.json();
+}
+async function apiDeleteBackground(id){
+  const r = await fetch('/api/backgrounds/'+id, { method:'DELETE' });
+  return r.json();
+}
 async function apiListSubclasses(){
   const r = await fetch('/api/subclasses');
   return r.json();
@@ -3185,15 +3773,24 @@ async function loadCustomClasses(){
   });
 }
 
+// "lv | name | desc | use | cost | choice; choice; …" — the trailing choices field
+// is optional and turns the feature into a pick-one prompt on the Settings tab.
 function parseFeatureLines(text){
   return (text||'').split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
-    const [lvRaw, name, desc, use, cost] = line.split('|').map(s=>(s||'').trim());
+    const [lvRaw, name, desc, use, cost, choicesRaw] = line.split('|').map(s=>(s||'').trim());
     const f = { lv: Math.max(1, Math.min(20, parseInt(lvRaw)||1)), name };
     if(desc) f.desc = desc;
     if(use) f.use = use;
     if(cost) f.cost = cost;
+    const choices = parseChoiceList(choicesRaw);
+    if(choices.length) f.choices = choices;
     return f;
   }).filter(f=>f.name);
+}
+
+// Choices are semicolon-separated so option text can still contain commas.
+function parseChoiceList(raw){
+  return (raw||'').split(';').map(s=>s.trim()).filter(Boolean);
 }
 
 function buildClassFromForm(){
@@ -3336,6 +3933,8 @@ function buildSpeciesSelect(){
     buildSubraceSelect();
     renderSpeciesInfo();
     buildSpeciesTraits();
+    buildSkillPicker(); // species-granted skill chips change with the species
+    buildSkills();
     updateHero(); recalc(); save();
   };
 }
@@ -3408,6 +4007,79 @@ function buildSpeciesTraits(){
     html += `<div class="subrace-divider">${esc(state.subrace)} <span class="chip-abbr">subrace</span></div>` + ss.traits.map(traitRow).join('');
   }
   box.innerHTML = html || '<div class="action-empty">No traits listed for this species.</div>';
+}
+
+// ---------- Backgrounds (character selection + Features tab) ----------
+async function loadCustomBackgrounds(){
+  let list = [];
+  try { list = await apiListBackgrounds(); } catch(e){ return; }
+  Object.keys(BACKGROUND_DATA).forEach(n=>{ if(BACKGROUND_DATA[n].custom) restoreOrDelete(BACKGROUND_DATA, BUILTIN_BACKGROUNDS, n); });
+  list.forEach(rec=>{
+    BACKGROUND_DATA[rec.name] = Object.assign({}, rec.data, {
+      source: rec.source, custom:true, customId: rec.id, builtin:false
+    });
+  });
+}
+
+function buildBackgroundSelect(){
+  const sel = document.getElementById('charBackground');
+  if(!sel) return;
+  const names = Object.keys(BACKGROUND_DATA).sort();
+  sel.innerHTML = '<option value="">— none —</option>' + names.map(n=>
+    `<option value="${esc(n)}" ${state.background===n?'selected':''}>${esc(n)} · ${BACKGROUND_DATA[n].source}</option>`).join('');
+  // Preserve a pre-existing freeform background that isn't in the library.
+  if(state.background && !BACKGROUND_DATA[state.background]){
+    sel.insertAdjacentHTML('beforeend', `<option value="${esc(state.background)}" selected>${esc(state.background)} (custom)</option>`);
+  }
+  sel.onchange = ()=>{
+    state.background = sel.value;
+    renderBackgroundInfo();
+    buildBackgroundFeature();
+    buildSkillPicker(); // granted chips change with the background
+    buildSkills();
+    recalc(); save();
+  };
+}
+
+function renderBackgroundInfo(){
+  const box = document.getElementById('backgroundInfo');
+  if(!box) return;
+  const bd = BACKGROUND_DATA[state.background];
+  if(!bd){
+    box.innerHTML = state.background
+      ? '<div class="ci-desc">// custom background — import it on the Import page to attach skills & a feature</div>'
+      : '<div class="ci-desc">// no background selected</div>';
+    return;
+  }
+  box.innerHTML = `
+    <div class="ci-title">${esc(state.background)}${sourceTag(bd.source)}</div>
+    ${bd.skills&&bd.skills.length?`<div class="ci-row"><span class="ci-key">skills</span><span>${bd.skills.map(esc).join(', ')} (granted)</span></div>`:''}
+    ${bd.tools?`<div class="ci-row"><span class="ci-key">tools</span><span>${esc(bd.tools)}</span></div>`:''}
+    ${bd.languages?`<div class="ci-row"><span class="ci-key">languages</span><span>${esc(bd.languages)}</span></div>`:''}
+    ${bd.feature?`<div class="ci-row"><span class="ci-key">feature</span><span>${esc(bd.feature.name)}</span></div>`:''}
+    <div class="ci-row"><span class="ci-key">source</span><span>${bd.custom?'Imported · '+bd.source:'Official · '+bd.source}</span></div>
+    ${bd.desc?`<div class="ci-desc">${esc(bd.desc)}</div>`:''}`;
+}
+
+// Features & Traits tab: the selected background's feature + equipment notes.
+function buildBackgroundFeature(){
+  const box = document.getElementById('backgroundFeatureList');
+  if(!box) return;
+  const bd = BACKGROUND_DATA[state.background];
+  if(!bd){
+    box.innerHTML = `<div class="action-empty">${state.background ? 'Custom background — import "'+esc(state.background)+'" on the Import page to list its feature here.' : 'Pick a background in Settings to see its feature here.'}</div>`;
+    return;
+  }
+  let html = '';
+  if(bd.feature && bd.feature.name){
+    html += `<div class="feat-item">
+      <div class="feat-head"><span class="f-name">${esc(bd.feature.name)}</span><span class="action-badge dim">background</span></div>
+      ${bd.feature.desc?`<div class="feat-desc">${esc(bd.feature.desc)}</div>`:''}
+    </div>`;
+  }
+  if(bd.skills && bd.skills.length) html += `<div class="feat-item"><div class="feat-head"><span class="f-name">Skill Proficiencies</span></div><div class="feat-desc">${bd.skills.map(esc).join(', ')} — applied automatically on the Skills tab.</div></div>`;
+  if(bd.equipment) html += `<div class="feat-item"><div class="feat-head"><span class="f-name">Equipment</span></div><div class="feat-desc">${esc(bd.equipment)}</div></div>`;
+  box.innerHTML = html || '<div class="action-empty">No feature listed for this background.</div>';
 }
 
 // ---------- Species import (Library tab) ----------
@@ -3505,6 +4177,109 @@ function bindSpeciesImport(){
       submitSpeciesImport({ name, source, data: data || rest });
     } else {
       submitSpeciesImport();
+    }
+  });
+}
+
+// ---------- Background import (Import page) ----------
+// Comma-separated skill names → canonical SKILLS names (case-insensitive);
+// unknown names are rejected so granted proficiencies always match the sheet.
+function parseSkillNames(text){
+  const out = [];
+  (text||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(nm=>{
+    const hit = SKILLS.find(s=>s.name.toLowerCase()===nm.toLowerCase());
+    if(!hit) throw new Error(`Unknown skill "${nm}" — use the 5e skill names (e.g. ${SKILLS[0].name}, ${SKILLS[6].name}).`);
+    if(!out.includes(hit.name)) out.push(hit.name);
+  });
+  return out;
+}
+
+function buildBackgroundFromForm(){
+  const name = document.getElementById('bgName').value.trim();
+  if(!name) throw new Error('Background name is required.');
+  const source = document.getElementById('bgSource').value;
+  const data = { skills: parseSkillNames(document.getElementById('bgSkills').value) };
+  const tools = document.getElementById('bgTools').value.trim();
+  const langs = document.getElementById('bgLanguages').value.trim();
+  const equipment = document.getElementById('bgEquipment').value.trim();
+  const desc = document.getElementById('bgDesc').value.trim();
+  const featName = document.getElementById('bgFeatureName').value.trim();
+  const featDesc = document.getElementById('bgFeatureDesc').value.trim();
+  if(tools) data.tools = tools;
+  if(langs) data.languages = langs;
+  if(equipment) data.equipment = equipment;
+  if(desc) data.desc = desc;
+  if(featName) data.feature = { name: featName, desc: featDesc };
+  return { name, source, data };
+}
+
+async function submitBackgroundImport(payload){
+  const msg = document.getElementById('bgMsg');
+  try{
+    if(!payload) payload = buildBackgroundFromForm();
+    if(!payload.name) throw new Error('Background name is required.');
+    if(!payload.data || typeof payload.data!=='object') throw new Error('Background data is required.');
+    if(payload.data.skills) payload.data.skills = parseSkillNames([].concat(payload.data.skills).join(','));
+    const source = CLASS_SOURCES.includes(payload.source) ? payload.source : 'Homebrew';
+    const res = await apiImportBackground({ name: payload.name, source, data: payload.data });
+    BACKGROUND_DATA[payload.name] = Object.assign({}, payload.data, { source, custom:true, customId: res.id, builtin:false });
+    msg.className = 'import-msg ok';
+    msg.textContent = `Imported "${payload.name}" (${source}) — now available in the Background picker on the Settings tab.`;
+    buildBackgroundSelect(); renderBackgroundInfo(); renderBackgroundImportedList(); buildLibraryEditSelects();
+  }catch(err){
+    msg.className = 'import-msg err';
+    msg.textContent = 'Import failed: ' + err.message;
+  }
+}
+
+function renderBackgroundImportedList(){
+  const box = document.getElementById('backgroundImportedList');
+  if(!box) return;
+  const customs = Object.entries(BACKGROUND_DATA).filter(([n,bd])=>bd.custom);
+  if(!customs.length){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="picker-hint" style="margin-bottom:6px;">Imported backgrounds</div>' + customs.map(([n,bd])=>`
+    <div class="imported-item">
+      <span class="ii-name">${esc(n)}</span>
+      ${sourceTag(bd.source)}
+      <span class="ii-edit" data-name="${esc(n)}" title="Load into the form to edit">✎</span>
+      <span class="row-del" data-id="${bd.customId}" data-name="${esc(n)}">✕</span>
+    </div>`).join('');
+  box.querySelectorAll('.ii-edit').forEach(btn=>btn.addEventListener('click', e=>{
+    fillBackgroundForm(e.target.dataset.name);
+  }));
+  box.querySelectorAll('.row-del').forEach(btn=>btn.addEventListener('click', e=>
+    deleteBackgroundEntry(e.target.dataset.id, e.target.dataset.name)));
+}
+
+async function deleteBackgroundEntry(id, name){
+  if(!confirm(`Remove imported background "${name}"?${BUILTIN_BACKGROUNDS[name]?' The built-in version is restored.':''}`)) return false;
+  await apiDeleteBackground(id);
+  restoreOrDelete(BACKGROUND_DATA, BUILTIN_BACKGROUNDS, name);
+  buildBackgroundSelect(); renderBackgroundInfo(); buildBackgroundFeature(); renderBackgroundImportedList();
+  buildLibraryEditSelects();
+  return true;
+}
+
+function bindBackgroundImport(){
+  document.getElementById('bgJsonToggle').addEventListener('click', ()=>{
+    const w = document.getElementById('bgJsonWrap');
+    w.style.display = (w.style.display==='none') ? '' : 'none';
+  });
+  document.getElementById('bgSubmit').addEventListener('click', ()=>{
+    const jsonWrap = document.getElementById('bgJsonWrap');
+    const jsonText = document.getElementById('bgJson').value.trim();
+    if(jsonWrap.style.display!=='none' && jsonText){
+      let obj;
+      try { obj = JSON.parse(jsonText); }
+      catch(e){
+        const m = document.getElementById('bgMsg');
+        m.className = 'import-msg err'; m.textContent = 'Invalid JSON: ' + e.message;
+        return;
+      }
+      const { name, source, data, ...rest } = obj;
+      submitBackgroundImport({ name, source, data: data || rest });
+    } else {
+      submitBackgroundImport();
     }
   });
 }
@@ -4124,7 +4899,8 @@ function setImportMsg(id, name){
 // features [{lv,name,desc,use,cost}] → "lv | name | desc | use | cost" lines.
 function featuresToLines(features){
   return (features||[]).map(f=>{
-    const parts = [f.lv, f.name, f.desc||'', f.use||'', f.cost||''].map(p=>String(p==null?'':p));
+    const parts = [f.lv, f.name, f.desc||'', f.use||'', f.cost||'', (f.choices||[]).join('; ')]
+      .map(p=>String(p==null?'':p));
     while(parts.length>2 && !parts[parts.length-1]) parts.pop();
     return parts.join(' | ');
   }).join('\n');
@@ -4193,6 +4969,22 @@ function fillSpeciesForm(name){
   document.getElementById('spTraits').value = traitsToLines(sd.traits);
   setFormDelete('spDelete', sd.custom ? { id: sd.customId, name } : null);
   setImportMsg('spMsg', name);
+}
+
+function fillBackgroundForm(name){
+  const bd = BACKGROUND_DATA[name];
+  if(!bd) return;
+  document.getElementById('bgName').value = name;
+  document.getElementById('bgSource').value = CLASS_SOURCES.includes(bd.source) ? bd.source : 'Homebrew';
+  document.getElementById('bgSkills').value = (bd.skills||[]).join(', ');
+  document.getElementById('bgTools').value = bd.tools||'';
+  document.getElementById('bgLanguages').value = bd.languages||'';
+  document.getElementById('bgEquipment').value = bd.equipment||'';
+  document.getElementById('bgDesc').value = bd.desc||'';
+  document.getElementById('bgFeatureName').value = (bd.feature&&bd.feature.name)||'';
+  document.getElementById('bgFeatureDesc').value = (bd.feature&&bd.feature.desc)||'';
+  setFormDelete('bgDelete', bd.custom ? { id: bd.customId, name } : null);
+  setImportMsg('bgMsg', name);
 }
 
 function fillSubclassForm(parent, name){
@@ -4270,6 +5062,8 @@ function buildLibraryEditSelects(){
     `<option value="${esc(n)}">${esc(n)} · ${CLASS_DATA[n].source} · ${tag(CLASS_DATA[n])}</option>`).join(''));
   fill('spEdit', Object.keys(SPECIES_DATA).sort().map(n=>
     `<option value="${esc(n)}">${esc(n)} · ${SPECIES_DATA[n].source} · ${tag(SPECIES_DATA[n])}</option>`).join(''));
+  fill('bgEdit', Object.keys(BACKGROUND_DATA).sort().map(n=>
+    `<option value="${esc(n)}">${esc(n)} · ${BACKGROUND_DATA[n].source} · ${tag(BACKGROUND_DATA[n])}</option>`).join(''));
   // Subclasses: built-in name lists on each class plus imported records.
   const subEntries = [];
   Object.keys(CLASS_DATA).forEach(parent=>
@@ -4305,6 +5099,7 @@ function bindLibraryEditSelects(){
   };
   wire('impEdit', fillClassForm);
   wire('spEdit', fillSpeciesForm);
+  wire('bgEdit', fillBackgroundForm);
   wire('subEdit', key=>{
     const i = key.indexOf('::');
     if(i>0) fillSubclassForm(key.slice(0,i), key.slice(i+2));
@@ -4328,6 +5123,7 @@ function bindLibraryEditSelects(){
   };
   wireDelete('impDelete',   'impMsg',   d=>deleteClassEntry(d.id, d.name));
   wireDelete('spDelete',    'spMsg',    d=>deleteSpeciesEntry(d.id, d.name));
+  wireDelete('bgDelete',    'bgMsg',    d=>deleteBackgroundEntry(d.id, d.name));
   wireDelete('subDelete',   'subMsg',   d=>deleteSubclassEntry(d.id, d.parent, d.name));
   wireDelete('subspDelete', 'subspMsg', d=>deleteSubspeciesEntry(d.id, d.parent, d.name));
   wireDelete('splDelete',   'splMsg',   d=>deleteSpellEntry(d.id, d.name));
@@ -4392,14 +5188,25 @@ function buildAlignmentSelect(){
 // Static rules reference — built once; content doesn't change per character.
 function buildNotes(){
   const grid = document.getElementById('alignGrid');
-  if(!grid || grid.dataset.built) return;
-  grid.innerHTML = ALIGNMENTS.map(a=>`
-    <div class="align-card">
-      <div><span class="a-abbr">${a.abbr}</span><span class="a-name">${a.name}</span></div>
-      <div class="a-desc">${a.desc}</div>
-      <div class="a-eg"><b>e.g.</b> ${a.eg}</div>
-    </div>`).join('');
-  grid.dataset.built = '1';
+  if(grid && !grid.dataset.built){
+    grid.innerHTML = ALIGNMENTS.map(a=>`
+      <div class="align-card">
+        <div><span class="a-abbr">${a.abbr}</span><span class="a-name">${a.name}</span></div>
+        <div class="a-desc">${a.desc}</div>
+        <div class="a-eg"><b>e.g.</b> ${a.eg}</div>
+      </div>`).join('');
+    grid.dataset.built = '1';
+  }
+  const mgrid = document.getElementById('masteryGrid');
+  if(mgrid && !mgrid.dataset.built){
+    mgrid.innerHTML = MASTERY_PROPERTIES.map(m=>`
+      <div class="align-card">
+        <div><span class="a-name">${m.name}</span></div>
+        <div class="a-desc">${m.desc}</div>
+        <div class="mastery-weapons">${m.weapons.map(w=>`<span class="mastery-chip">${w}</span>`).join('')}</div>
+      </div>`).join('');
+    mgrid.dataset.built = '1';
+  }
 }
 
 // ---------- Notes page: reference search ----------
@@ -4410,7 +5217,10 @@ let NOTES_INDEX = [];
 let notesFilter = 'All';
 let notesBrowsePage = 0; // current page when browsing a type filter with no search query
 const NOTES_PAGE_SIZE = 20;
-const NOTES_TYPES = ['All','Classes','Subclasses','Species','Subspecies','Spells','Features','Actions','Alignments'];
+// Features and standard combat actions are deliberately absent: features are
+// reachable through the class/subclass entry that owns them (their text is folded
+// into that entry's haystack), so they don't clutter the results as separate rows.
+const NOTES_TYPES = ['All','Classes','Subclasses','Species','Subspecies','Spells','Alignments','Mastery'];
 
 function notesEntry(type, name, badges, haystack, detail, edit){
   return { type, name, badges: badges.filter(Boolean).map(String),
@@ -4439,11 +5249,11 @@ function castingLabel(c){
   return c.type==='full' ? 'full caster'+ab : c.type==='half' ? 'half caster'+ab : 'pact magic'+ab;
 }
 
-function featureEntry(f, ownerName, extraHay, edit){
-  return notesEntry('Features', f.name, [ownerName, 'level '+f.lv],
-    [f.desc, f.use, f.cost, ownerName, extraHay].filter(Boolean).join(' '),
-    `<div class="nr-meta">${esc(ownerName)} · level ${f.lv}${f.use?' · '+esc(f.use):''}${f.cost?' · '+esc(f.cost):''}</div>
-     ${f.desc?`<div class="feat-desc">${esc(f.desc)}</div>`:''}`, edit);
+// Feature names/descriptions/choices, flattened into one string so a search for a
+// feature still finds the class or subclass that grants it.
+function featuresHaystack(features){
+  return (features||[]).map(f=>
+    [f.name, f.desc, f.use, f.cost, (f.choices||[]).join(' ')].filter(Boolean).join(' ')).join(' ');
 }
 
 function buildNotesIndex(){
@@ -4456,7 +5266,7 @@ function buildNotesIndex(){
     const meta = `<div class="nr-meta">d${cd.hitDie||8} hit die · saves ${(cd.saves||[]).map(s=>s.toUpperCase()).join(' / ')||'—'} · ${esc(castingLabel(cd.casting))} · subclass at level ${cd.subclassLevel||'—'}</div>
        <div class="nr-meta">skills (choose ${cd.choose||0}): ${esc(skills)}</div>`;
     ix.push(Object.assign(notesEntry('Classes', name, [cd.source, cd.custom?'imported':'built-in'],
-      [cd.desc, skills, subNames.join(' '), castingLabel(cd.casting)].filter(Boolean).join(' '),
+      [cd.desc, skills, subNames.join(' '), castingLabel(cd.casting), featuresHaystack(cd.features)].filter(Boolean).join(' '),
       meta
       + `${subNames.length?`<div class="nr-meta">subclasses: ${esc(subNames.join(', '))}</div>`:''}
        ${cd.desc?`<div class="feat-desc">${esc(cd.desc)}</div>`:''}`,
@@ -4466,8 +5276,6 @@ function buildNotesIndex(){
         + (subNames.length?`<div class="nr-sect">Subclasses — click to view</div><div class="nr-sub-list">${
             subNames.map(n=>`<span class="nr-sub-link" data-key="${esc(subKey(name, n))}">${esc(n)}</span>`).join('')}</div>`:'')
         + ((cd.features||[]).length?`<div class="nr-sect">Features</div>`+classFeaturesHtml(cd.features):'') }));
-    (cd.features||[]).forEach(f=> ix.push(featureEntry(f, name, null,
-      editLink('class', name, 'Edit '+name+' in Library'))));
   });
 
   // Subclasses: imported records carry detail; built-in ones are name-only lists.
@@ -4477,14 +5285,12 @@ function buildNotesIndex(){
     const summary = `<div class="nr-meta">${esc(sc.parent)} subclass · chosen at level ${sc.subclassLevel||3}</div>
        ${sc.desc?`<div class="feat-desc">${esc(sc.desc)}</div>`:''}`;
     ix.push(Object.assign(notesEntry('Subclasses', sc.name, [sc.parent, sc.source||'Homebrew', 'imported'],
-      [sc.desc, sc.parent, (sc.features||[]).map(f=>f.name+' '+(f.desc||'')).join(' ')].filter(Boolean).join(' '),
+      [sc.desc, sc.parent, featuresHaystack(sc.features)].filter(Boolean).join(' '),
       summary,
       editLink('subclass', subKey(sc.parent, sc.name), 'Edit subclass in Library')),
       { key: subKey(sc.parent, sc.name),
         parent: { type:'Classes', name: sc.parent },
         full: summary + ((sc.features||[]).length?`<div class="nr-sect">Features</div>`+classFeaturesHtml(sc.features):'') }));
-    (sc.features||[]).forEach(f=> ix.push(featureEntry(f, sc.name, sc.parent,
-      editLink('subclass', subKey(sc.parent, sc.name), 'Edit '+sc.name+' in Library'))));
   });
   Object.entries(CLASS_DATA).forEach(([parent, cd])=>{
     (cd.subclasses||[]).forEach(n=>{
@@ -4571,11 +5377,13 @@ function buildNotesIndex(){
       editLink('spell', name, 'Edit spell in Library')));
   });
 
-  // Standard combat actions and alignments.
-  STANDARD_ACTIONS.forEach(a=> ix.push(notesEntry('Actions', a.name, ['combat action'], a.desc,
-    `<div class="feat-desc">${esc(a.desc)}</div>`)));
   ALIGNMENTS.forEach(a=> ix.push(notesEntry('Alignments', a.name, [a.abbr], a.desc+' '+a.eg,
     `<div class="feat-desc">${esc(a.desc)}</div><div class="nr-meta">e.g. ${esc(a.eg)}</div>`)));
+
+  // Weapon Mastery properties — searchable by property name or any weapon that has it.
+  MASTERY_PROPERTIES.forEach(m=> ix.push(notesEntry('Mastery', m.name, ['weapon mastery'],
+    m.desc+' '+m.weapons.join(' '),
+    `<div class="feat-desc">${esc(m.desc)}</div><div class="nr-meta">weapons: ${esc(m.weapons.join(', '))}</div>`)));
 
   return ix;
 }
@@ -4586,11 +5394,18 @@ function renderNotesResults(){
   if(!box) return;
   const q = (document.getElementById('notesSearch').value||'').trim().toLowerCase();
   if(!q){
-    // No search query: browse mode. "All" and "Alignments" keep the static
-    // alignment reference below; every other filter shows a paginated list.
-    if(notesFilter==='All' || notesFilter==='Alignments'){
+    // No search query: browse mode. "All", "Alignments" and "Mastery" keep the
+    // static reference below (filtered to the matching panel); every other
+    // filter shows a paginated list.
+    if(notesFilter==='All' || notesFilter==='Alignments' || notesFilter==='Mastery'){
       box.innerHTML = '';
-      if(ref) ref.style.display = '';
+      if(ref){
+        ref.style.display = '';
+        const alignPanel = document.getElementById('alignmentPanel');
+        const masteryPanel = document.getElementById('masteryPanel');
+        if(alignPanel) alignPanel.style.display = notesFilter==='Mastery' ? 'none' : '';
+        if(masteryPanel) masteryPanel.style.display = notesFilter==='Alignments' ? 'none' : '';
+      }
     } else {
       renderNotesBrowse();
     }
@@ -4633,8 +5448,8 @@ function renderNotesResults(){
 }
 
 // Browse mode: with no search query, a specific type filter lists every entry
-// of that type, 20 per page, with prev/next paging. (All / Alignments keep the
-// static alignment reference instead — see renderNotesResults.)
+// of that type, 20 per page, with prev/next paging. (All / Alignments / Mastery
+// keep the static reference instead — see renderNotesResults.)
 function renderNotesBrowse(){
   const box = document.getElementById('notesResults');
   const ref = document.getElementById('notesReference');
@@ -4989,6 +5804,9 @@ function renderCharacter(){
   buildSubraceSelect();
   renderSpeciesInfo();
   buildSpeciesTraits();
+  buildBackgroundSelect();
+  renderBackgroundInfo();
+  buildBackgroundFeature();
   buildAbilities();
   buildSaves();
   buildSkills();
@@ -5019,9 +5837,45 @@ async function loadCharacter(id){
   setSaveStatus('saved');
 }
 
+// Import a character from parsed JSON: either a raw character state object
+// (the shape defaultCharacter() returns) or an API-style { name, data } wrapper
+// (the shape GET /api/characters/:id returns). Saves it as a new profile and
+// switches to it. Unknown fields are dropped on next save; missing ones get defaults.
+async function importCharacterJson(parsed){
+  if(!parsed || typeof parsed !== 'object' || Array.isArray(parsed)){
+    throw new Error('Expected a JSON object describing one character.');
+  }
+  if(Array.isArray(parsed.entries) || ['class','species','subclass','subspecies','spell'].includes(parsed.type)){
+    throw new Error('This looks like Library JSON — use the Import page for classes, species, and spells.');
+  }
+  const raw = (parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data)) ? parsed.data : parsed;
+  const incoming = Object.assign(defaultCharacter(), raw);
+  incoming.id = null;
+  if(typeof parsed.name === 'string' && parsed.name.trim()) incoming.name = parsed.name.trim();
+  if(typeof incoming.name !== 'string' || !incoming.name.trim()) incoming.name = 'Unnamed Adventurer';
+  const res = await apiCreateCharacter(incoming.name, incoming);
+  await loadCharacter(res.id);
+  await refreshProfileList(res.id);
+}
+
 function bindProfileBar(){
   document.getElementById('profileSelect').addEventListener('change', e=>{
     if(e.target.value) loadCharacter(e.target.value);
+  });
+
+  document.getElementById('importCharBtn').addEventListener('click', ()=>{
+    document.getElementById('importCharFile').click();
+  });
+  document.getElementById('importCharFile').addEventListener('change', async e=>{
+    const file = e.target.files[0];
+    e.target.value = ''; // reset so picking the same file again re-fires change
+    if(!file) return;
+    try{
+      const parsed = JSON.parse(await file.text());
+      await importCharacterJson(parsed);
+    }catch(err){
+      alert('Import failed: ' + err.message);
+    }
   });
 
   document.getElementById('newCharBtn').addEventListener('click', async ()=>{
@@ -5176,6 +6030,8 @@ function openLibraryEditParam(){
   if(type==='subspecies') setSubImportOpen('toggleSubspecies', 'subspeciesWrap', true);
   const anchor = document.getElementById(m.anchor);
   const panel = anchor && anchor.closest('.panel');
+  // Deep links land on an open form — toggle via the header so aria-expanded stays in sync.
+  if(panel && panel.classList.contains('collapsed')) panel.querySelector(':scope > h2').click();
   // The target form lives inside a tab pane — switch to that tab before scrolling.
   const pane = anchor && anchor.closest('.tab-pane');
   if(pane){
@@ -5187,13 +6043,34 @@ function openLibraryEditParam(){
   if(panel) setTimeout(()=> panel.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 }
 
+// Import-page panels marked .collapsible fold down to their header (a caret on
+// the rune shows state). Panels with .collapsed in the markup start folded, so
+// each tab opens as a clean stack of headers. Not persisted across reloads.
+function bindCollapsiblePanels(){
+  document.querySelectorAll('.panel.collapsible > h2').forEach(h2=>{
+    const panel = h2.parentElement;
+    h2.setAttribute('role','button');
+    h2.setAttribute('tabindex','0');
+    const sync = ()=> h2.setAttribute('aria-expanded', String(!panel.classList.contains('collapsed')));
+    const toggle = ()=>{ panel.classList.toggle('collapsed'); sync(); };
+    h2.addEventListener('click', toggle);
+    h2.addEventListener('keydown', e=>{
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); }
+    });
+    sync();
+  });
+}
+
 // The Import page: import forms, imported lists, and load-existing pickers.
 // Registries are already loaded when this runs; no character is loaded here.
 function initImportPage(){
+  bindCollapsiblePanels();
   bindClassImport();
   renderImportedList();
   bindSpeciesImport();
   renderSpeciesImportedList();
+  bindBackgroundImport();
+  renderBackgroundImportedList();
   bindSubclassImport();
   renderSubclassImportedList();
   bindSubspeciesImport();
@@ -5224,6 +6101,9 @@ async function initSheetPage(){
   bindStaticInputs();
   bindProfileBar();
   bindTabs();
+  bindSkillLegendButtons(); // "?" legend popups on the Skills tab & Settings skill picker
+  bindCornerLauncher(); // "⋯" quick-tools stack (Dice / Notes / Skills)
+  bindPassiveSenseRows(); // Passive Senses rows open a quick-reference popup
   bindNotesModal(); // shared spell-detail popup, used by the Spells & Actions tabs
   buildClassFilterBar();
   buildSpellLevelSelects();
@@ -5237,6 +6117,7 @@ async function init(){
   bindSidebar();
   await loadCustomClasses(); // merge imported classes before any character renders
   await loadCustomSpecies(); // merge imported species too
+  await loadCustomBackgrounds(); // ...and imported backgrounds
   await loadCustomSubclasses(); // ...and imported subclasses (attach to parent classes)
   await loadCustomSubspecies(); // ...and imported subspecies (attach to parent species)
   await loadCustomSpells();  // ...and imported spells (merge into the Spell Library)

@@ -195,9 +195,10 @@
       popup.classList.toggle('open', willOpen);
       if(fab) fab.classList.toggle('open', willOpen);
       if(willOpen){
-        // Mutually exclusive with the dice popup so the two don't overlap.
-        const dp = document.getElementById('dicePopup'); if(dp) dp.classList.remove('open');
-        const df = document.getElementById('diceFab'); if(df) df.classList.remove('open');
+        // Mutually exclusive with the dice/skills popups so they don't overlap.
+        ['dicePopup','diceFab','skillsPopup','skillsFab'].forEach(id=>{
+          const n = document.getElementById(id); if(n) n.classList.remove('open');
+        });
         buildPopup();
         const t = document.getElementById('journalPopText'); if(t) t.focus();
       }

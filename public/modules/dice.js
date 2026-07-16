@@ -137,9 +137,10 @@
       popup.classList.toggle('open', willOpen);
       if(fab) fab.classList.toggle('open', willOpen);
       if(willOpen){
-        // Mutually exclusive with the journal popup so the two don't overlap.
-        const jp = document.getElementById('journalPopup'); if(jp) jp.classList.remove('open');
-        const jf = document.getElementById('journalFab'); if(jf) jf.classList.remove('open');
+        // Mutually exclusive with the journal/skills popups so they don't overlap.
+        ['journalPopup','journalFab','skillsPopup','skillsFab'].forEach(id=>{
+          const n = document.getElementById(id); if(n) n.classList.remove('open');
+        });
         renderTray();
         renderPool();
       }

@@ -11,11 +11,23 @@
       "name": "dev-scratch-db",
       "runtimeExecutable": "env",
       "runtimeArgs": [
-        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/ba830708-4f09-4ca1-90b5-30040e78ef8d/scratchpad/preview.db",
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/ed858d52-5679-4613-8894-842b9975b8c2/scratchpad/preview.db",
         "node",
         "src/server.js"
       ],
       "port": 4174,
+      "autoPort": true
+    },
+    {
+      "name": "worktree-multiuser",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/dd3620ef-cc63-4e11-b054-d13ef060804a/scratchpad/multiuser.db",
+        "PORT=4180",
+        "node",
+        "/Users/jg/Projects/D&D/app/dnd-character-app/.claude/worktrees/session-2026-07-15/src/server.js"
+      ],
+      "port": 4180,
       "autoPort": true
     }
   ]

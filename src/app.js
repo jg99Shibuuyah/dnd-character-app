@@ -4,6 +4,7 @@ const config = require('./config');
 const charactersRouter = require('./routes/characters.routes');
 const classesRouter = require('./routes/classes.routes');
 const speciesRouter = require('./routes/species.routes');
+const backgroundsRouter = require('./routes/backgrounds.routes');
 const subclassesRouter = require('./routes/subclasses.routes');
 const subspeciesRouter = require('./routes/subspecies.routes');
 const spellsRouter = require('./routes/spells.routes');
@@ -37,6 +38,7 @@ app.get('/library', (req, res) => {
 app.use('/api/characters', charactersRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/species', speciesRouter);
+app.use('/api/backgrounds', backgroundsRouter);
 app.use('/api/subclasses', subclassesRouter);
 app.use('/api/subspecies', subspeciesRouter);
 app.use('/api/spells', spellsRouter);
