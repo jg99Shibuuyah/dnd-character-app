@@ -415,20 +415,26 @@ function buildInventory(){
       document.querySelector('.tab-btn[data-tab="equipment"]').click();
     }));
   }
+  // Items are added/renamed through the popup (openItemModal); drop blank
+  // leftovers from the old inline flow instead of rendering empty rows.
+  const items = state.inventory.filter(it=> it.name && it.name.trim());
+  if(!items.length && !gear.length){
+    list.insertAdjacentHTML('beforeend', '<div class="action-empty">Nothing carried yet — add an item below.</div>');
+  }
   state.inventory.forEach((item,i)=>{
+    if(!(item.name && item.name.trim())) return;
     const row = el('div','inv-row');
     row.innerHTML = `
-      <input class="item-name" data-i="${i}" value="${item.name}" placeholder="Item name">
+      <span class="item-name inv-edit" data-i="${i}" title="Click to edit">${esc(item.name)}</span>
       <input class="item-qty" data-i="${i}" type="number" value="${item.qty}">
       <span class="row-del" data-i="${i}">✕</span>
     `;
     list.appendChild(row);
   });
-  list.querySelectorAll('.item-name').forEach(i=>i.addEventListener('input', e=>{state.inventory[e.target.dataset.i].name=e.target.value; save();}));
+  list.querySelectorAll('.inv-edit').forEach(s=>s.addEventListener('click', e=>{ openItemModal(Number(e.target.dataset.i)); }));
   list.querySelectorAll('.item-qty').forEach(i=>i.addEventListener('input', e=>{state.inventory[e.target.dataset.i].qty=parseInt(e.target.value)||0; save();}));
   list.querySelectorAll('.row-del').forEach(i=>i.addEventListener('click', e=>{
     state.inventory.splice(e.target.dataset.i,1);
-    if(state.inventory.length===0) state.inventory.push({name:'',qty:1});
     buildInventory(); save();
   }));
 }
@@ -1406,6 +1412,19 @@ function slotsRemainingAtOrAbove(level){
   return n;
 }
 
+// Short effect summaries shown on the compact equipment rows. Raw strings —
+// caller escapes.
+function equipSummaryBadges(it){
+  const b=[], atk=it.attack||{}, ab=it.abilities||{};
+  const atkTxt=[atk.bonus,atk.dmg].map(s=>(s==null?'':String(s).trim())).filter(Boolean).join(' · ');
+  if(atkTxt) b.push('⚔ '+atkTxt);
+  if(it.ac!=null && String(it.ac).trim()) b.push('AC '+String(it.ac).trim());
+  ABILITIES.forEach(a=>{ const v=(ab[a.key]==null?'':String(ab[a.key]).trim()); if(v) b.push(a.key.toUpperCase()+' '+v); });
+  (it.skills||[]).forEach(s=> b.push(`${s.name} ${fmt(Number(s.bonus)||0)}`));
+  (it.spells||[]).forEach(sp=> b.push('✦ '+sp.name));
+  return b;
+}
+
 function buildEquipment(){
   const wrap = document.getElementById('equipmentList');
   if(!wrap) return;
@@ -1414,44 +1433,18 @@ function buildEquipment(){
     wrap.innerHTML = '<div class="action-empty">No equipment yet — add a weapon, armor, or magic item below.</div>';
     return;
   }
+  // Compact rows: toggle + name + effect badges. Details live in the popup
+  // editor (openEquipModal) — click the row to open it.
   wrap.innerHTML = list.map((it,i)=>{
-    const ab = it.abilities||{}, atk = it.attack||{};
-    return `<div class="equip-card ${it.equipped?'equipped':''}">
-      <div class="equip-head">
-        <label class="equip-toggle"><input type="checkbox" class="eq-equipped" data-i="${i}" ${it.equipped?'checked':''}><span>Equipped</span></label>
-        <input class="eq-name" data-i="${i}" value="${esc(it.name)}" placeholder="Item name (e.g. Longsword +1)">
-        <span class="row-del eq-del" data-i="${i}">✕</span>
+    const named = it.name && it.name.trim();
+    const badges = equipSummaryBadges(it).map(t=>`<span class="eq-badge">${esc(t)}</span>`).join('');
+    return `<div class="equip-row ${it.equipped?'equipped':''}">
+      <label class="equip-toggle" title="Equipped / packed"><input type="checkbox" class="eq-equipped" data-i="${i}" ${it.equipped?'checked':''}></label>
+      <div class="eq-row-main" data-i="${i}" title="Click to edit">
+        <span class="eq-row-name ${named?'':'unnamed'}">${named?esc(it.name):'Unnamed item'}</span>
+        ${badges}
       </div>
-      <textarea class="eq-desc" data-i="${i}" placeholder="Description…">${esc(it.description)}</textarea>
-      <div class="eq-effects">
-        <div class="eq-field-group">
-          <span class="eq-lbl">Attack</span>
-          <input class="eq-atk-bonus" data-i="${i}" value="${esc(atk.bonus)}" placeholder="+6 hit">
-          <input class="eq-atk-dmg" data-i="${i}" value="${esc(atk.dmg)}" placeholder="1d8+4 slashing">
-        </div>
-        <div class="eq-field-group">
-          <span class="eq-lbl">Armor</span>
-          <input class="eq-ac" data-i="${i}" value="${esc(it.ac)}" placeholder="+2 (shield) or =16 (heavy armor)" style="width:220px;">
-        </div>
-        <div class="eq-field-group">
-          <span class="eq-lbl">Ability</span>
-          ${ABILITIES.map(a=>`<label class="eq-ab"><span>${a.key.toUpperCase()}</span><input class="eq-abil" data-i="${i}" data-k="${a.key}" value="${esc(ab[a.key])}" placeholder="—"></label>`).join('')}
-        </div>
-        <div class="eq-field-group">
-          <span class="eq-lbl">Skills</span>
-          <div class="eq-skill-list">${(it.skills||[]).map((s,si)=>`<span class="eq-chip">${esc(s.name)} ${fmt(Number(s.bonus)||0)}<span class="eq-skill-del" data-i="${i}" data-si="${si}">✕</span></span>`).join('')}</div>
-          <select class="eq-skill-pick" data-i="${i}"><option value="">skill…</option>${SKILLS.map(s=>`<option>${s.name}</option>`).join('')}</select>
-          <input class="eq-skill-bonus" data-i="${i}" type="number" placeholder="±" style="width:56px;">
-          <button class="add-btn eq-skill-add" data-i="${i}">Add</button>
-        </div>
-        <div class="eq-field-group">
-          <span class="eq-lbl">Spells</span>
-          <div class="eq-spell-list">${(it.spells||[]).map((sp,si)=>`<span class="eq-chip">${esc(sp.name)} <em>${sp.level==0?'C':'L'+sp.level}</em><span class="eq-spell-del" data-i="${i}" data-si="${si}">✕</span></span>`).join('')}</div>
-          <input class="eq-spell-name" data-i="${i}" placeholder="Granted spell">
-          <select class="eq-spell-lvl" data-i="${i}" style="width:110px;">${levelOptions(0)}</select>
-          <button class="add-btn eq-spell-add" data-i="${i}">Add</button>
-        </div>
-      </div>
+      <span class="row-del eq-del" data-i="${i}">✕</span>
     </div>`;
   }).join('');
   bindEquipList(wrap);
@@ -1462,59 +1455,171 @@ function refreshEffects(){ recalc(); buildActions(); buildKnownSpells(); buildEq
 
 function bindEquipList(wrap){
   const list = equipList();
-  // In-place text edits: update state without rebuilding (preserve focus).
-  wrap.querySelectorAll('.eq-name').forEach(inp=>inp.addEventListener('input', e=>{
-    list[e.target.dataset.i].name = e.target.value; buildActions(); buildEquipAttackList(); buildInventory(); save();
-  }));
-  wrap.querySelectorAll('.eq-desc').forEach(inp=>inp.addEventListener('input', e=>{
-    list[e.target.dataset.i].description = e.target.value; save();
-  }));
-  wrap.querySelectorAll('.eq-atk-bonus').forEach(inp=>inp.addEventListener('input', e=>{
-    const it=list[e.target.dataset.i]; it.attack=it.attack||{}; it.attack.bonus=e.target.value;
-    buildActions(); buildEquipAttackList(); save();
-  }));
-  wrap.querySelectorAll('.eq-atk-dmg').forEach(inp=>inp.addEventListener('input', e=>{
-    const it=list[e.target.dataset.i]; it.attack=it.attack||{}; it.attack.dmg=e.target.value;
-    buildActions(); buildEquipAttackList(); save();
-  }));
-  wrap.querySelectorAll('.eq-abil').forEach(inp=>inp.addEventListener('input', e=>{
-    const it=list[e.target.dataset.i]; it.abilities=it.abilities||{}; it.abilities[e.target.dataset.k]=e.target.value;
-    recalc(); save();
-  }));
-  wrap.querySelectorAll('.eq-ac').forEach(inp=>inp.addEventListener('input', e=>{
-    list[e.target.dataset.i].ac = e.target.value;
-    recalc(); save();
-  }));
-  // Structural edits: rebuild the list.
   wrap.querySelectorAll('.eq-equipped').forEach(inp=>inp.addEventListener('change', e=>{
     list[e.target.dataset.i].equipped = e.target.checked; buildEquipment(); refreshEffects(); save();
   }));
   wrap.querySelectorAll('.eq-del').forEach(btn=>btn.addEventListener('click', e=>{
     list.splice(e.target.dataset.i,1); buildEquipment(); refreshEffects(); save();
   }));
-  wrap.querySelectorAll('.eq-skill-add').forEach(btn=>btn.addEventListener('click', e=>{
-    const card=e.target.closest('.equip-card');
-    const name=card.querySelector('.eq-skill-pick').value;
-    const bonus=parseInt(card.querySelector('.eq-skill-bonus').value,10);
-    if(!name || isNaN(bonus)) return;
-    const it=list[e.target.dataset.i]; it.skills=it.skills||[]; it.skills.push({name,bonus});
+  wrap.querySelectorAll('.eq-row-main').forEach(row=>row.addEventListener('click', ()=>{
+    openEquipModal(Number(row.dataset.i));
+  }));
+}
+
+// ---------- Add/Edit item popup (Inventory tab) ----------
+// One modal (partials/item-modal.html) serves both flavors: 'equip' shows the
+// full effects form working on a draft copy committed on Save; 'item' is just
+// name + quantity. index null = adding a new entry.
+let itemModalCtx = null; // { kind:'equip'|'item', index, draft }
+
+function setItemModalStatus(msg){
+  const el = document.getElementById('itemModalStatus');
+  if(el) el.textContent = msg || '';
+}
+
+// Skill/spell chips edit the draft only; nothing touches state until Save.
+function renderItemModalChips(){
+  if(!itemModalCtx || itemModalCtx.kind!=='equip') return;
+  const d = itemModalCtx.draft;
+  const skills = document.getElementById('itemModalSkillList');
+  const spells = document.getElementById('itemModalSpellList');
+  skills.innerHTML = d.skills.map((s,si)=>`<span class="eq-chip">${esc(s.name)} ${fmt(Number(s.bonus)||0)}<span class="eq-skill-del" data-si="${si}">✕</span></span>`).join('');
+  spells.innerHTML = d.spells.map((sp,si)=>`<span class="eq-chip">${esc(sp.name)} <em>${sp.level==0?'C':'L'+sp.level}</em><span class="eq-spell-del" data-si="${si}">✕</span></span>`).join('');
+  skills.querySelectorAll('.eq-skill-del').forEach(x=>x.addEventListener('click', e=>{
+    d.skills.splice(e.target.dataset.si,1); renderItemModalChips();
+  }));
+  spells.querySelectorAll('.eq-spell-del').forEach(x=>x.addEventListener('click', e=>{
+    d.spells.splice(e.target.dataset.si,1); renderItemModalChips();
+  }));
+}
+
+function openItemModalShell(kind, heading, hint){
+  const backdrop = document.getElementById('itemModalBackdrop');
+  if(!backdrop) return false;
+  document.getElementById('itemModalHeading').textContent = heading;
+  document.getElementById('itemModalHint').textContent = hint || '';
+  backdrop.classList.toggle('mode-equip', kind==='equip');
+  backdrop.classList.toggle('mode-item', kind==='item');
+  setItemModalStatus('');
+  backdrop.classList.add('open');
+  backdrop.setAttribute('aria-hidden','false');
+  setTimeout(()=>{ const n = document.getElementById('itemModalName'); if(n) n.focus(); }, 0);
+  return true;
+}
+
+function openEquipModal(index){
+  const editing = Number.isInteger(index);
+  const src = editing ? equipList()[index] : newEquipItem();
+  if(!src) return;
+  const draft = JSON.parse(JSON.stringify(src));
+  draft.attack = draft.attack||{bonus:'',dmg:''};
+  draft.abilities = draft.abilities||{};
+  draft.skills = draft.skills||[];
+  draft.spells = draft.spells||[];
+  itemModalCtx = { kind:'equip', index: editing?index:null, draft };
+  if(!openItemModalShell('equip', editing?'Edit Equipment':'Add Equipment',
+      'Effects apply while the item is equipped')) return;
+  document.getElementById('itemModalName').value = draft.name||'';
+  document.getElementById('itemModalEquipped').checked = draft.equipped!==false;
+  document.getElementById('itemModalDesc').value = draft.description||'';
+  document.getElementById('itemModalAtkBonus').value = draft.attack.bonus||'';
+  document.getElementById('itemModalAtkDmg').value = draft.attack.dmg||'';
+  document.getElementById('itemModalAC').value = draft.ac==null?'':draft.ac;
+  // Rebuild the six ability inputs so they always reflect this draft.
+  const abBox = document.getElementById('itemModalAbilities');
+  abBox.querySelectorAll('.eq-ab').forEach(n=>n.remove());
+  abBox.insertAdjacentHTML('beforeend', ABILITIES.map(a=>`<label class="eq-ab"><span>${a.key.toUpperCase()}</span><input class="eq-abil" data-k="${a.key}" value="${esc(draft.abilities[a.key])}" placeholder="—"></label>`).join(''));
+  document.getElementById('itemModalSkillPick').value='';
+  document.getElementById('itemModalSkillBonus').value='';
+  document.getElementById('itemModalSpellName').value='';
+  document.getElementById('itemModalSpellLvl').value='0';
+  renderItemModalChips();
+}
+
+function openItemModal(index){
+  const editing = Number.isInteger(index);
+  const src = editing ? state.inventory[index] : {name:'', qty:1};
+  if(!src) return;
+  itemModalCtx = { kind:'item', index: editing?index:null, draft:null };
+  if(!openItemModalShell('item', editing?'Edit Item':'Add Item', '')) return;
+  document.getElementById('itemModalName').value = src.name||'';
+  document.getElementById('itemModalQty').value = src.qty==null?1:src.qty;
+}
+
+function closeItemModal(){
+  itemModalCtx = null;
+  const backdrop = document.getElementById('itemModalBackdrop');
+  if(!backdrop) return;
+  backdrop.classList.remove('open');
+  backdrop.setAttribute('aria-hidden','true');
+}
+
+function saveItemModal(){
+  if(!itemModalCtx) return;
+  const name = document.getElementById('itemModalName').value.trim();
+  if(!name){ setItemModalStatus('Give it a name first.'); return; }
+  if(itemModalCtx.kind==='item'){
+    const qty = parseInt(document.getElementById('itemModalQty').value,10);
+    const item = { name, qty: isNaN(qty)?1:qty };
+    if(itemModalCtx.index==null) state.inventory.push(item);
+    else Object.assign(state.inventory[itemModalCtx.index], item);
+    buildInventory(); save();
+  } else {
+    const d = itemModalCtx.draft;
+    d.name = name;
+    d.equipped = document.getElementById('itemModalEquipped').checked;
+    d.description = document.getElementById('itemModalDesc').value;
+    d.attack = {
+      bonus: document.getElementById('itemModalAtkBonus').value,
+      dmg: document.getElementById('itemModalAtkDmg').value
+    };
+    d.ac = document.getElementById('itemModalAC').value;
+    document.querySelectorAll('#itemModalAbilities .eq-abil').forEach(inp=>{ d.abilities[inp.dataset.k]=inp.value; });
+    const list = equipList();
+    if(itemModalCtx.index==null) list.push(d);
+    else list[itemModalCtx.index] = d;
     buildEquipment(); refreshEffects(); save();
+  }
+  closeItemModal();
+}
+
+function bindItemModal(){
+  const backdrop = document.getElementById('itemModalBackdrop');
+  if(!backdrop) return;
+  // Static option pools, filled once.
+  document.getElementById('itemModalSkillPick').insertAdjacentHTML('beforeend', SKILLS.map(s=>`<option>${s.name}</option>`).join(''));
+  document.getElementById('itemModalSpellLvl').innerHTML = levelOptions(0);
+  document.getElementById('itemModalClose').addEventListener('click', closeItemModal);
+  document.getElementById('itemModalSave').addEventListener('click', saveItemModal);
+  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeItemModal(); });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && backdrop.classList.contains('open')) closeItemModal();
+  });
+  ['itemModalName','itemModalQty'].forEach(id=>document.getElementById(id).addEventListener('keydown', e=>{
+    if(e.key==='Enter') saveItemModal();
   }));
-  wrap.querySelectorAll('.eq-skill-del').forEach(x=>x.addEventListener('click', e=>{
-    list[e.target.dataset.i].skills.splice(e.target.dataset.si,1); buildEquipment(); refreshEffects(); save();
-  }));
-  wrap.querySelectorAll('.eq-spell-add').forEach(btn=>btn.addEventListener('click', e=>{
-    const card=e.target.closest('.equip-card');
-    const name=card.querySelector('.eq-spell-name').value.trim();
-    if(!name) return;
-    const level=Math.max(0,Math.min(9,parseInt(card.querySelector('.eq-spell-lvl').value,10)||0));
-    const it=list[e.target.dataset.i]; it.spells=it.spells||[]; it.spells.push({name,level});
-    buildEquipment(); buildActions(); buildKnownSpells(); save();
-  }));
-  wrap.querySelectorAll('.eq-spell-del').forEach(x=>x.addEventListener('click', e=>{
-    list[e.target.dataset.i].spells.splice(e.target.dataset.si,1);
-    buildEquipment(); buildActions(); buildKnownSpells(); save();
-  }));
+  document.getElementById('itemModalSkillAdd').addEventListener('click', ()=>{
+    if(!itemModalCtx || itemModalCtx.kind!=='equip') return;
+    const name = document.getElementById('itemModalSkillPick').value;
+    const bonus = parseInt(document.getElementById('itemModalSkillBonus').value,10);
+    if(!name || isNaN(bonus)){ setItemModalStatus('Pick a skill and a bonus.'); return; }
+    itemModalCtx.draft.skills.push({name,bonus});
+    document.getElementById('itemModalSkillPick').value='';
+    document.getElementById('itemModalSkillBonus').value='';
+    setItemModalStatus('');
+    renderItemModalChips();
+  });
+  document.getElementById('itemModalSpellAdd').addEventListener('click', ()=>{
+    if(!itemModalCtx || itemModalCtx.kind!=='equip') return;
+    const nameInp = document.getElementById('itemModalSpellName');
+    const name = nameInp.value.trim();
+    if(!name){ setItemModalStatus('Name the granted spell first.'); return; }
+    const level = Math.max(0,Math.min(9,parseInt(document.getElementById('itemModalSpellLvl').value,10)||0));
+    itemModalCtx.draft.spells.push({name,level});
+    nameInp.value='';
+    setItemModalStatus('');
+    renderItemModalChips();
+  });
 }
 
 // Read-only mirror of equipped weapons under the Character-tab attacks table.
@@ -4555,6 +4660,8 @@ const app = {
   save,
   refreshEffects,
   newEquipItem,
+  openEquipModal,
+  openItemModal,
   buildActions,
   buildActionResources,
   buildKnownSpells,
@@ -4774,6 +4881,7 @@ async function initSheetPage(){
   bindPassiveSenseRows(); // Passive Senses rows open a quick-reference popup
   bindNotesModal(); // shared spell-detail popup, used by the Spells & Actions tabs
   bindChoiceModal(); // "Other…" custom feature-choice popup
+  bindItemModal(); // Inventory tab: add/edit equipment & item popup
   bindCustomFeatureForm(); // Features tab: add / edit your own features
   buildClassFilterBar();
   buildSpellLevelSelects();

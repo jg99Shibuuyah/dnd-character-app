@@ -376,7 +376,9 @@ textarea.trait{
 
 /* Inventory */
 .inv-row{ display:flex; gap:6px; align-items:center; padding:3px 0; border-bottom:1px dashed var(--parchment-line);}
-.inv-row input.item-name{ flex:1; background:transparent; border:none; font-size:14px; color:var(--ink);}
+.inv-row .item-name{ flex:1; font-size:14px; color:var(--ink);}
+.inv-row .item-name.inv-edit{ cursor:pointer; }
+.inv-row .item-name.inv-edit:hover{ color: var(--neon-cyan); }
 .inv-row input.item-qty{ width:36px; text-align:center; background:transparent; border:none; font-family:'JetBrains Mono',monospace; color:var(--ink);}
 .currency{ display:grid; grid-template-columns: repeat(5,1fr); gap:6px; margin-bottom:10px;}
 .currency .c{ text-align:center; }
@@ -851,26 +853,33 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 .ability .mod-badge.nerfed{ border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
 
 /* ---------- Equipment tab ---------- */
-.equip-card{
+/* Compact equipment rows — details live in the add/edit popup (item-modal) */
+.equip-row{
+  display:flex; align-items:center; gap:8px;
   background: var(--void-2); border:1px solid var(--parchment-line); border-radius:3px;
-  padding:12px 14px; margin-bottom:12px; opacity:0.6;
+  padding:7px 10px; margin-bottom:6px; opacity:0.6;
 }
-.equip-card.equipped{ opacity:1; border-color: var(--border-glow); box-shadow: 0 0 10px rgba(0,255,213,0.08); }
-.equip-head{ display:flex; align-items:center; gap:10px; }
+.equip-row.equipped{ opacity:1; border-color: var(--border-glow); box-shadow: 0 0 10px rgba(0,255,213,0.08); }
 .equip-toggle{ display:flex; align-items:center; gap:5px; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap; cursor:pointer; }
 .equip-toggle input{ accent-color: var(--neon-green); width:14px; height:14px; }
-.equip-head .eq-name{
-  flex:1; font-size:15px; padding:6px 8px;
-  background: var(--void-3); color: var(--ink);
-  border:1px solid var(--parchment-line); border-radius:2px;
+.eq-row-main{ flex:1; min-width:0; display:flex; align-items:center; flex-wrap:wrap; gap:6px; cursor:pointer; }
+.eq-row-name{ font-size:14px; color: var(--ink); }
+.eq-row-main:hover .eq-row-name{ color: var(--neon-cyan); }
+.eq-row-name.unnamed{ color: var(--ink-dim); font-style:italic; }
+.eq-badge{
+  font-family:'JetBrains Mono', monospace; font-size:10.5px; color: var(--ink-soft);
+  background: var(--void-3); border:1px solid rgba(0,255,213,0.25); border-radius:2px;
+  padding:1px 6px; white-space:nowrap;
 }
-.equip-head .eq-name:focus{ outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
-.equip-card textarea.eq-desc{
-  width:100%; min-height:44px; resize:vertical; margin-top:8px;
-  font-family:'JetBrains Mono', monospace; font-size:12.5px;
-  background: var(--void-3); color: var(--ink-soft);
-  border:1px solid var(--parchment-line); border-radius:2px; padding:7px 8px;
-}
+
+/* Add/Edit item popup: mode-equip / mode-item on the backdrop picks the fields */
+.item-modal-backdrop .app-modal{ width:min(640px, 100%); }
+.item-modal-backdrop .app-field textarea{ min-height:72px; }
+.item-modal-backdrop .item-modal-item-only{ display:none; }
+.item-modal-backdrop.mode-item .item-modal-item-only{ display:flex; }
+.item-modal-backdrop .item-modal-equip-only{ display:none; }
+.item-modal-backdrop.mode-equip .item-modal-equip-only{ display:flex; flex-direction:column; gap:12px; }
+#itemModalQty{ width:90px; }
 .eq-effects{ margin-top:8px; display:flex; flex-direction:column; gap:8px; }
 .eq-field-group{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .eq-lbl{
