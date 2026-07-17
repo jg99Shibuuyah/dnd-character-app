@@ -240,10 +240,11 @@ function buildSkills(){
 // the "?" buttons on the Skills tab and the Settings skill picker — same
 // draggable window system as the dice roller and notes popups).
 function openSkillLegend(){
-  openNotesModal({
+  const win = openNotesModal({
     name: 'Skill Proficiencies — Legend',
     badges: ['Reference'],
     detail: `
+      <p>Click any skill for a quick description. <span class="hl">Highlighted rows are proficiencies</span> — toggle them on the <a href="#" class="skills-to-settings-link hl">Character Settings</a> tab. Tagged rows are granted by your species or background.</p>
       <div class="legend-row"><span class="prof-dot on"></span><span>Proficient — your proficiency bonus is added to the skill.</span></div>
       <div class="legend-row"><span class="prof-dot on granted"></span><span>Granted proficiency — applied automatically by your <span class="hl">species</span> or <span class="hl">background</span>. Locked: it goes away only if you change the source in Settings.</span></div>
       <div class="legend-row"><span class="skill-chip classpick legend-chip">chip</span><span>Offered by your <span class="hl">class</span> — pick your allowed number of these in Settings (the class decides how many).</span></div>
@@ -251,11 +252,33 @@ function openSkillLegend(){
       <div class="legend-row"><span class="grant-tag">background</span><span>Tag showing where a granted proficiency comes from.</span></div>
       <p class="nr-hint">Skill bonuses everywhere on the sheet update automatically: ability modifier + proficiency bonus (if proficient) + equipped-gear bonuses.</p>`
   });
+  // The "Character Settings" link inside the popup jumps to that tab.
+  if(win) win.el.querySelectorAll('.skills-to-settings-link').forEach(a=>
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      const btn = document.querySelector('.tab-btn[data-tab="settings"]');
+      if(btn) btn.click();
+      nrCloseWindow(win);
+    }));
+}
+
+// Same treatment for the Equipment panel: the how-it-works blurb lives in the
+// "?" button's title (hover) and this popup (click) instead of inline text.
+function openEquipLegend(){
+  openNotesModal({
+    name: 'Equipment — How it works',
+    badges: ['Reference'],
+    detail: `
+      <p>Gear you're wearing or wielding. <span class="hl">Equipped</span> items feed your attacks, spellcasting, ability scores, and skill bonuses on the other tabs.</p>
+      <p class="nr-hint">Ability fields accept <span class="hl">+2</span> (bonus) or <span class="hl">=19</span> (set score).</p>`
+  });
 }
 
 function bindSkillLegendButtons(){
   document.querySelectorAll('.skill-legend-btn').forEach(btn=>
     btn.addEventListener('click', e=>{ e.stopPropagation(); openSkillLegend(); }));
+  document.querySelectorAll('.equip-legend-btn').forEach(btn=>
+    btn.addEventListener('click', e=>{ e.stopPropagation(); openEquipLegend(); }));
 }
 
 // ---------- Quick-tools launcher (bottom-right "⋯" FAB) ----------
@@ -1932,13 +1955,6 @@ function bindTabs(){
       if(btn.dataset.tab==='features') refreshFeatureLists();
       if(btn.dataset.tab==='settings') buildClassList();
     });
-  });
-  // Skills tab: the "Character Settings" hint link jumps to the settings tab.
-  const toSettings = document.getElementById('skillsToSettings');
-  if(toSettings) toSettings.addEventListener('click', e=>{
-    e.preventDefault();
-    const btn = document.querySelector('.tab-btn[data-tab="settings"]');
-    if(btn) btn.click();
   });
 }
 
