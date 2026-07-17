@@ -416,6 +416,13 @@ textarea.trait{
 .res-adj{ width:20px; height:20px; line-height:1; padding:0; border:1px solid var(--parchment-line); border-radius:3px; background:transparent; color:var(--ink-soft); cursor:pointer; font-family:'JetBrains Mono',monospace; }
 .res-adj:hover{ background:rgba(201,162,39,0.15); color:var(--ink); }
 .res-empty{ font-size:12px; color:var(--ink-dim); font-style:italic; padding:8px 4px; }
+/* Owner sub-dividers grouping the pools by whose sheet they belong to. */
+.res-group-row td{ padding:10px 4px 3px; border-bottom:1px solid var(--parchment-line); }
+.res-group-row:first-child td{ padding-top:2px; }
+.res-group-label{
+  font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--neon-green);
+}
 /* Auto spell-slot rows: totals are managed on the Spells tab. */
 .res-row-auto td{ background:rgba(0,255,213,0.04); }
 .res-auto-name{ font-size:14px; color:var(--ink); }

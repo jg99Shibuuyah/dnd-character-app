@@ -2207,8 +2207,12 @@ function buildActionResources(){
     </tr>`;
   }).join('');
 
-  const poolRow = (ownerKey, i, r, tag) => `<tr class="res-row">
-      <td><span class="res-auto-name">${esc(r.name||'—')}</span>${tag?`<span class="res-auto-tag" title="Companion resource">${esc(tag)}</span>`:''}</td>
+  // A sub-divider row labelling which sheet the pools beneath it belong to.
+  const groupRow = label =>
+    `<tr class="res-group-row"><td colspan="2"><span class="res-group-label">${esc(label)}</span></td></tr>`;
+
+  const poolRow = (ownerKey, i, r) => `<tr class="res-row">
+      <td><span class="res-auto-name">${esc(r.name||'—')}</span></td>
       <td>
         <div class="res-pip-cell">
           ${resourceMeterHtml(r.total, r.used, `data-o="${ownerKey}" data-i="${i}"`)}
@@ -2221,14 +2225,18 @@ function buildActionResources(){
     </tr>`;
 
   const charList = resourceOwnerList('char');
-  const manualHtml = charList.map((r,i)=> poolRow('char', i, r, null)).join('');
-  const compHtml = companions().map((c,ci)=>
-    (c.resources||[]).map((r,ri)=> poolRow(String(ci), ri, r, c.name||'companion')).join('')
-  ).join('');
+  // Group the table under owner sub-dividers: spell slots, then the character's
+  // own pools, then one section per companion that has resources.
+  const groups = [];
+  if(slotRows.length) groups.push(groupRow('Spell Slots') + autoHtml);
+  if(charList.length) groups.push(groupRow('Character') + charList.map((r,i)=> poolRow('char', i, r)).join(''));
+  companions().forEach((c,ci)=>{
+    const rows = c.resources||[];
+    if(rows.length) groups.push(groupRow(c.name||('Companion '+(ci+1))) + rows.map((r,ri)=> poolRow(String(ci), ri, r)).join(''));
+  });
 
-  const anyRows = slotRows.length || charList.length || compHtml;
-  body.innerHTML = anyRows
-    ? autoHtml + manualHtml + compHtml
+  body.innerHTML = groups.length
+    ? groups.join('')
     : `<tr><td colspan="2" class="res-empty">No trackers yet — spell slots appear here automatically once you have them; add other pools (Ki, Sorcery Points…) with the button below.</td></tr>`;
 
   // Auto spell-slot pips write straight back to the real slot state and keep the
