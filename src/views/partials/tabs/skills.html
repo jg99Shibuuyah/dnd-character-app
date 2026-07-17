@@ -1,6 +1,6 @@
-<!-- TAB: Skills — the full skill list (moved off the Character tab), with
-     proficient rows highlighted. Rows are built by buildSkills() in app.js;
-     clicking one opens a floating description popup (openSkillDetail). -->
+<!-- TAB: Skills — the full skill list and saving throws (moved off the Character
+     tab), with proficient rows highlighted. Rows are built by buildSkills() /
+     buildSaves() in app.js; clicking a skill opens a description popup. -->
 <div class="tab-pane" id="tab-skills">
 <div class="grid grid-two">
 
@@ -20,6 +20,11 @@
   </div>
 
   <div>
+    <div class="panel">
+      <h2><span>Saving Throws</span><span class="rune">✦</span></h2>
+      <div id="savesPanel"></div>
+    </div>
+
     <div class="panel">
       <h2><span>Passive Senses</span><span class="rune">✦</span></h2>
       <div class="mini-row passive-row" data-passive="Perception" title="Click for a quick description"><label>Passive Perception</label><span class="val" id="passivePerception">10</span></div>

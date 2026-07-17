@@ -4,7 +4,8 @@
   "description": "Local server for the dynamic D&D character sheet, with SQLite-backed character profiles.",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "start:noauth": "SKIP_AUTH=true node src/server.js"
   },
   "engines": {
     "node": ">=24"

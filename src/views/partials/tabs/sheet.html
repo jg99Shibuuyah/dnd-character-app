@@ -2,7 +2,7 @@
 <div class="tab-pane active" id="tab-sheet">
 <div class="grid grid-sheet">
 
-  <!-- LEFT COLUMN: Abilities, Saves, Skills -->
+  <!-- LEFT COLUMN: Abilities & derived numbers (saving throws live on the Skills tab) -->
   <div>
     <div class="panel" id="abilitiesPanel">
       <h2><span>Ability Scores</span><span class="rune">✦</span></h2>
@@ -10,9 +10,8 @@
     </div>
 
     <div class="panel">
-      <h2><span>Saving Throws</span><span class="rune">✦</span></h2>
-      <div id="savesPanel"></div>
-      <div class="mini-row" style="margin-top:8px; border-top:1px solid var(--parchment-line); padding-top:8px;">
+      <h2><span>Derived</span><span class="rune">✦</span></h2>
+      <div class="mini-row">
         <label>Proficiency Bonus</label>
         <span class="val" id="profBonusDisplay">+2</span>
       </div>
@@ -52,13 +51,12 @@
     </div>
 
     <div class="panel">
-      <h2><span>Attacks &amp; Spellcasting</span><span class="rune">⚔</span></h2>
-      <table class="attacks">
-        <thead><tr><th style="width:34%">Name</th><th style="width:16%">Bonus</th><th style="width:34%">Damage / Type</th><th></th></tr></thead>
-        <tbody id="attacksBody"></tbody>
-      </table>
-      <button class="add-btn" id="addAttack">+ Add Attack</button>
-      <div id="equipAttackList"></div>
+      <h2><span>Companions <button class="legend-btn companion-legend-btn" type="button" title="Creatures that fight alongside you — a Steel Defender, familiar, summoned spirit… Auto-generate one from your features and spells, or add one by hand.">?</button></span><span class="rune">🐾</span></h2>
+      <div id="companionList"></div>
+      <div class="companion-btn-row">
+        <button class="add-btn" id="autoCompanionBtn">✦ Auto-generate from features &amp; spells</button>
+        <button class="add-btn" id="addCompanionBtn">+ Add companion manually</button>
+      </div>
     </div>
 
   </div>

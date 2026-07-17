@@ -4,18 +4,32 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"],
+      "runtimeArgs": [
+        "start"
+      ],
       "port": 3000
     },
     {
       "name": "dev-scratch-db",
       "runtimeExecutable": "env",
       "runtimeArgs": [
-        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/ed858d52-5679-4613-8894-842b9975b8c2/scratchpad/preview.db",
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/bb0725b1-3ba3-4b21-81ab-ab0e6cabdab6/scratchpad/preview.db",
         "node",
         "src/server.js"
       ],
       "port": 4174,
+      "autoPort": true
+    },
+    {
+      "name": "dev-builtin-split",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/769fe6a3-77a9-4d79-8e0b-2b14bcc49387/scratchpad/preview.db",
+        "PORT=4177",
+        "node",
+        "src/server.js"
+      ],
+      "port": 4177,
       "autoPort": true
     },
     {
@@ -63,6 +77,31 @@
         "/Users/jg/Projects/D&D/app/dnd-character-app/.claude/worktrees/session-2026-07-15/src/server.js"
       ],
       "port": 4180,
+      "autoPort": true
+    },
+    {
+      "name": "dev-companions",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/606f785d-8053-4c2a-b879-b1c766fdf549/scratchpad/preview.db",
+        "PORT=4185",
+        "SKIP_AUTH=true",
+        "node",
+        "src/server.js"
+      ],
+      "port": 4185,
+      "autoPort": true
+    },
+    {
+      "name": "dev-goliath-verify",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/2cb79d6c-2117-4c08-a481-f876091c1295/scratchpad/verify.db",
+        "PORT=4183",
+        "node",
+        "src/server.js"
+      ],
+      "port": 4183,
       "autoPort": true
     }
   ]

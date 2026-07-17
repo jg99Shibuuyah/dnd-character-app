@@ -36,6 +36,39 @@ const statements = {
     JOIN game_sessions g ON g.id = m.session_id
     WHERE m.character_id = ? AND g.dm_user_id = ?
     LIMIT 1
+  `),
+  // The host's loaner pool, with whoever currently has each character claimed.
+  hostCharacters: db.prepare(`
+    SELECT sc.character_id, c.name AS character_name, c.data AS character_data,
+           m.user_id AS claimed_by_user_id, u.username AS claimed_by
+    FROM session_characters sc
+    JOIN characters c ON c.id = sc.character_id
+    LEFT JOIN session_members m ON m.session_id = sc.session_id AND m.character_id = sc.character_id
+    LEFT JOIN users u ON u.id = m.user_id
+    WHERE sc.session_id = ?
+    ORDER BY c.name COLLATE NOCASE
+  `),
+  isHostCharacter: db.prepare(
+    'SELECT 1 FROM session_characters WHERE session_id = ? AND character_id = ? LIMIT 1'
+  ),
+  addHostCharacter: db.prepare(
+    'INSERT OR IGNORE INTO session_characters (session_id, character_id) VALUES (?, ?)'
+  ),
+  removeHostCharacter: db.prepare(
+    'DELETE FROM session_characters WHERE session_id = ? AND character_id = ?'
+  ),
+  claimant: db.prepare(
+    'SELECT user_id FROM session_members WHERE session_id = ? AND character_id = ? LIMIT 1'
+  ),
+  releaseClaims: db.prepare(
+    'UPDATE session_members SET character_id = NULL WHERE session_id = ? AND character_id = ?'
+  ),
+  // A player using a host character from the session pool may read AND edit it.
+  borrowerCanEditCharacter: db.prepare(`
+    SELECT 1 FROM session_members m
+    JOIN session_characters sc ON sc.session_id = m.session_id AND sc.character_id = m.character_id
+    WHERE m.user_id = ? AND m.character_id = ?
+    LIMIT 1
   `)
 };
 
@@ -102,7 +135,36 @@ function dmCanViewCharacter(dmUserId, characterId) {
   return !!statements.dmCanViewCharacter.get(characterId, dmUserId);
 }
 
+function hostCharacters(sessionId) {
+  return statements.hostCharacters.all(sessionId);
+}
+
+function isHostCharacter(sessionId, characterId) {
+  return !!statements.isHostCharacter.get(sessionId, characterId);
+}
+
+function addHostCharacter(sessionId, characterId) {
+  statements.addHostCharacter.run(sessionId, characterId);
+}
+
+// Pulling a character from the pool also releases whoever was using it.
+const removeHostCharacter = db.transaction((sessionId, characterId) => {
+  statements.releaseClaims.run(sessionId, characterId);
+  statements.removeHostCharacter.run(sessionId, characterId);
+});
+
+function claimant(sessionId, characterId) {
+  const row = statements.claimant.get(sessionId, characterId);
+  return row ? row.user_id : null;
+}
+
+function borrowerCanEditCharacter(userId, characterId) {
+  return !!statements.borrowerCanEditCharacter.get(userId, characterId);
+}
+
 module.exports = {
   create, findById, findByCode, listForUser, members, membership,
-  addMember, removeMember, setMemberCharacter, remove, dmCanViewCharacter
+  addMember, removeMember, setMemberCharacter, remove, dmCanViewCharacter,
+  hostCharacters, isHostCharacter, addHostCharacter, removeHostCharacter,
+  claimant, borrowerCanEditCharacter
 };

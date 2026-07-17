@@ -45,6 +45,14 @@ db.exec(`
     UNIQUE(session_id, user_id)
   );
 
+  CREATE TABLE IF NOT EXISTS session_characters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
+    character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+    added_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(session_id, character_id)
+  );
+
   CREATE TABLE IF NOT EXISTS characters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,

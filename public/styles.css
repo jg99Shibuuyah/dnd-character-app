@@ -1483,3 +1483,107 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 /* Freeze the sheet itself: tabs still switch, but fields don't take input. */
 .view-only .tab-pane input, .view-only .tab-pane select, .view-only .tab-pane textarea,
 .view-only .tab-pane button:not(.tab-btn){ pointer-events:none; opacity:0.75; }
+
+/* ---------- Borrowed host character (/?view=<id>, editable) ---------- */
+/* Fully editable, but it's the host's profile: no switcher/new/delete. */
+.borrowed #profileSelect, .borrowed #newCharBtn, .borrowed #dupCharBtn,
+.borrowed #delCharBtn, .borrowed .profile-bar label{ display:none; }
+.borrowed .view-banner{ color: var(--neon-cyan); }
+#saveCopyBtn{ margin-left:8px; }
+
+/* ---------- Sessions page: join chooser & host loaner pool ---------- */
+.join-chooser{
+  margin-top:12px; padding:12px; border:1px solid var(--parchment-line);
+  border-radius:4px; display:flex; flex-direction:column; gap:8px;
+}
+.join-chooser[hidden]{ display:none; }
+.join-chooser-title{
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1px;
+  text-transform:uppercase; color: var(--neon-cyan);
+}
+.host-pool-title{
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1px;
+  text-transform:uppercase; color: var(--ink-soft); margin:16px 0 6px;
+}
+.host-offer{ margin-top:10px; }
+
+/* ---------- Companions (Character tab) ---------- */
+.companion-btn-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.companion-btn-row .add-btn{ flex:1; white-space:nowrap; }
+.companion-card{
+  border:1px solid var(--parchment-line); border-radius:4px;
+  padding:10px 12px; margin-bottom:12px;
+}
+.comp-head{ display:flex; align-items:center; gap:8px; }
+.comp-head .comp-name{
+  flex:1; min-width:0; background:transparent; border:none;
+  border-bottom:1px dashed var(--parchment-line);
+  color:inherit; font-weight:600; font-size:15px; padding:2px 0;
+}
+.comp-head .comp-name:focus{ outline:none; border-bottom-color: var(--neon-green); }
+.comp-collapse{
+  background:transparent; border:1px solid var(--parchment-line); border-radius:3px;
+  color:var(--ink-soft); cursor:pointer; width:22px; height:22px; line-height:1;
+}
+.comp-collapse:hover{ color:var(--neon-green); border-color:var(--neon-green); }
+.comp-src{ font-size:11px; color:var(--ink-dim); margin:4px 0 6px; }
+.comp-hp-strip{ margin:8px 0 0; }
+.companion-card.collapsed .comp-body{ display:none; }
+.comp-body{ margin-top:8px; }
+.comp-typeline{ font-style:italic; color:var(--ink-dim); font-size:12px; margin-bottom:6px; }
+.comp-abilities{
+  display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; margin:6px 0 8px;
+}
+.comp-ab{ text-align:center; border:1px solid var(--parchment-line); border-radius:3px; padding:4px 2px; }
+.comp-ab label{
+  display:block; font-family:'Orbitron', sans-serif; font-size:8px;
+  letter-spacing:1px; color:var(--ink-soft); margin-bottom:2px;
+}
+.comp-ab span{ font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:600; }
+.comp-ab input{
+  width:100%; background:transparent; border:none; text-align:center;
+  color:inherit; font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600;
+}
+.comp-ab input:focus{ outline:1px solid var(--neon-green); }
+.comp-line{ font-size:12.5px; margin:3px 0; line-height:1.45; }
+.comp-line b{ color:var(--ink-soft); }
+.comp-note{ color:var(--ink-dim); font-style:italic; }
+.comp-manual-grid{ display:grid; grid-template-columns:2fr 1fr 1fr 2fr; gap:8px; margin-bottom:6px; }
+.comp-area{
+  width:100%; background:transparent; border:1px solid var(--parchment-line);
+  border-radius:3px; color:inherit; font:inherit; font-size:12.5px;
+  padding:6px 8px; margin-top:4px; resize:vertical;
+}
+.comp-area:focus{ outline:none; border-color:var(--neon-green); }
+.comp-notes{ margin-top:8px; }
+.comp-pick{ cursor:pointer; }
+.comp-pick:hover{ background: rgba(5,255,161,0.08); }
+.comp-pick-dim .a-name{ color:var(--ink-dim); }
+@media (max-width: 700px){
+  .comp-manual-grid{ grid-template-columns:1fr 1fr; }
+  .comp-abilities{ grid-template-columns:repeat(3, 1fr); }
+}
+
+/* ---------- Resource Points: >10-point counter & add/edit popup ---------- */
+.res-counter{ display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
+.res-count-num{
+  font-family:'JetBrains Mono', monospace; font-weight:600; font-size:14px;
+  color:var(--gold); min-width:52px; text-align:center;
+}
+.res-step{
+  width:22px; height:22px; line-height:1; padding:0; border:1px solid var(--parchment-line);
+  border-radius:3px; background:transparent; color:var(--ink-soft); cursor:pointer;
+  font-family:'JetBrains Mono', monospace; font-size:14px;
+}
+.res-step:hover{ background:rgba(201,162,39,0.15); color:var(--ink); }
+.res-form{ display:flex; flex-direction:column; gap:6px; }
+.res-form label{
+  font-family:'Orbitron', sans-serif; font-size:9px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--ink-soft); margin-top:4px;
+}
+.res-form input, .res-form select{
+  background:transparent; border:1px solid var(--parchment-line); border-radius:3px;
+  color:inherit; font:inherit; padding:6px 8px;
+}
+.res-form input:focus, .res-form select:focus{ outline:none; border-color:var(--neon-green); }
+.res-form .add-btn{ margin-top:8px; }

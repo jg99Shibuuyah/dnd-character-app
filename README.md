@@ -20,12 +20,13 @@ That's it — a file called `characters.db` will be created in this folder
 the first time you run it. That file *is* your database; back it up or
 copy it elsewhere if you want to keep a snapshot of your characters.
 
-Two environment variables are recognized (both optional):
+These environment variables are recognized (all optional):
 
-| Variable  | Default              | Purpose                       |
-|-----------|----------------------|-------------------------------|
-| `PORT`    | `3000`               | HTTP port the server binds to |
-| `DB_FILE` | `./characters.db`    | Path to the SQLite database   |
+| Variable    | Default              | Purpose                       |
+|-------------|----------------------|-------------------------------|
+| `PORT`      | `3000`               | HTTP port the server binds to |
+| `DB_FILE`   | `./characters.db`    | Path to the SQLite database   |
+| `SKIP_AUTH` | `false`              | `true` skips the sign-in screen: every request runs as the seeded `admin` account (`npm run start:noauth`). Local use only — never on a shared server |
 
 ### Platform-specific setup
 

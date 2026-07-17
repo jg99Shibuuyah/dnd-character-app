@@ -1,6 +1,7 @@
 const AuthSession = require('../models/authSession.model');
 const User = require('../models/user.model');
 const { hashToken } = require('../services/password');
+const config = require('../config');
 
 const COOKIE_NAME = 'ledger_session';
 const SESSION_TTL_DAYS = 30;
@@ -26,6 +27,13 @@ function attachUser(req, res, next) {
       const user = User.findById(session.user_id);
       if (user) req.user = { id: user.id, username: user.username, email: user.email };
     }
+  }
+  // SKIP_AUTH=true: no valid cookie still lands on the seeded default account,
+  // so the login screen never appears. A real signed-in cookie (above) wins,
+  // letting you still test other accounts while the flag is on.
+  if (!req.user && config.skipAuth) {
+    const user = User.findByUsername('admin');
+    if (user) req.user = { id: user.id, username: user.username, email: user.email };
   }
   next();
 }

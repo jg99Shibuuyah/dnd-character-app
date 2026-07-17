@@ -1,11 +1,14 @@
 <!-- Reference search over everything the app knows — built-in and imported
-     classes, features, subclasses, species, spells, actions, alignments, and
-     weapon mastery properties. Wired in app.js: initNotesPage() / buildNotesIndex(). -->
+     classes, features, species, spells, actions, alignments, and weapon mastery
+     properties. Subclasses and subspecies are not listed as their own results;
+     they open from inside their parent class/species window.
+     Wired in app.js: initNotesPage() / buildNotesIndex(). -->
 <div class="panel">
   <h2><span>Search the Reference</span><span class="rune">◈</span></h2>
   <input id="notesSearch" type="text" autocomplete="off"
          placeholder="Search anything — Fireball, Darkvision, Rage, Elf, Lawful Good…">
   <div class="filter-bar" id="notesFilterBar" style="margin-top:10px;"><span class="filter-label">Show</span></div>
+  <div class="filter-bar" id="notesSourceFilterBar" style="margin-top:6px;"><span class="filter-label">Source</span></div>
   <div id="notesResults"></div>
-  <div class="picker-hint" style="margin-bottom:0;">Looks up classes &amp; their features, subclasses, species &amp; traits, spells (built-in <span class="hl">and imported</span>), standard actions, alignments, and weapon mastery properties. Click a result for full details and editing.</div>
+  <div class="picker-hint" style="margin-bottom:0;">Looks up classes &amp; their features, species &amp; traits, spells (built-in <span class="hl">and imported</span>), standard actions, alignments, and weapon mastery properties. Subclasses and subspecies open from within their parent class or species. Click a result for full details and editing.</div>
 </div>

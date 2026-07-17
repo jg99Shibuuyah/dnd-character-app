@@ -33,22 +33,56 @@ function create(req, res) {
   res.json({ id });
 }
 
+// Resolve a join/attach request to a character id, or null for "no character".
+// Players may bring their own character, or claim an unclaimed one from the
+// host's loaner pool (which grants them read/edit on it). Writes an error to
+// `res` and returns undefined when the request isn't allowed.
+function resolveCharacterChoice(req, res, session) {
+  const { characterId, hostCharacterId } = req.body || {};
+  if (hostCharacterId) {
+    if (!GameSession.isHostCharacter(session.id, hostCharacterId)) {
+      return void res.status(403).json({ error: 'That character is not offered by the host' });
+    }
+    const holder = GameSession.claimant(session.id, hostCharacterId);
+    if (holder && holder !== req.user.id) {
+      return void res.status(409).json({ error: 'Another player is already using that character' });
+    }
+    return Number(hostCharacterId);
+  }
+  if (characterId) {
+    const row = Character.findById(characterId);
+    if (!row || row.user_id !== req.user.id) {
+      return void res.status(403).json({ error: 'You can only bring your own character' });
+    }
+    return row.id;
+  }
+  return null;
+}
+
+// Look up a session by join code before joining: name, DM, and which loaner
+// characters are up for grabs. Knowing the code is what authorizes a join, so
+// it also authorizes this summary.
+function preview(req, res) {
+  const code = (req.body && req.body.code || '').trim().toUpperCase();
+  const session = code && GameSession.findByCode(code);
+  if (!session) return res.status(404).json({ error: 'No session with that code' });
+  const alreadyIn = !!GameSession.membership(session.id, req.user.id);
+  const hostCharacters = GameSession.hostCharacters(session.id).map(row => ({
+    ...characterSummary(row),
+    available: !row.claimed_by_user_id
+  }));
+  res.json({ name: session.name, alreadyIn, hostCharacters });
+}
+
 function join(req, res) {
   const code = (req.body && req.body.code || '').trim().toUpperCase();
-  const characterId = req.body && req.body.characterId;
   const session = code && GameSession.findByCode(code);
   if (!session) return res.status(404).json({ error: 'No session with that code' });
   if (GameSession.membership(session.id, req.user.id)) {
     return res.status(409).json({ error: 'You are already in that session' });
   }
-  let charId = null;
-  if (characterId) {
-    const row = Character.findById(characterId);
-    if (!row || row.user_id !== req.user.id) {
-      return res.status(403).json({ error: 'You can only bring your own character' });
-    }
-    charId = row.id;
-  }
+  const charId = resolveCharacterChoice(req, res, session);
+  if (charId === undefined) return;
   GameSession.addMember(session.id, req.user.id, charId);
   res.json({ id: session.id });
 }
@@ -63,31 +97,63 @@ function detail(req, res) {
   const mine = GameSession.membership(session.id, req.user.id);
   if (!mine) return res.status(403).json({ error: 'You are not in that session' });
   const isDm = session.dm_user_id === req.user.id;
+  const hostIds = new Set(GameSession.hostCharacters(session.id).map(r => r.character_id));
   const members = GameSession.members(session.id).map(m => {
     const character = characterSummary(m);
+    if (character) character.borrowed = hostIds.has(character.id);
     if (character && !isDm && m.user_id !== req.user.id) delete character.id;
     return { username: m.username, role: m.role, isYou: m.user_id === req.user.id, character };
   });
-  res.json({ id: session.id, name: session.name, code: session.code, role: mine.role, isDm, members });
+  // The loaner pool: ids are visible to every member (needed to claim one),
+  // but full-sheet reads stay gated in characters.controller.get.
+  const hostCharacters = GameSession.hostCharacters(session.id).map(row => ({
+    ...characterSummary(row),
+    claimedBy: row.claimed_by || null,
+    claimedByYou: row.claimed_by_user_id === req.user.id
+  }));
+  res.json({
+    id: session.id, name: session.name, code: session.code,
+    role: mine.role, isDm, members, hostCharacters
+  });
 }
 
-// Change which of your characters is attached to the session.
+// Change which character is attached to you in the session: one of your own,
+// one claimed from the host's pool, or none.
 function setCharacter(req, res) {
   const session = GameSession.findById(req.params.id);
   if (!session) return res.status(404).json({ error: 'Session not found' });
   if (!GameSession.membership(session.id, req.user.id)) {
     return res.status(403).json({ error: 'You are not in that session' });
   }
-  const characterId = req.body && req.body.characterId;
-  let charId = null;
-  if (characterId) {
-    const row = Character.findById(characterId);
-    if (!row || row.user_id !== req.user.id) {
-      return res.status(403).json({ error: 'You can only attach your own character' });
-    }
-    charId = row.id;
-  }
+  const charId = resolveCharacterChoice(req, res, session);
+  if (charId === undefined) return;
   GameSession.setMemberCharacter(session.id, req.user.id, charId);
+  res.json({ ok: true });
+}
+
+// DM-only: offer one of your characters to players (add to the loaner pool).
+function addHostCharacter(req, res) {
+  const session = GameSession.findById(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (session.dm_user_id !== req.user.id) {
+    return res.status(403).json({ error: 'Only the DM can offer characters' });
+  }
+  const row = req.body && req.body.characterId && Character.findById(req.body.characterId);
+  if (!row || row.user_id !== req.user.id) {
+    return res.status(403).json({ error: 'You can only offer your own characters' });
+  }
+  GameSession.addHostCharacter(session.id, row.id);
+  res.json({ ok: true });
+}
+
+// DM-only: withdraw a character from the pool (releases any player using it).
+function removeHostCharacter(req, res) {
+  const session = GameSession.findById(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (session.dm_user_id !== req.user.id) {
+    return res.status(403).json({ error: 'Only the DM can withdraw characters' });
+  }
+  GameSession.removeHostCharacter(session.id, Number(req.params.characterId));
   res.json({ ok: true });
 }
 
@@ -111,4 +177,7 @@ function remove(req, res) {
   res.json({ ok: true });
 }
 
-module.exports = { list, create, join, detail, setCharacter, leave, remove };
+module.exports = {
+  list, create, preview, join, detail, setCharacter, leave, remove,
+  addHostCharacter, removeHostCharacter
+};

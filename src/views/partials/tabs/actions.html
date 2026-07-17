@@ -4,11 +4,20 @@
     <div>
       <div class="panel">
         <h2><span>Attacks</span><span class="rune">⚔</span></h2>
-        <div id="actAttacks"></div>
+        <table class="attacks">
+          <thead><tr><th style="width:34%">Name</th><th style="width:16%">Bonus</th><th style="width:34%">Damage / Type</th><th></th></tr></thead>
+          <tbody id="attacksBody"></tbody>
+        </table>
+        <button class="add-btn" id="addAttack">+ Add Attack</button>
+        <div id="equipAttackList"></div>
       </div>
       <div class="panel">
         <h2><span>Standard Actions</span><span class="rune">⚔</span></h2>
         <div id="actStandard"></div>
+      </div>
+      <div class="panel">
+        <h2><span>Companion Actions</span><span class="rune">🐾</span></h2>
+        <div id="actCompanions"></div>
       </div>
       <div class="panel">
         <h2><span>Reactions</span><span class="rune">⟲</span></h2>

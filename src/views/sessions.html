@@ -20,9 +20,18 @@
       </form>
       <form id="joinSessionForm" class="sessions-form">
         <input id="joinCode" placeholder="Join code, e.g. K7MPQ2" maxlength="6" required>
-        <select id="joinCharacter"></select>
         <button class="pbtn" type="submit">Join as player</button>
       </form>
+    </div>
+    <div class="join-chooser" id="joinChooser" hidden>
+      <div class="join-chooser-title" id="joinChooserTitle"></div>
+      <div class="sessions-form">
+        <select id="joinCharacter"></select>
+        <button class="pbtn" id="joinConfirmBtn" type="button">Join session</button>
+        <button class="pbtn" id="joinCancelBtn" type="button">Cancel</button>
+      </div>
+      <div class="session-dim">Pick one of your own characters, take one the host is offering
+        (you can read, edit, and copy it), or join without one and decide later.</div>
     </div>
     <div class="sessions-error" id="sessionsError" hidden></div>
   </div>
@@ -36,6 +45,7 @@
     <h2><span id="sessionDetailTitle">Session</span></h2>
     <div class="session-meta" id="sessionMeta"></div>
     <div id="sessionMembers"></div>
+    <div id="hostCharacters"></div>
     <div class="session-detail-actions">
       <label id="attachWrap">Your character in this session
         <select id="attachCharacter"></select>
@@ -48,7 +58,19 @@
   <div class="footer-note">Sessions link players together — the DM can open every attached character sheet; players only see each other's name, class and level.</div>
 </div>
 
-<script src="/resources/builtins.js"></script>
+<script src="/resources/builtin/spells.js"></script>
+<script src="/resources/builtin/actions.js"></script>
+<script src="/resources/builtin/alignments.js"></script>
+<script src="/resources/builtin/weapon-mastery.js"></script>
+<script src="/resources/builtin/abilities-skills.js"></script>
+<script src="/resources/builtin/classes.js"></script>
+<script src="/resources/builtin/species.js"></script>
+<script src="/resources/builtin/backgrounds.js"></script>
+<script src="/resources/builtin/subclasses.js"></script>
+<script src="/resources/builtin/subspecies.js"></script>
+<script src="/resources/builtin/spell-slots.js"></script>
+<script src="/resources/builtin/fighting-styles.js"></script>
+<script src="/resources/builtin/snapshots.js"></script>
 <script src="/app.js"></script>
 <script src="/modules/sessions.js"></script>
 </body>

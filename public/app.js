@@ -1,9 +1,10 @@
 // Character sheet behaviour: state, rendering, and the import/DB plumbing.
 //
 // The built-in game content (SPELL_DATA, CLASS_DATA, SPECIES_DATA, the
-// BUILTIN_* snapshots, …) lives in /resources/builtins.js, which the views load
-// as a classic script immediately before this one — its top-level consts are
-// globals here. Adding new built-in content means editing that file, not this.
+// BUILTIN_* snapshots, …) lives in /resources/builtin/ — one classic script per
+// content type; see its README for the load order. The views load them all
+// immediately before this file, so their top-level consts are globals here.
+// Adding new built-in content means editing those files, not this one.
 
 // Imported spells (global, DB-backed), keyed by name. A custom spell with the
 // same name as a built-in SPELL_DATA entry shadows it in the Spell Library.
@@ -36,6 +37,13 @@ function defaultCharacter(){
     // Freeform point trackers on the Actions tab: each is a named pool of pips
     // (a spell slot, Focus Point, Ki, etc.) that the player fills in as used.
     actionResources: [], // {name, total, used}
+    // Companions (Character tab): auto-generated ones store a templateId from
+    // COMPANION_TEMPLATES (resources/companions.js) and recompute their stats
+    // from the character's level/abilities; manual ones carry their own numbers.
+    // {uid, templateId|null, name, hpCurrent, hpTemp, notes, collapsed,
+    //  ...manual-only: ac, hpMax, speed, typeLine, abilities{}, skillsText,
+    //  featuresText, actionsText, spellsText}
+    companions: [],
     journal: [], // character journal entries: {id, title, text, created, updated}
     rollLog: [] // dice roller history: {id, formula, detail, total, time}
   };
@@ -48,11 +56,14 @@ let state = defaultCharacter();
 // check this to skip character-sheet-only work (autosave, sheet panel rebuilds).
 const PAGE = document.body.dataset.page || 'sheet';
 
-// DM read-only mode: /?view=<id> shows another player's sheet. The server only
-// honors the read for that session's DM; this flag additionally freezes the UI
-// (save() no-ops, inputs disabled, profile bar controls hidden).
+// /?view=<id> opens another user's sheet. For a session DM the server allows a
+// read and the UI freezes (save() no-ops, inputs disabled, profile bar hidden).
+// For a player who claimed the character from a session's loaner pool the
+// server also allows writes; BORROWED_EDIT then unfreezes the sheet and saves
+// go back to the host's copy.
 const VIEW_CHARACTER_ID = PAGE==='sheet' ? new URLSearchParams(location.search).get('view') : null;
 const VIEW_ONLY = !!VIEW_CHARACTER_ID;
+let BORROWED_EDIT = false; // set during init once the server says editable
 
 function mod(score){ return Math.floor((score-10)/2); }
 function fmt(n){ return (n>=0?'+':'') + n; }
@@ -1690,7 +1701,7 @@ function bindItemModal(){
   });
 }
 
-// Read-only mirror of equipped weapons under the Character-tab attacks table.
+// Read-only mirror of equipped weapons under the Actions-tab attacks table.
 function buildEquipAttackList(){
   const box = document.getElementById('equipAttackList');
   if(!box) return;
@@ -1699,6 +1710,264 @@ function buildEquipAttackList(){
     ? '<div class="equip-atk-head">From equipped gear</div>' + atks.map(a=>
         `<div class="equip-atk-row"><span>${esc(a.name)}</span><span>${a.bonus?esc(a.bonus)+' hit':''}${a.bonus&&a.dmg?' · ':''}${esc(a.dmg||'')}</span></div>`).join('')
     : '';
+}
+
+// ---------- Companions (Character tab) ----------
+// Auto-generated companions store only a templateId + mutable bits (name, HP,
+// notes); their stat block is recomputed from COMPANION_TEMPLATES every time
+// the character changes, so they scale with level automatically. Manual
+// companions carry all their own numbers.
+
+function companionTemplates(){
+  return (typeof COMPANION_TEMPLATES !== 'undefined') ? COMPANION_TEMPLATES : [];
+}
+function companionTemplate(id){ return companionTemplates().find(t=>t.id===id) || null; }
+function companions(){
+  if(!Array.isArray(state.companions)) state.companions = [];
+  return state.companions;
+}
+
+// Everything a template needs to compute its stat block for this character.
+function companionCtx(){
+  const eff = effectiveAbilities();
+  const pb = profBonus(state.level);
+  const picked = pickedClasses();
+  const amod = k => mod(eff[k]||10);
+  const classLevel = name => { const c = picked.find(p=>p.name===name); return c ? (c.level||1) : 0; };
+  const subclassLevel = (cls, sub) => { const c = picked.find(p=>p.name===cls && p.subclass===sub); return c ? (c.level||1) : 0; };
+  // Spellcasting mod for a class; with no class given (or a class the character
+  // doesn't cast with), fall back to the best casting stat among picked classes.
+  const castMod = name => {
+    const cd = name && CLASS_DATA[name];
+    if(cd && cd.casting && cd.casting.ability) return amod(cd.casting.ability);
+    const mods = picked.map(p=>CLASS_DATA[p.name])
+      .filter(d=>d && d.casting && d.casting.ability)
+      .map(d=>amod(d.casting.ability));
+    return mods.length ? Math.max(...mods) : amod('int');
+  };
+  const known = new Set([...state.knownSpells.map(s=>s.name), ...equipmentGrantedSpells().map(s=>s.name)]
+    .map(n=>(n||'').toLowerCase()));
+  const bestSlotLevel = min => {
+    let best = 0;
+    (state.spellSlots||[]).forEach((s,i)=>{ if(s && s.total>0) best = Math.max(best, i+1); });
+    if(state.pactSlots && state.pactSlots.total>0) best = Math.max(best, state.pactSlots.level||1);
+    return Math.max(min||1, best);
+  };
+  return { pb, level: state.level||1, abilities: eff, amod, fmt,
+    classLevel, subclassLevel, castMod, spellAtk: name => pb + castMod(name),
+    knowsSpell: n => known.has((n||'').toLowerCase()), bestSlotLevel };
+}
+
+// Library popups have no character loaded: render templates for a baseline
+// character (fresh unlock, +2 PB, +0 modifiers) and lean on the formula text.
+function companionBaselineCtx(){
+  return { pb:2, level:3, abilities:{str:10,dex:10,con:10,int:10,wis:10,cha:10},
+    amod:()=>0, fmt,
+    classLevel:()=>3, subclassLevel:()=>3, castMod:()=>0, spellAtk:()=>2,
+    knowsSpell:()=>true, bestSlotLevel:min=>Math.max(1,min||1) };
+}
+
+function newManualCompanion(){
+  return { uid: 'c'+Date.now()+Math.floor(Math.random()*1000), templateId: null,
+    name:'New Companion', typeLine:'', ac:12, hpMax:10, hpCurrent:10, hpTemp:0,
+    speed:'30 ft.', abilities:{str:10,dex:10,con:10,int:10,wis:10,cha:10},
+    skillsText:'', featuresText:'', actionsText:'', spellsText:'', notes:'', collapsed:false };
+}
+
+// The computed portion of an auto card (no inputs here — this region is
+// re-rendered wholesale by updateCompanionComputed on every recalc).
+function companionStatsHtml(stats){
+  const section = (label, rows) => (rows && rows.length)
+    ? `<div class="equip-atk-head">${label}</div>` + rows.map(r=>
+        `<div class="comp-line"><b>${esc(r.name)}.</b> ${esc(r.desc)}</div>`).join('')
+    : '';
+  const listRow = (label, val) => val ? `<div class="comp-line"><b>${label}:</b> ${esc(val)}</div>` : '';
+  return `
+    <div class="comp-typeline">${esc(stats.typeLine||'')}</div>
+    <div class="comp-abilities">
+      ${ABILITIES.map(a=>{
+        const v = (stats.abilities||{})[a.key];
+        return `<div class="comp-ab"><label>${a.key.toUpperCase()}</label><span>${v==null?'—':v+' ('+fmt(mod(v))+')'}</span></div>`;
+      }).join('')}
+    </div>
+    ${listRow('AC', String(stats.ac) + (stats.acNote?` (${stats.acNote})`:''))}
+    ${listRow('Max HP', String(stats.hpMax) + (stats.hpFormula?` — ${stats.hpFormula}`:''))}
+    ${listRow('Speed', stats.speed)}
+    ${listRow('Saves', (stats.saves||[]).join(', '))}
+    ${listRow('Skills', (stats.skills||[]).join(', '))}
+    ${listRow('Senses', (stats.senses||[]).join(', '))}
+    ${listRow('Immunities', (stats.immunities||[]).join(', '))}
+    ${listRow('Languages', stats.languages)}
+    ${section('Features', stats.features)}
+    ${section('Actions', stats.actions)}
+    ${section('Reactions', stats.reactions)}
+    ${section('Spells', stats.spells)}
+    ${stats.note ? `<div class="comp-line comp-note">${esc(stats.note)}</div>` : ''}`;
+}
+
+// Editable stats region for a manual companion (bound in buildCompanions).
+function companionManualHtml(c){
+  const abil = c.abilities||{};
+  const area = (label, field, ph) => `
+    <div class="equip-atk-head">${label}</div>
+    <textarea class="comp-area" data-field="${field}" rows="2" placeholder="${ph}">${esc(c[field]||'')}</textarea>`;
+  return `
+    <div class="comp-manual-grid">
+      <div class="stat-box"><label>Type</label><input class="comp-field" data-field="typeLine" value="${esc(c.typeLine||'')}" placeholder="Medium beast"></div>
+      <div class="stat-box"><label>AC</label><input class="comp-field" data-field="ac" data-num="1" type="number" value="${c.ac||0}"></div>
+      <div class="stat-box"><label>Max HP</label><input class="comp-field" data-field="hpMax" data-num="1" type="number" value="${c.hpMax||0}"></div>
+      <div class="stat-box"><label>Speed</label><input class="comp-field" data-field="speed" value="${esc(c.speed||'')}"></div>
+    </div>
+    <div class="comp-abilities">
+      ${ABILITIES.map(a=>`<div class="comp-ab"><label>${a.key.toUpperCase()}</label><input class="comp-ab-input" data-ab="${a.key}" type="number" value="${abil[a.key]==null?10:abil[a.key]}"></div>`).join('')}
+    </div>
+    ${area('Skills','skillsText','Perception +4, Stealth +6…')}
+    ${area('Features','featuresText','Keen Hearing — advantage on hearing checks…')}
+    ${area('Actions','actionsText','Bite: +5 to hit, 1d6+3 piercing…')}
+    ${area('Spells','spellsText','Spells it can cast, if any')}`;
+}
+
+function buildCompanions(){
+  const list = document.getElementById('companionList');
+  if(!list) return;
+  const ctx = companionCtx();
+  list.innerHTML = '';
+  if(!companions().length){
+    list.innerHTML = '<div class="action-empty">No companions yet — auto-generate one from your features &amp; spells, or add one manually.</div>';
+    return;
+  }
+  companions().forEach((c,i)=>{
+    const tpl = c.templateId ? companionTemplate(c.templateId) : null;
+    const stats = tpl ? tpl.build(ctx) : null;
+    const card = el('div','companion-card'+(c.collapsed?' collapsed':''));
+    card.dataset.i = i;
+    if(tpl) card.dataset.templateId = tpl.id;
+    card.innerHTML = `
+      <div class="comp-head">
+        <button class="comp-collapse" type="button" title="${c.collapsed?'Expand':'Collapse'}">${c.collapsed?'▸':'▾'}</button>
+        <input class="comp-name" value="${esc(c.name||'')}" placeholder="Companion name">
+        <span class="action-badge">${tpl ? (tpl.kind==='spell'?'Spell':'Feature') : 'Manual'}</span>
+        <span class="row-del comp-del" title="Remove companion">✕</span>
+      </div>
+      ${tpl ? `<div class="comp-src">${esc(tpl.source)}</div>` : ''}
+      <div class="stat-strip comp-hp-strip">
+        ${stats ? `<div class="stat-box"><label>Max HP</label><div class="computed comp-hpmax">${stats.hpMax}</div></div>` : ''}
+        <div class="stat-box"><label>Current HP</label><input class="comp-field" data-field="hpCurrent" data-num="1" type="number" value="${c.hpCurrent==null?(stats?stats.hpMax:10):c.hpCurrent}"></div>
+        <div class="stat-box"><label>Temp HP</label><input class="comp-field" data-field="hpTemp" data-num="1" type="number" value="${c.hpTemp||0}"></div>
+      </div>
+      <div class="comp-body">
+        ${stats ? `<div class="comp-stats">${companionStatsHtml(stats)}</div>` : companionManualHtml(c)}
+        <textarea class="comp-area comp-notes" data-field="notes" rows="2" placeholder="Notes — tricks, current orders, damage taken…">${esc(c.notes||'')}</textarea>
+      </div>`;
+    list.appendChild(card);
+
+    card.querySelector('.comp-collapse').addEventListener('click', ()=>{
+      c.collapsed = !c.collapsed; buildCompanions(); save();
+    });
+    card.querySelector('.comp-del').addEventListener('click', ()=>{
+      if(!confirm(`Remove ${c.name||'this companion'}?`)) return;
+      companions().splice(i,1); buildCompanions(); save();
+    });
+    card.querySelector('.comp-name').addEventListener('input', e=>{ c.name = e.target.value; save(); });
+    card.querySelectorAll('.comp-field, .comp-area').forEach(inp=> inp.addEventListener('input', e=>{
+      const f = e.target.dataset.field;
+      c[f] = e.target.dataset.num ? (parseInt(e.target.value,10)||0) : e.target.value;
+      save();
+    }));
+    card.querySelectorAll('.comp-ab-input').forEach(inp=> inp.addEventListener('input', e=>{
+      if(!c.abilities) c.abilities = {};
+      c.abilities[e.target.dataset.ab] = parseInt(e.target.value,10)||0;
+      save();
+    }));
+  });
+}
+
+// Called from recalc(): refresh the computed stat regions in place (no inputs
+// live inside .comp-stats, so this never steals focus mid-typing).
+function updateCompanionComputed(){
+  const list = document.getElementById('companionList');
+  if(!list) return;
+  const ctx = companionCtx();
+  list.querySelectorAll('.companion-card[data-template-id]').forEach(card=>{
+    const tpl = companionTemplate(card.dataset.templateId);
+    if(!tpl) return;
+    const stats = tpl.build(ctx);
+    const hpEl = card.querySelector('.comp-hpmax');
+    if(hpEl) hpEl.textContent = stats.hpMax;
+    const box = card.querySelector('.comp-stats');
+    if(box) box.innerHTML = companionStatsHtml(stats);
+    // Scaling resource pools (e.g. Unleash Incarnation = CON mod) track the
+    // template's current total; spent points are preserved.
+    const c = companions()[Number(card.dataset.i)];
+    if(c && Array.isArray(c.resources) && (stats.resources||[]).length){
+      stats.resources.forEach(sr=>{
+        const own = c.resources.find(r=>r.name===sr.name);
+        if(own && own.total !== sr.total){
+          own.total = sr.total;
+          own.used = Math.min(own.used, own.total);
+        }
+      });
+    }
+  });
+}
+
+function addCompanionFromTemplate(tpl){
+  const stats = tpl.build(companionCtx());
+  companions().push({ uid:'c'+Date.now()+Math.floor(Math.random()*1000),
+    templateId: tpl.id, name: tpl.name,
+    hpCurrent: stats.hpMax, hpTemp: 0, notes:'', collapsed:false,
+    // Limited-use abilities (Repair 3/Day…) become trackers in Resource Points.
+    resources: (stats.resources||[]).map(r=>({name:r.name, total:r.total, used:0})) });
+  buildCompanions(); buildActionResources(); save();
+}
+
+// The auto-generate picker. Only sources this character actually qualifies for
+// are offered (matching subclass feature or known spell) — everything else can
+// still be entered by hand with "+ Add companion manually", or browsed in the
+// Library under the Companions filter.
+function openCompanionPicker(){
+  const ctx = companionCtx();
+  const tmpls = companionTemplates();
+  if(!tmpls.length){ alert('No companion templates loaded.'); return; }
+  const avail = tmpls.filter(t=>{ try{ return t.match(ctx); }catch(e){ return false; } });
+  const row = t => `
+    <div class="action-row comp-pick" data-tid="${t.id}" title="Add this companion">
+      <span class="a-name">${esc(t.name)}</span>
+      <span class="a-detail">${esc(t.source)}</span>
+      <span class="action-badge">${t.kind==='spell'?'Spell':'Feature'}</span>
+    </div>`;
+  const win = openNotesModal({
+    name:'Auto-generate a Companion',
+    badges:['Companions'],
+    detail: `
+      <p>Companions scale with your level, proficiency bonus, and spellcasting — their stat blocks update automatically as your character grows.</p>
+      ${avail.length
+        ? '<div class="equip-atk-head">From your features &amp; spells</div>' + avail.map(row).join('')
+        : '<p class="nr-hint">No companion-granting feature or known spell detected on this character. Pick a qualifying subclass (e.g. Battle Smith) or learn a summoning spell — or add one manually. Browse all companion sources in the <span class="hl">Library</span>.</p>'}`
+  });
+  if(win) win.el.querySelectorAll('.comp-pick').forEach(r=> r.addEventListener('click', ()=>{
+    const tpl = companionTemplate(r.dataset.tid);
+    if(tpl){ addCompanionFromTemplate(tpl); nrCloseWindow(win); }
+  }));
+}
+
+function openCompanionLegend(){
+  openNotesModal({
+    name:'Companions — How it works',
+    badges:['Reference'],
+    detail: `
+      <p>Creatures that fight alongside you. <span class="hl">Auto-generate</span> scans your class features and known spells for anything that grants a scaling companion (a Battle Smith's Steel Defender, a Homunculus Servant, the Tasha's summon spells…) and builds its mini character sheet — skills, health, features, actions — from your current level. It re-scales automatically when you level up.</p>
+      <p class="nr-hint"><span class="hl">Manual</span> companions are free-form: fill in any creature's numbers yourself. Current/Temp HP and notes are always yours to track either way.</p>`
+  });
+}
+
+function bindCompanionButtons(){
+  const auto = document.getElementById('autoCompanionBtn');
+  if(auto) auto.addEventListener('click', openCompanionPicker);
+  const add = document.getElementById('addCompanionBtn');
+  if(add) add.addEventListener('click', ()=>{ companions().push(newManualCompanion()); buildCompanions(); save(); });
+  document.querySelectorAll('.companion-legend-btn').forEach(btn=>
+    btn.addEventListener('click', e=>{ e.stopPropagation(); openCompanionLegend(); }));
 }
 
 // A spell casts as a reaction if its imported casting time or tags say so, or
@@ -1712,18 +1981,10 @@ function isReactionSpell(s){
 }
 
 function buildActions(){
-  const attacksEl = document.getElementById('actAttacks');
-  if(!attacksEl) return;
-  const manual = state.attacks.filter(a=>a.name && a.name.trim()).map(a=>({name:a.name, bonus:a.bonus, dmg:a.dmg, src:'Attack'}));
-  const gearAtk = equipmentAttacks().map(a=>({...a, src:'Equipped'}));
-  const allAtk = [...manual, ...gearAtk];
-  attacksEl.innerHTML = allAtk.length ? allAtk.map(a=>`
-    <div class="action-row">
-      <span class="a-name">${esc(a.name)}</span>
-      <span class="a-detail">${a.bonus ? esc(a.bonus)+' to hit' : ''}${a.bonus && a.dmg ? ' — ' : ''}${esc(a.dmg||'')}</span>
-      <span class="action-badge">${a.src}</span>
-    </div>`).join('')
-    : '<div class="action-empty">No attacks yet — add them on the Character tab or equip a weapon.</div>';
+  const spellsEl0 = document.getElementById('actSpells');
+  if(!spellsEl0) return;
+  // The Attacks panel on this tab holds the editable attack table (buildAttacks)
+  // plus the equipped-gear mirror (buildEquipAttackList) — nothing to do here.
 
   // Reaction spells & class abilities are pulled out of their parent panels
   // and gathered under the Reactions sub-category below.
@@ -1825,6 +2086,40 @@ function buildActions(){
       <span class="a-detail">${a.desc}</span>
     </div>`).join('');
 
+  // Companion actions mirror the character's list: one sub-section per
+  // companion, rows from its computed stat block (auto) or free text (manual).
+  const compEl = document.getElementById('actCompanions');
+  if(compEl){
+    const ctx = companionCtx();
+    const sections = companions().map(c=>{
+      const tpl = c.templateId ? companionTemplate(c.templateId) : null;
+      let rows = [];
+      if(tpl){
+        const stats = tpl.build(ctx);
+        rows = [
+          ...(stats.actions||[]).map(a=>({...a, badge:'Action'})),
+          ...(stats.reactions||[]).map(a=>({...a, badge:'Reaction'}))
+        ];
+      } else {
+        // Manual companions: one row per non-empty line of the Actions text.
+        rows = (c.actionsText||'').split('\n').map(s=>s.trim()).filter(Boolean)
+          .map(line=>{
+            const m = line.match(/^([^:.]{1,40})[:.]\s*(.*)$/); // "Bite: +5 to hit…"
+            return { name: m?m[1]:line, desc: m?m[2]:'', badge:'Action' };
+          });
+      }
+      if(!rows.length) return '';
+      return `<div class="equip-atk-head">${esc(c.name||'Companion')}</div>` + rows.map(a=>`
+        <div class="action-row">
+          <span class="a-name">${esc(a.name)}</span>
+          <span class="a-detail">${esc(a.desc||'')}</span>
+          <span class="action-badge">${esc(a.badge)}</span>
+        </div>`).join('');
+    }).filter(Boolean);
+    compEl.innerHTML = sections.length ? sections.join('')
+      : '<div class="action-empty">No companions — add one on the Character tab and its actions appear here.</div>';
+  }
+
   const reactionsEl = document.getElementById('actReactions');
   if(reactionsEl){
     reactions.sort((a,b)=> a.name.localeCompare(b.name));
@@ -1865,14 +2160,37 @@ function spellSlotResourceRows(){
   return rows;
 }
 
-// Resource Points on the Actions tab: auto spell-slot rows (above) plus the
-// player's freeform pools. Each freeform row is a named pool (Focus Points, Ki,
-// Sorcery Points, etc.); clicking a pip toggles it used and the −/+ buttons
-// resize the pool.
+// A resource list by owner key: 'char' is the character's freeform pools,
+// a numeric key is the matching companion's pools.
+function resourceOwnerList(key){
+  if(key==='char') return state.actionResources || (state.actionResources = []);
+  const c = companions()[Number(key)];
+  if(!c) return [];
+  return c.resources || (c.resources = []);
+}
+
+// The spend/restore widget for one pool. Up to 10 points it's clickable pips;
+// above 10 it's a "remaining/total" counter with − (spend) and + (restore).
+function resourceMeterHtml(total, used, attrs){
+  if(total<=10){
+    let pips='';
+    for(let p=0;p<total;p++) pips += `<span class="res-pip ${p<used?'filled':''}" ${attrs} data-p="${p}"></span>`;
+    return `<div class="res-pips">${pips || '<span class="res-none">— no points —</span>'}</div>`;
+  }
+  return `<div class="res-counter">
+    <button class="res-step" ${attrs} data-d="1" title="Spend a point" aria-label="Spend a point">−</button>
+    <span class="res-count-num">${total-used}/${total}</span>
+    <button class="res-step" ${attrs} data-d="-1" title="Restore a point" aria-label="Restore a point">+</button>
+  </div>`;
+}
+
+// Resource Points on the Actions tab: auto spell-slot rows, companion pools
+// (seeded from limited-use companion abilities like Repair 3/Day), and the
+// player's freeform pools. Rows are added/edited through a popup
+// (openResourceModal) that asks for a name and a max.
 function buildActionResources(){
   const body = document.getElementById('actResources');
   if(!body) return;
-  const list = state.actionResources || (state.actionResources = []);
   const slotRows = spellSlotResourceRows();
 
   const autoHtml = slotRows.map(r=>{
@@ -1889,26 +2207,28 @@ function buildActionResources(){
     </tr>`;
   }).join('');
 
-  const manualHtml = list.map((r,i)=>{
-    let pips='';
-    for(let p=0;p<r.total;p++) pips += `<span class="res-pip ${p<r.used?'filled':''}" data-i="${i}" data-p="${p}"></span>`;
-    return `<tr class="res-row">
-      <td><input class="res-name" data-i="${i}" value="${esc(r.name)}" placeholder="Focus Points, Ki, Sorcery Points…"></td>
+  const poolRow = (ownerKey, i, r, tag) => `<tr class="res-row">
+      <td><span class="res-auto-name">${esc(r.name||'—')}</span>${tag?`<span class="res-auto-tag" title="Companion resource">${esc(tag)}</span>`:''}</td>
       <td>
         <div class="res-pip-cell">
-          <div class="res-pips">${pips || '<span class="res-none">— no points —</span>'}</div>
+          ${resourceMeterHtml(r.total, r.used, `data-o="${ownerKey}" data-i="${i}"`)}
           <div class="res-controls">
-            <button class="res-adj" data-i="${i}" data-d="-1" title="Remove a point" aria-label="Remove a point">−</button>
-            <button class="res-adj" data-i="${i}" data-d="1" title="Add a point" aria-label="Add a point">+</button>
-            <span class="row-del res-del" data-i="${i}" title="Delete row">✕</span>
+            <button class="res-adj res-edit" data-o="${ownerKey}" data-i="${i}" title="Edit name & max" aria-label="Edit resource">✎</button>
+            <span class="row-del res-del" data-o="${ownerKey}" data-i="${i}" title="Delete row">✕</span>
           </div>
         </div>
       </td>
     </tr>`;
-  }).join('');
 
-  body.innerHTML = (slotRows.length || list.length)
-    ? autoHtml + manualHtml
+  const charList = resourceOwnerList('char');
+  const manualHtml = charList.map((r,i)=> poolRow('char', i, r, null)).join('');
+  const compHtml = companions().map((c,ci)=>
+    (c.resources||[]).map((r,ri)=> poolRow(String(ci), ri, r, c.name||'companion')).join('')
+  ).join('');
+
+  const anyRows = slotRows.length || charList.length || compHtml;
+  body.innerHTML = anyRows
+    ? autoHtml + manualHtml + compHtml
     : `<tr><td colspan="2" class="res-empty">No trackers yet — spell slots appear here automatically once you have them; add other pools (Ki, Sorcery Points…) with the button below.</td></tr>`;
 
   // Auto spell-slot pips write straight back to the real slot state and keep the
@@ -1921,25 +2241,79 @@ function buildActionResources(){
     buildActionResources(); buildSpellSlots(); save();
   }));
 
-  body.querySelectorAll('.res-name').forEach(inp=> inp.addEventListener('input', e=>{
-    list[e.target.dataset.i].name = e.target.value; save();
-  }));
   body.querySelectorAll('.res-pip').forEach(pip=> pip.addEventListener('click', e=>{
-    const i = +e.target.dataset.i, p = +e.target.dataset.p, r = list[i];
+    const r = resourceOwnerList(e.target.dataset.o)[+e.target.dataset.i];
+    if(!r) return;
+    const p = +e.target.dataset.p;
     // Click a filled pip to free it and everything after; an empty pip fills up to it.
     r.used = (p < r.used) ? p : p+1;
     buildActionResources(); save();
   }));
-  body.querySelectorAll('.res-adj').forEach(btn=> btn.addEventListener('click', e=>{
-    const i = +e.currentTarget.dataset.i, d = +e.currentTarget.dataset.d, r = list[i];
-    r.total = Math.max(0, Math.min(30, r.total + d));
-    if(r.used > r.total) r.used = r.total;
+  body.querySelectorAll('.res-step').forEach(btn=> btn.addEventListener('click', e=>{
+    const t = e.currentTarget;
+    const r = resourceOwnerList(t.dataset.o)[+t.dataset.i];
+    if(!r) return;
+    r.used = Math.max(0, Math.min(r.total, r.used + Number(t.dataset.d)));
     buildActionResources(); save();
+  }));
+  body.querySelectorAll('.res-edit').forEach(btn=> btn.addEventListener('click', e=>{
+    const t = e.currentTarget;
+    openResourceModal({ owner: t.dataset.o, index: +t.dataset.i });
   }));
   body.querySelectorAll('.res-del').forEach(x=> x.addEventListener('click', e=>{
-    list.splice(+e.currentTarget.dataset.i, 1);
+    const t = e.currentTarget;
+    resourceOwnerList(t.dataset.o).splice(+t.dataset.i, 1);
     buildActionResources(); save();
   }));
+}
+
+// Add/edit popup for a resource pool: name + max points, and (when companions
+// exist) which sheet the pool belongs to.
+function openResourceModal(edit){
+  const comps = companions();
+  const owners = [{key:'char', label:'Character'}]
+    .concat(comps.map((c,ci)=>({key:String(ci), label: c.name||('Companion '+(ci+1))})));
+  const cur = edit ? resourceOwnerList(edit.owner)[edit.index] : null;
+  if(edit && !cur) return;
+  const win = openNotesModal({
+    name: cur ? 'Edit Resource' : 'Add Resource',
+    badges: ['Resource Points'],
+    detail: `
+      <div class="res-form">
+        <label>Name</label>
+        <input id="resFormName" placeholder="Ki, Sorcery Points, Repair…" value="${esc(cur?cur.name:'')}">
+        <label>Max points</label>
+        <input id="resFormMax" type="number" min="1" max="99" value="${cur?cur.total:3}">
+        ${owners.length>1 ? `<label>Belongs to</label>
+        <select id="resFormOwner">${owners.map(o=>`<option value="${o.key}" ${(edit?edit.owner:'char')===o.key?'selected':''}>${esc(o.label)}</option>`).join('')}</select>` : ''}
+        <p class="nr-hint">Pools of more than <span class="hl">10</span> points show as a <span class="hl">11/11</span> counter with − / + instead of pips.</p>
+        <button class="add-btn" id="resFormSave">${cur?'Save changes':'Add resource'}</button>
+      </div>`
+  });
+  if(!win) return;
+  const nameEl = win.el.querySelector('#resFormName');
+  const maxEl = win.el.querySelector('#resFormMax');
+  nameEl.focus();
+  const submit = ()=>{
+    const name = nameEl.value.trim();
+    if(!name){ nameEl.focus(); return; }
+    const total = Math.max(1, Math.min(99, parseInt(maxEl.value,10)||1));
+    const ownerSel = win.el.querySelector('#resFormOwner');
+    const ownerKey = ownerSel ? ownerSel.value : 'char';
+    if(cur){
+      cur.name = name; cur.total = total; cur.used = Math.min(cur.used, total);
+      if(ownerKey !== edit.owner){
+        resourceOwnerList(edit.owner).splice(edit.index, 1);
+        resourceOwnerList(ownerKey).push(cur);
+      }
+    } else {
+      resourceOwnerList(ownerKey).push({ name, total, used:0 });
+    }
+    buildActionResources(); save();
+    nrCloseWindow(win);
+  };
+  win.el.querySelector('#resFormSave').addEventListener('click', submit);
+  [nameEl, maxEl].forEach(inp=> inp.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); }));
 }
 
 function bindTabs(){
@@ -2190,6 +2564,7 @@ function recalc(){
     if(p) p.classList.toggle('filled', v);
   });
 
+  updateCompanionComputed(); // companion stat blocks scale with level/abilities
   updateHero();
 }
 
@@ -2210,6 +2585,12 @@ function bindStaticInputs(){
     buildClassList();
   });
   bind('statAC','ac',true); bind('statSpeed','speed',true);
+  const addAtk = document.getElementById('addAttack'); // Actions tab: manual attack rows
+  if(addAtk) addAtk.addEventListener('click', ()=>{
+    state.attacks.push({name:'',bonus:'',dmg:''});
+    buildAttacks(); save();
+  });
+  bindCompanionButtons(); // Character tab: auto-generate / add companion
   bind('hpMax','hpMax',true); bind('hpCurrent','hpCurrent',true); bind('hpTemp','hpTemp',true);
   bind('hitDice','hitDice');
   bind('persTraits','persTraits'); bind('persIdeals','persIdeals');
@@ -3940,7 +4321,7 @@ function setSaveStatus(status){
 let saveTimeout=null;
 function save(){
   if(PAGE!=='sheet') return; // no character is loaded on standalone pages
-  if(VIEW_ONLY) return; // DM viewing another player's sheet — never write back
+  if(VIEW_ONLY && !BORROWED_EDIT) return; // DM viewing another player's sheet — never write back
   clearTimeout(saveTimeout);
   setSaveStatus('saving');
   saveTimeout = setTimeout(async ()=>{
@@ -3951,7 +4332,8 @@ function save(){
         const res = await apiCreateCharacter(state.name, state);
         state.id = res.id;
       }
-      await refreshProfileList(state.id);
+      // A borrowed character isn't one of this user's profiles — no list to sync.
+      if(!BORROWED_EDIT) await refreshProfileList(state.id);
       setSaveStatus('saved');
     }catch(err){
       console.error('Save failed', err);
@@ -4014,17 +4396,25 @@ function buildNotes(){
 // alignments — so the Notes page can look any of it up by name or text.
 let NOTES_INDEX = [];
 let notesFilter = 'All';
+let notesSourceFilter = 'All'; // source-tag filter (5E, 5.5E, Homebrew…), independent of the type filter
 let notesBrowsePage = 0; // current page when browsing a type filter with no search query
 const NOTES_PAGE_SIZE = 20;
 // Features and standard combat actions are deliberately absent: features are
 // reachable through the class/subclass entry that owns them (their text is folded
 // into that entry's haystack), so they don't clutter the results as separate rows.
-const NOTES_TYPES = ['All','Classes','Subclasses','Species','Subspecies','Spells','Fighting Styles','Alignments','Mastery'];
+const NOTES_TYPES = ['All','Classes','Species','Spells','Companions','Fighting Styles','Alignments','Mastery'];
+// Subclasses and subspecies stay in the index (the chips inside a class/species
+// window open them by key) but never appear as their own search/browse results —
+// searching one by name surfaces its parent instead.
+const NOTES_HIDDEN_TYPES = new Set(['Subclasses','Subspecies']);
 
-function notesEntry(type, name, badges, haystack, detail, edit){
-  return { type, name, badges: badges.filter(Boolean).map(String),
+function notesEntry(type, name, source, badges, haystack, detail, edit){
+  return { type, name, source: source || 'Other', badges: badges.filter(Boolean).map(String),
     text: (name + ' ' + haystack).toLowerCase(), detail, edit };
 }
+
+// True when an entry passes the active source-tag filter.
+function notesSourceMatch(e){ return notesSourceFilter==='All' || e.source===notesSourceFilter; }
 
 // Deep link into the Import page's forms: /import?edit=<type>:<key>.
 // The Import page loads the entry into the matching form (see openLibraryEditParam).
@@ -4064,14 +4454,12 @@ function buildNotesIndex(){
     const subNames = subclassNamesForClass(name); // built-in + imported
     const meta = `<div class="nr-meta">d${cd.hitDie||8} hit die · saves ${(cd.saves||[]).map(s=>s.toUpperCase()).join(' / ')||'—'} · ${esc(castingLabel(cd.casting))} · subclass at level ${cd.subclassLevel||'—'}</div>
        <div class="nr-meta">skills (choose ${cd.choose||0}): ${esc(skills)}</div>`;
-    ix.push(Object.assign(notesEntry('Classes', name, [cd.source, cd.custom?'imported':'built-in'],
+    ix.push(Object.assign(notesEntry('Classes', name, cd.source, [cd.source, cd.custom?'imported':'built-in'],
       [cd.desc, skills, subNames.join(' '), castingLabel(cd.casting), featuresHaystack(cd.features)].filter(Boolean).join(' '),
       meta
-      + `${subNames.length?`<div class="nr-meta">subclasses: ${esc(subNames.join(', '))}</div>`:''}
-       ${cd.desc?`<div class="feat-desc">${esc(cd.desc)}</div>`:''}`,
+      + `${subNames.length?`<div class="nr-meta">subclasses: ${esc(subNames.join(', '))}</div>`:''}`,
       editLink('class', name, 'Edit class in Library')),
       { full: meta
-        + `${cd.desc?`<div class="feat-desc">${esc(cd.desc)}</div>`:''}`
         + (subNames.length?`<div class="nr-sect">Subclasses — click to view</div><div class="nr-sub-list">${
             subNames.map(n=>`<span class="nr-sub-link" data-key="${esc(subKey(name, n))}">${esc(n)}</span>`).join('')}</div>`:'')
         + ((cd.features||[]).length?`<div class="nr-sect">Features</div>`+classFeaturesHtml(cd.features):'') }));
@@ -4083,7 +4471,7 @@ function buildNotesIndex(){
     seenSubs.add(subKey(sc.parent, sc.name));
     const summary = `<div class="nr-meta">${esc(sc.parent)} subclass · chosen at level ${sc.subclassLevel||3}</div>
        ${sc.desc?`<div class="feat-desc">${esc(sc.desc)}</div>`:''}`;
-    ix.push(Object.assign(notesEntry('Subclasses', sc.name, [sc.parent, sc.source||'Homebrew', 'imported'],
+    ix.push(Object.assign(notesEntry('Subclasses', sc.name, sc.source||'Homebrew', [sc.parent, sc.source||'Homebrew', 'imported'],
       [sc.desc, sc.parent, featuresHaystack(sc.features)].filter(Boolean).join(' '),
       summary,
       editLink('subclass', subKey(sc.parent, sc.name), 'Edit subclass in Library')),
@@ -4094,7 +4482,7 @@ function buildNotesIndex(){
   Object.entries(CLASS_DATA).forEach(([parent, cd])=>{
     (cd.subclasses||[]).forEach(n=>{
       if(seenSubs.has(subKey(parent, n))) return;
-      ix.push(Object.assign(notesEntry('Subclasses', n, [parent, 'built-in'], parent,
+      ix.push(Object.assign(notesEntry('Subclasses', n, cd.source, [parent, 'built-in'], parent,
         `<div class="nr-meta">${esc(parent)} subclass · chosen at level ${cd.subclassLevel||3}</div>`,
         editLink('subclass', subKey(parent, n), 'Edit subclass in Library')),
         { key: subKey(parent, n),
@@ -4110,9 +4498,8 @@ function buildNotesIndex(){
     const subNames = subspeciesNamesForSpecies(name); // built-in + imported
     const detail = `<div class="nr-meta">${esc(sd.size||'Medium')} · ${sd.speed||30} ft${sd.darkvision?' · darkvision '+sd.darkvision+' ft':''}${sd.asi?' · '+esc(sd.asi):''}</div>
        ${sd.languages?`<div class="nr-meta">languages: ${esc(sd.languages)}</div>`:''}
-       ${sd.desc?`<div class="feat-desc">${esc(sd.desc)}</div>`:''}
        ${traits.map(t=>`<div class="feat-desc"><b>${esc(t.name)}</b>${t.desc?' — '+esc(t.desc):''}</div>`).join('')}`;
-    ix.push(Object.assign(notesEntry('Species', name, [sd.source, sd.custom?'imported':'built-in'],
+    ix.push(Object.assign(notesEntry('Species', name, sd.source, [sd.source, sd.custom?'imported':'built-in'],
       [sd.desc, sd.asi, sd.languages, subNames.join(' '), traits.map(t=>t.name+' '+(t.desc||'')).join(' ')].filter(Boolean).join(' '),
       detail,
       editLink('species', name, 'Edit species in Library')),
@@ -4129,7 +4516,7 @@ function buildNotesIndex(){
     const traits = ss.traits||[];
     const summary = `<div class="nr-meta">${esc(ss.parent)} subrace${ss.asi?' · '+esc(ss.asi):''}</div>
        ${ss.desc?`<div class="feat-desc">${esc(ss.desc)}</div>`:''}`;
-    ix.push(Object.assign(notesEntry('Subspecies', ss.name, [ss.parent, ss.source||'Homebrew', ss.custom?'imported':'built-in'],
+    ix.push(Object.assign(notesEntry('Subspecies', ss.name, ss.source||'Homebrew', [ss.parent, ss.source||'Homebrew', ss.custom?'imported':'built-in'],
       [ss.desc, ss.parent, ss.asi, traits.map(t=>t.name+' '+(t.desc||'')).join(' ')].filter(Boolean).join(' '),
       summary,
       editLink('subspecies', subspKey(ss.parent, ss.name), 'Edit subspecies in Library')),
@@ -4140,7 +4527,7 @@ function buildNotesIndex(){
   Object.entries(SPECIES_DATA).forEach(([parent, sd])=>{
     (sd.subraces||[]).forEach(n=>{
       if(seenSubsp.has(subspKey(parent, n))) return;
-      ix.push(Object.assign(notesEntry('Subspecies', n, [parent, 'built-in'], parent,
+      ix.push(Object.assign(notesEntry('Subspecies', n, sd.source, [parent, 'built-in'], parent,
         `<div class="nr-meta">${esc(parent)} subrace</div>`,
         editLink('subspecies', subspKey(parent, n), 'Edit subspecies in Library')),
         { key: subspKey(parent, n),
@@ -4167,7 +4554,7 @@ function buildNotesIndex(){
       : bi.classes;
     const bits = [det.school, det.castingTime&&'cast '+det.castingTime, det.range&&'range '+det.range,
       det.components, det.duration&&'duration '+det.duration].filter(Boolean).join(' · ');
-    ix.push(notesEntry('Spells', name, [levelLabel(level), imp?imp.source:null, imp?'imported':'built-in'],
+    ix.push(notesEntry('Spells', name, imp?imp.source:'5E', [levelLabel(level), imp?imp.source:null, imp?'imported':'built-in'],
       [classes.join(' '), det.school, det.desc, (det.tags||[]).join(' ')].filter(Boolean).join(' '),
       `<div class="nr-meta">${esc(levelLabel(level))} · ${esc(classes.join(', '))}</div>
        ${bits?`<div class="nr-meta">${esc(bits)}</div>`:''}
@@ -4176,17 +4563,33 @@ function buildNotesIndex(){
       editLink('spell', name, 'Edit spell in Library')));
   });
 
+  // Companions — every template from resources/companions.js, with its stat
+  // block rendered at a baseline (see companionBaselineCtx) since no character
+  // is loaded on the Library page. The sheet's auto-generate scales the real one.
+  companionTemplates().forEach(t=>{
+    const stats = t.build(companionBaselineCtx());
+    const srcLine = `<div class="nr-meta">${esc(t.kind==='spell'?'Spell':'Class feature')} · ${esc(t.source)}</div>`;
+    const summary = srcLine + `<div class="nr-meta">${esc(stats.typeLine||'')}</div>`;
+    const hay = [t.source, stats.typeLine, stats.hpFormula,
+      ...(stats.features||[]).map(f=>f.name+' '+f.desc),
+      ...(stats.actions||[]).map(a=>a.name+' '+a.desc), 'companion'].filter(Boolean).join(' ');
+    ix.push(Object.assign(
+      notesEntry('Companions', t.name, 'Companion', [t.kind==='spell'?'Spell':'Feature', t.source.split(' — ')[0]], hay, summary),
+      { full: srcLine + companionStatsHtml(stats) // stats html already leads with the type line
+          + `<p class="nr-hint">Numbers shown for a baseline character (proficiency +2, +0 modifiers). Use <span class="hl">Auto-generate</span> on the Character tab to scale it to your character.</p>` }));
+  });
+
   // Fighting styles — searchable by name, effect, or a class that can take one.
-  FIGHTING_STYLES.forEach(s=> ix.push(notesEntry('Fighting Styles', s.name, [s.source, s.classes.join(' / ')],
+  FIGHTING_STYLES.forEach(s=> ix.push(notesEntry('Fighting Styles', s.name, s.source, [s.source, s.classes.join(' / ')],
     [s.desc, s.classes.join(' '), 'fighting style'].join(' '),
     `<div class="nr-meta">Available to: ${esc(s.classes.join(', '))}</div>
      <div class="feat-desc">${esc(s.desc)}</div>`)));
 
-  ALIGNMENTS.forEach(a=> ix.push(notesEntry('Alignments', a.name, [a.abbr], a.desc+' '+a.eg,
+  ALIGNMENTS.forEach(a=> ix.push(notesEntry('Alignments', a.name, '5E', [a.abbr], a.desc+' '+a.eg,
     `<div class="feat-desc">${esc(a.desc)}</div><div class="nr-meta">e.g. ${esc(a.eg)}</div>`)));
 
   // Weapon Mastery properties — searchable by property name or any weapon that has it.
-  MASTERY_PROPERTIES.forEach(m=> ix.push(notesEntry('Mastery', m.name, ['weapon mastery'],
+  MASTERY_PROPERTIES.forEach(m=> ix.push(notesEntry('Mastery', m.name, '5.5E', ['weapon mastery'],
     m.desc+' '+m.weapons.join(' '),
     `<div class="feat-desc">${esc(m.desc)}</div><div class="nr-meta">weapons: ${esc(m.weapons.join(', '))}</div>`)));
 
@@ -4199,10 +4602,11 @@ function renderNotesResults(){
   if(!box) return;
   const q = (document.getElementById('notesSearch').value||'').trim().toLowerCase();
   if(!q){
-    // No search query: browse mode. "All", "Alignments" and "Mastery" keep the
-    // static reference below (filtered to the matching panel); every other
-    // filter shows a paginated list.
-    if(notesFilter==='All' || notesFilter==='Alignments' || notesFilter==='Mastery'){
+    // No search query: browse mode. With no source filter, "All", "Alignments"
+    // and "Mastery" keep the static reference below (filtered to the matching
+    // panel); every other filter — or any active source filter — shows a
+    // paginated list.
+    if(notesSourceFilter==='All' && (notesFilter==='All' || notesFilter==='Alignments' || notesFilter==='Mastery')){
       box.innerHTML = '';
       if(ref){
         ref.style.display = '';
@@ -4217,9 +4621,11 @@ function renderNotesResults(){
     return;
   }
   if(ref) ref.style.display = 'none';
-  const hits = NOTES_INDEX.filter(e=> (notesFilter==='All' || e.type===notesFilter) && e.text.includes(q));
+  const hits = NOTES_INDEX.filter(e=> !NOTES_HIDDEN_TYPES.has(e.type)
+    && (notesFilter==='All' || e.type===notesFilter) && notesSourceMatch(e) && e.text.includes(q));
   if(!hits.length){
-    box.innerHTML = `<div class="action-empty">No matches for "${esc(q)}"${notesFilter==='All'?'':' in '+notesFilter}.</div>`;
+    const scope = (notesFilter==='All'?'':' in '+notesFilter) + (notesSourceFilter==='All'?'':' ('+notesSourceFilter+')');
+    box.innerHTML = `<div class="action-empty">No matches for "${esc(q)}"${scope}.</div>`;
     return;
   }
   // Name matches outrank text-only matches; earlier match positions rank higher.
@@ -4260,11 +4666,14 @@ function renderNotesBrowse(){
   const ref = document.getElementById('notesReference');
   if(!box) return;
   if(ref) ref.style.display = 'none';
-  const all = NOTES_INDEX.filter(e=> e.type===notesFilter)
+  const all = NOTES_INDEX.filter(e=> !NOTES_HIDDEN_TYPES.has(e.type)
+      && (notesFilter==='All' || e.type===notesFilter) && notesSourceMatch(e))
     .sort((a,b)=> a.name.localeCompare(b.name));
+  const scopeLabel = (notesFilter==='All' ? 'entries' : notesFilter.toLowerCase())
+    + (notesSourceFilter==='All' ? '' : ' tagged ' + notesSourceFilter);
   if(!all.length){
     notesHits = [];
-    box.innerHTML = `<div class="action-empty">No ${esc(notesFilter.toLowerCase())} in the reference yet.</div>`;
+    box.innerHTML = `<div class="action-empty">No ${esc(scopeLabel)} in the reference yet.</div>`;
     return;
   }
   const pageCount = Math.ceil(all.length / NOTES_PAGE_SIZE);
@@ -4272,7 +4681,7 @@ function renderNotesBrowse(){
   const start = notesBrowsePage * NOTES_PAGE_SIZE;
   const pageItems = all.slice(start, start + NOTES_PAGE_SIZE);
   notesHits = pageItems; // rows index into this via data-i, like search results
-  let html = `<div class="nr-group">${esc(notesFilter)} — ${all.length} total</div>`
+  let html = `<div class="nr-group">${esc(notesFilter==='All'?'All':notesFilter)}${notesSourceFilter==='All'?'':' · '+esc(notesSourceFilter)} — ${all.length} total</div>`
     + pageItems.map((e,i)=>`
       <div class="feat-item nr-item" data-i="${i}" title="Click for full details">
         <div class="feat-head">
@@ -4587,12 +4996,36 @@ function buildNotesFilterBar(){
   }));
 }
 
+// Distinct source tags present among the visible (non-hidden) index entries,
+// ordered by the canonical source list with any extras appended alphabetically.
+function notesSourcesPresent(){
+  const set = new Set(NOTES_INDEX.filter(e=> !NOTES_HIDDEN_TYPES.has(e.type)).map(e=> e.source));
+  const ordered = CLASS_SOURCES.filter(s=> set.has(s));
+  const extra = [...set].filter(s=> !CLASS_SOURCES.includes(s)).sort();
+  return [...ordered, ...extra];
+}
+
+function buildNotesSourceFilterBar(){
+  const bar = document.getElementById('notesSourceFilterBar');
+  if(!bar) return;
+  const opts = ['All', ...notesSourcesPresent()];
+  bar.innerHTML = '<span class="filter-label">Source</span>' + opts.map(o=>
+    `<span class="filter-chip ${notesSourceFilter===o?'on':''}" data-s="${esc(o)}">${esc(o)}</span>`).join('');
+  bar.querySelectorAll('.filter-chip').forEach(chip=>chip.addEventListener('click', ()=>{
+    notesSourceFilter = chip.dataset.s;
+    notesBrowsePage = 0; // start each browsed filter from its first page
+    buildNotesSourceFilterBar();
+    renderNotesResults();
+  }));
+}
+
 // The Notes page: a search box over the full reference index; the alignment
 // tables stay visible underneath until a query is typed.
 function initNotesPage(){
   buildNotes();
   NOTES_INDEX = buildNotesIndex();
   buildNotesFilterBar();
+  buildNotesSourceFilterBar();
   bindNotesModal();
   const input = document.getElementById('notesSearch');
   if(input){
@@ -4629,6 +5062,7 @@ function renderCharacter(){
   buildClassFeatures();
   renderOtherFeatures(); // custom entries also append to the class/species lists above
   buildActions();
+  buildCompanions();
   applyStateToInputs();
   refreshTagPickers(); // known-spell tags feed the dropdown option pool
   // Journal lives in modules/journal.js; guard in case the module didn't load.
@@ -4725,8 +5159,10 @@ const app = {
   openItemModal,
   buildActions,
   buildActionResources,
+  openResourceModal,
   buildKnownSpells,
   buildAttacks,
+  buildCompanions,
   buildSaves,
   buildSkills,
   buildAbilities,
@@ -4902,15 +5338,63 @@ function initImportPage(){
 // The character sheet (index): loads a character and wires every tab.
 async function initSheetPage(){
   if(VIEW_ONLY){
-    document.body.classList.add('view-only');
+    let res;
     try{
-      await loadCharacter(VIEW_CHARACTER_ID);
+      res = await apiGetCharacter(VIEW_CHARACTER_ID);
     }catch(err){
       alert(err.message || 'You do not have access to that character sheet.');
       location.href = '/sessions';
       return;
     }
-    // Banner instead of the profile switcher; no autosave, no profile bar.
+    state = Object.assign(defaultCharacter(), res.data, { id: res.id, name: res.name });
+
+    if(res.editable && !res.owned){
+      // A host character claimed from a session's loaner pool: the full sheet
+      // works and autosaves to the host's copy. No profile switcher — this
+      // isn't one of the player's own profiles — but they can take a copy.
+      BORROWED_EDIT = true;
+      document.body.classList.add('borrowed');
+      renderCharacter();
+      const bar = document.querySelector('.profile-bar');
+      if(bar){
+        const banner = document.createElement('span');
+        banner.className = 'view-banner';
+        banner.textContent = `Playing "${state.name}" — host's character`;
+        bar.appendChild(banner);
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'pbtn';
+        copyBtn.id = 'saveCopyBtn';
+        copyBtn.textContent = 'Save a copy to my characters';
+        copyBtn.addEventListener('click', async ()=>{
+          if(!confirm(`Save a copy of "${state.name}" into your account? The host keeps the original.`)) return;
+          const r = await apiDuplicateCharacter(state.id);
+          if(r && r.id) location.href = '/';
+          else alert(r && r.error || 'Could not copy the character.');
+        });
+        bar.appendChild(copyBtn);
+      }
+      bindStaticInputs();
+      bindTabs();
+      bindSkillLegendButtons();
+      bindCornerLauncher();
+      bindPassiveSenseRows();
+      bindNotesModal();
+      bindChoiceModal();
+      bindItemModal();
+      bindCustomFeatureForm();
+      buildClassFilterBar();
+      buildSpellLevelSelects();
+      setTagPicker('customSpellTagPicker', []);
+      setSaveStatus('saved');
+      return;
+    }
+
+    // DM (or owner) viewing: banner instead of the profile switcher; no
+    // autosave, no profile bar.
+    document.body.classList.add('view-only');
+    renderCharacter();
+    setSaveStatus('saved');
     const bar = document.querySelector('.profile-bar');
     if(bar){
       const banner = document.createElement('span');
