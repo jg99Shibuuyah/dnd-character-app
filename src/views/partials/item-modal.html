@@ -1,9 +1,10 @@
 <!-- Add/Edit popup for the Inventory tab. One modal serves both flavors:
      Equipment (full effects form working on a draft, committed on Save) and
-     plain Inventory items (name + quantity). The backdrop's mode-equip /
-     mode-item class picks which fields show. Shares the modal chrome with the
-     Journal/Choice popups. Wired in app.js: bindItemModal(), opened by
-     openEquipModal() / openItemModal(). -->
+     plain Inventory items (name + quantity). The Type toggle switches an entry
+     between the two — saving moves it to the matching list. The backdrop's
+     mode-equip / mode-item class picks which fields show. Shares the modal
+     chrome with the Journal/Choice popups. Wired in app.js: bindItemModal(),
+     opened by openEquipModal() / openItemModal(). -->
 <div class="app-modal-backdrop item-modal-backdrop" id="itemModalBackdrop" aria-hidden="true">
   <div class="app-modal panel" role="dialog" aria-modal="true" aria-labelledby="itemModalHeading">
     <div class="app-modal-head">
@@ -12,6 +13,13 @@
       <button class="app-modal-close" id="itemModalClose" type="button" aria-label="Close">✕</button>
     </div>
     <div class="app-modal-body">
+      <div class="app-field">
+        <span class="app-field-label">Type</span>
+        <div class="item-kind-toggle">
+          <button type="button" class="item-kind-btn" id="itemKindEquip">Equipment</button>
+          <button type="button" class="item-kind-btn" id="itemKindItem">Item</button>
+        </div>
+      </div>
       <label class="app-field">
         <span class="app-field-label">Name</span>
         <input id="itemModalName" type="text" placeholder="e.g. Longsword +1">

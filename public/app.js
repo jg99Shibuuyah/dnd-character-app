@@ -1469,8 +1469,10 @@ function bindEquipList(wrap){
 // ---------- Add/Edit item popup (Inventory tab) ----------
 // One modal (partials/item-modal.html) serves both flavors: 'equip' shows the
 // full effects form working on a draft copy committed on Save; 'item' is just
-// name + quantity. index null = adding a new entry.
-let itemModalCtx = null; // { kind:'equip'|'item', index, draft }
+// name + quantity. The Type toggle flips `kind`; when it no longer matches
+// `originKind`, Save moves the entry to the other list (item ⇄ equipment).
+// index null = adding a new entry.
+let itemModalCtx = null; // { originKind:'equip'|'item', index, kind, draft }
 
 function setItemModalStatus(msg){
   const el = document.getElementById('itemModalStatus');
@@ -1479,7 +1481,7 @@ function setItemModalStatus(msg){
 
 // Skill/spell chips edit the draft only; nothing touches state until Save.
 function renderItemModalChips(){
-  if(!itemModalCtx || itemModalCtx.kind!=='equip') return;
+  if(!itemModalCtx || !itemModalCtx.draft) return;
   const d = itemModalCtx.draft;
   const skills = document.getElementById('itemModalSkillList');
   const spells = document.getElementById('itemModalSpellList');
@@ -1493,33 +1495,33 @@ function renderItemModalChips(){
   }));
 }
 
-function openItemModalShell(kind, heading, hint){
+// Switch which flavor the form shows; Save moves the entry if it changed.
+function setItemModalKind(kind){
+  if(!itemModalCtx) return;
+  itemModalCtx.kind = kind;
   const backdrop = document.getElementById('itemModalBackdrop');
-  if(!backdrop) return false;
-  document.getElementById('itemModalHeading').textContent = heading;
-  document.getElementById('itemModalHint').textContent = hint || '';
   backdrop.classList.toggle('mode-equip', kind==='equip');
   backdrop.classList.toggle('mode-item', kind==='item');
-  setItemModalStatus('');
-  backdrop.classList.add('open');
-  backdrop.setAttribute('aria-hidden','false');
-  setTimeout(()=>{ const n = document.getElementById('itemModalName'); if(n) n.focus(); }, 0);
-  return true;
+  document.getElementById('itemKindEquip').classList.toggle('active', kind==='equip');
+  document.getElementById('itemKindItem').classList.toggle('active', kind==='item');
+  const editing = itemModalCtx.index!=null;
+  document.getElementById('itemModalHeading').textContent =
+    (editing?'Edit ':'Add ') + (kind==='equip'?'Equipment':'Item');
+  const hint = document.getElementById('itemModalHint');
+  if(kind==='equip') hint.textContent = 'Effects apply while the item is equipped';
+  else hint.textContent = (editing && itemModalCtx.originKind==='equip')
+    ? 'Saving as a plain item drops its equipment effects' : '';
 }
 
-function openEquipModal(index){
-  const editing = Number.isInteger(index);
-  const src = editing ? equipList()[index] : newEquipItem();
-  if(!src) return;
-  const draft = JSON.parse(JSON.stringify(src));
-  draft.attack = draft.attack||{bonus:'',dmg:''};
-  draft.abilities = draft.abilities||{};
-  draft.skills = draft.skills||[];
-  draft.spells = draft.spells||[];
-  itemModalCtx = { kind:'equip', index: editing?index:null, draft };
-  if(!openItemModalShell('equip', editing?'Edit Equipment':'Add Equipment',
-      'Effects apply while the item is equipped')) return;
-  document.getElementById('itemModalName').value = draft.name||'';
+function normalizeEquipDraft(d){
+  d.attack = d.attack||{bonus:'',dmg:''};
+  d.abilities = d.abilities||{};
+  d.skills = d.skills||[];
+  d.spells = d.spells||[];
+  return d;
+}
+
+function fillItemModalEquipFields(draft){
   document.getElementById('itemModalEquipped').checked = draft.equipped!==false;
   document.getElementById('itemModalDesc').value = draft.description||'';
   document.getElementById('itemModalAtkBonus').value = draft.attack.bonus||'';
@@ -1536,14 +1538,43 @@ function openEquipModal(index){
   renderItemModalChips();
 }
 
+function openItemModalBackdrop(){
+  const backdrop = document.getElementById('itemModalBackdrop');
+  if(!backdrop) return false;
+  setItemModalStatus('');
+  backdrop.classList.add('open');
+  backdrop.setAttribute('aria-hidden','false');
+  setTimeout(()=>{ const n = document.getElementById('itemModalName'); if(n) n.focus(); }, 0);
+  return true;
+}
+
+function openEquipModal(index){
+  const editing = Number.isInteger(index);
+  const src = editing ? equipList()[index] : newEquipItem();
+  if(!src) return;
+  const draft = normalizeEquipDraft(JSON.parse(JSON.stringify(src)));
+  itemModalCtx = { originKind:'equip', index: editing?index:null, kind:'equip', draft };
+  if(!openItemModalBackdrop()) return;
+  document.getElementById('itemModalName').value = draft.name||'';
+  document.getElementById('itemModalQty').value = 1;
+  fillItemModalEquipFields(draft);
+  setItemModalKind('equip');
+}
+
 function openItemModal(index){
   const editing = Number.isInteger(index);
   const src = editing ? state.inventory[index] : {name:'', qty:1};
   if(!src) return;
-  itemModalCtx = { kind:'item', index: editing?index:null, draft:null };
-  if(!openItemModalShell('item', editing?'Edit Item':'Add Item', '')) return;
+  // A fresh equip draft sits behind the simple form so flipping the Type
+  // toggle to Equipment starts from a clean effects form.
+  const draft = normalizeEquipDraft(newEquipItem());
+  draft.name = src.name||'';
+  itemModalCtx = { originKind:'item', index: editing?index:null, kind:'item', draft };
+  if(!openItemModalBackdrop()) return;
   document.getElementById('itemModalName').value = src.name||'';
   document.getElementById('itemModalQty').value = src.qty==null?1:src.qty;
+  fillItemModalEquipFields(draft);
+  setItemModalKind('item');
 }
 
 function closeItemModal(){
@@ -1556,16 +1587,22 @@ function closeItemModal(){
 
 function saveItemModal(){
   if(!itemModalCtx) return;
+  const ctx = itemModalCtx;
   const name = document.getElementById('itemModalName').value.trim();
   if(!name){ setItemModalStatus('Give it a name first.'); return; }
-  if(itemModalCtx.kind==='item'){
+  const equip = equipList();
+  if(ctx.kind==='item'){
     const qty = parseInt(document.getElementById('itemModalQty').value,10);
     const item = { name, qty: isNaN(qty)?1:qty };
-    if(itemModalCtx.index==null) state.inventory.push(item);
-    else Object.assign(state.inventory[itemModalCtx.index], item);
-    buildInventory(); save();
+    if(ctx.originKind==='item' && ctx.index!=null){
+      Object.assign(state.inventory[ctx.index], item);
+    } else {
+      // New entry, or equipment converted to a plain item.
+      if(ctx.originKind==='equip' && ctx.index!=null) equip.splice(ctx.index,1);
+      state.inventory.push(item);
+    }
   } else {
-    const d = itemModalCtx.draft;
+    const d = ctx.draft;
     d.name = name;
     d.equipped = document.getElementById('itemModalEquipped').checked;
     d.description = document.getElementById('itemModalDesc').value;
@@ -1575,11 +1612,17 @@ function saveItemModal(){
     };
     d.ac = document.getElementById('itemModalAC').value;
     document.querySelectorAll('#itemModalAbilities .eq-abil').forEach(inp=>{ d.abilities[inp.dataset.k]=inp.value; });
-    const list = equipList();
-    if(itemModalCtx.index==null) list.push(d);
-    else list[itemModalCtx.index] = d;
-    buildEquipment(); refreshEffects(); save();
+    if(ctx.originKind==='equip' && ctx.index!=null){
+      equip[ctx.index] = d;
+    } else {
+      // New entry, or a plain item promoted to equipment.
+      if(ctx.originKind==='item' && ctx.index!=null) state.inventory.splice(ctx.index,1);
+      equip.push(d);
+    }
   }
+  // refreshEffects rebuilds the inventory list too, so this covers both lists
+  // regardless of which one(s) changed.
+  buildEquipment(); refreshEffects(); save();
   closeItemModal();
 }
 
@@ -1591,6 +1634,8 @@ function bindItemModal(){
   document.getElementById('itemModalSpellLvl').innerHTML = levelOptions(0);
   document.getElementById('itemModalClose').addEventListener('click', closeItemModal);
   document.getElementById('itemModalSave').addEventListener('click', saveItemModal);
+  document.getElementById('itemKindEquip').addEventListener('click', ()=>setItemModalKind('equip'));
+  document.getElementById('itemKindItem').addEventListener('click', ()=>setItemModalKind('item'));
   backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeItemModal(); });
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape' && backdrop.classList.contains('open')) closeItemModal();

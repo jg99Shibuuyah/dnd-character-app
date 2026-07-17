@@ -880,6 +880,15 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 .item-modal-backdrop .item-modal-equip-only{ display:none; }
 .item-modal-backdrop.mode-equip .item-modal-equip-only{ display:flex; flex-direction:column; gap:12px; }
 #itemModalQty{ width:90px; }
+.item-kind-toggle{ display:flex; gap:6px; }
+.item-kind-btn{
+  flex:1; padding:7px 10px; cursor:pointer;
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  background: var(--void-3); color: var(--ink-soft);
+  border:1px solid var(--parchment-line); border-radius:2px;
+}
+.item-kind-btn:hover{ color: var(--ink); }
+.item-kind-btn.active{ color: var(--neon-cyan); border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
 .eq-effects{ margin-top:8px; display:flex; flex-direction:column; gap:8px; }
 .eq-field-group{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .eq-lbl{
