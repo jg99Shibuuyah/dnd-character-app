@@ -70,6 +70,17 @@ Also built the shared React shell: `components/Layout.jsx` (sidebar + page bar),
 2. Delete `public/app.js`, `public/modules/`, legacy `public/index.html`, and the EJS sheet/import/library/sessions views + partials.
 3. Update README, Dockerfile (add build step), and launch configs.
 
+### Phase 4 — Cutover and cleanup ✅
+1. Express serves `client/dist` at `/` via an SPA fallback (`app.get('*', requireAuthPage, …)`); EJS renders only `login`/`reset`. Vite `base` and router `basename` moved from `/next/` to `/`.
+2. Deleted the legacy frontend: `public/app.js`, `public/modules/`, `public/index.html`, and the sheet/import/library/sessions EJS views + partials. Kept `public/styles.css`, `public/login.js`, `public/resources/`. Recoverable from `historic-vanilla-frontend`.
+3. Dockerfile builds the client first; README + root `package.json` scripts (`build`, `client:dev`, `test:client`) updated.
+
+**Done when:** React serves at `/`, legacy gone, all routes verified. ✅
+
+## Migration complete
+
+All four phases landed on the `react-refactor` branch. `historic-vanilla-frontend` is the pre-migration snapshot. Optional remaining chrome not ported: the journal quick-note FAB and the skills quick-reference popup (both duplicate features already on their tabs).
+
 ## Risk notes
 
 - **Highest-risk widgets:** notes floating windows (drag/snap), the theme editor (writes CSS vars — port nearly as-is), and spell slot auto-calculation across multiclassing. All are isolated; none block other work.
