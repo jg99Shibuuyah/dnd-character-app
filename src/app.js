@@ -56,6 +56,16 @@ app.get('/sessions', requireAuthPage, (req, res) => {
   res.render('sessions', { user: req.user });
 });
 
+// ---- React client (migration in progress) ----
+// The Vite-built client lives under /next/ until it reaches parity and takes
+// over '/'. In dev the Vite server (client/vite.config.js) serves it instead
+// and proxies /api here, so this only matters for production builds.
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+app.use('/next', express.static(clientDist, { index: false }));
+app.get(['/next', '/next/*'], requireAuthPage, (req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+
 app.use('/api/auth', authRouter);
 
 // Everything below is per-user data or gameplay — sign-in required.

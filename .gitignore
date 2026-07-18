@@ -3,3 +3,4 @@ characters.db
 characters.db-shm
 characters.db-wal
 server.log
+client/dist/

@@ -93,6 +93,31 @@
       "autoPort": true
     },
     {
+      "name": "dev-react-api",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/9f0bdf9a-f8c6-4b65-ae88-ce57199e145f/scratchpad/react.db",
+        "PORT=4186",
+        "SKIP_AUTH=true",
+        "node",
+        "src/server.js"
+      ],
+      "port": 4186,
+      "autoPort": true
+    },
+    {
+      "name": "client-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "client",
+        "run",
+        "dev"
+      ],
+      "port": 5174,
+      "autoPort": false
+    },
+    {
       "name": "dev-goliath-verify",
       "runtimeExecutable": "env",
       "runtimeArgs": [
