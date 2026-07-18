@@ -16,8 +16,17 @@ not install Node.
 ### With Node.js
 
 ```bash
-npm install
+npm install       # server dependencies
+npm run build     # install + build the React client into client/dist
 npm start
+```
+
+For frontend development, run the server and the Vite dev server side by side
+(the client proxies `/api` to the server):
+
+```bash
+SKIP_AUTH=true npm start   # API on :3000
+npm run client:dev         # Vite on :5174 with hot reload
 ```
 
 ### With Docker
@@ -40,14 +49,17 @@ variables, and data backups, see the wiki:
 ## Technologies
 
 - **Runtime:** [Node.js](https://nodejs.org) 24+
-- **Server:** [Express](https://expressjs.com/) 4, with [EJS](https://ejs.co/)
-  for server-rendered views
+- **Server:** [Express](https://expressjs.com/) 4 (a JSON REST API; EJS renders
+  only the `login`/`reset` pages)
 - **Database:** [SQLite](https://www.sqlite.org/) via
   [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — a single
   `characters.db` file, no external database service
-- **Frontend:** vanilla JavaScript (no framework) — `public/app.js` plus ES
-  modules in `public/modules/`, talking to a REST API with `fetch()`
-- **Packaging:** Docker (`Dockerfile` + `docker-compose.yml`)
+- **Frontend:** [React](https://react.dev/) 19 + [Vite](https://vitejs.dev/) in
+  `client/`, built to static files (`client/dist`) that Express serves. Pure
+  rules logic lives in `client/src/rules/` with unit tests (`npm run
+  test:client`); builtin game data stays in `public/resources/`.
+- **Packaging:** Docker (`Dockerfile` + `docker-compose.yml`) — the image builds
+  the client, then runs the server
 
 See [Architecture](https://github.com/jg99Shibuuyah/dnd-character-app/wiki/Architecture)
 in the wiki for the code layout and REST API, and

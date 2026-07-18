@@ -15,14 +15,21 @@ const errorHandler = require('./middleware/error-handler');
 
 const app = express();
 
+// EJS renders only the two pre-auth pages (login, reset). Every signed-in page
+// is served by the React client in client/dist (see the SPA fallback below).
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'html');
 app.engine('html', require('ejs').renderFile);
 
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+
 app.use(express.json({ limit: config.jsonBodyLimit }));
-// index:false — otherwise public/index.html (the legacy monolith page) would
-// shadow the modular EJS view rendered by the '/' route below.
+// Shared static assets used by both the React app and the login/reset pages:
+// styles.css, /resources/* (builtin game data), and login.js.
 app.use(express.static(config.publicDir, { index: false }));
+// Built React assets (/assets/*, favicon, etc.). index:false so the SPA
+// fallback route below controls when index.html is served (behind auth).
+app.use(express.static(clientDist, { index: false }));
 
 app.use(attachUser);
 
@@ -34,36 +41,6 @@ app.get('/login', (req, res) => {
 
 app.get('/reset', (req, res) => {
   res.render('reset');
-});
-
-// ---- App pages — every render passes { user } for the sidebar footer ----
-app.get('/', requireAuthPage, (req, res) => {
-  res.render('index', { user: req.user });
-});
-
-// The import forms (formerly "Library").
-app.get('/import', requireAuthPage, (req, res) => {
-  res.render('import', { user: req.user });
-});
-
-// The rules reference + search (formerly "Notes").
-app.get('/library', requireAuthPage, (req, res) => {
-  res.render('library', { user: req.user });
-});
-
-// Game sessions: create/join campaigns; the creator is the DM.
-app.get('/sessions', requireAuthPage, (req, res) => {
-  res.render('sessions', { user: req.user });
-});
-
-// ---- React client (migration in progress) ----
-// The Vite-built client lives under /next/ until it reaches parity and takes
-// over '/'. In dev the Vite server (client/vite.config.js) serves it instead
-// and proxies /api here, so this only matters for production builds.
-const clientDist = path.join(__dirname, '..', 'client', 'dist');
-app.use('/next', express.static(clientDist, { index: false }));
-app.get(['/next', '/next/*'], requireAuthPage, (req, res) => {
-  res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 app.use('/api/auth', authRouter);
@@ -78,6 +55,15 @@ app.use('/api/backgrounds', backgroundsRouter);
 app.use('/api/subclasses', subclassesRouter);
 app.use('/api/subspecies', subspeciesRouter);
 app.use('/api/spells', spellsRouter);
+
+// ---- React SPA fallback ----
+// Any non-API GET that isn't login/reset serves the React shell; the client
+// router (/, /import, /library, /sessions) takes over. requireAuthPage keeps
+// the app behind sign-in and redirects to /login when signed out.
+app.get('*', requireAuthPage, (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
 
 app.use(errorHandler);
 

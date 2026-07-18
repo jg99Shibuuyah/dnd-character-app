@@ -9,7 +9,7 @@ import {
   featuresToLines, traitsToLines, builtinSpellInfo,
   collectBulkEntries, prepareBulkQueue, exportLibraryEntries, BULK_TYPE_ORDER
 } from '../rules/import-forms.js';
-import referenceHtml from '../../../src/views/partials/import/json-reference.html?raw';
+import referenceHtml from '../content/json-reference.html?raw';
 
 // Import page — React port of the legacy import forms (public/app.js:
 // bindClassImport & friends). Six forms share a common skeleton: an edit

@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react';
 import OptionsMenu from './OptionsMenu.jsx';
 import * as api from '../api/client.js';
 
-// Links mix React routes (ported pages) and legacy URLs (not yet ported).
-// As each page ports over, its entry flips from `legacy` to `route`; at
-// cutover they all become routes. Plain <a> everywhere keeps this trivial —
-// full page loads between pages are fine for this app.
+// Top-level pages. Plain <a> (full page loads) between them keeps this trivial
+// and is fine for this app.
 const NAV = [
   { page: 'sheet', label: 'Character Sheet', href: '/' },
-  { page: 'library', label: 'Library', href: '/next/library' },
-  { page: 'sessions', label: 'Sessions', href: '/next/sessions' },
-  { page: 'import', label: 'Import', href: '/next/import' }
+  { page: 'library', label: 'Library', href: '/library' },
+  { page: 'sessions', label: 'Sessions', href: '/sessions' },
+  { page: 'import', label: 'Import', href: '/import' }
 ];
 
 // Shared page chrome: slide-in sidebar + page bar (☰, title, Options menu).

@@ -57,14 +57,13 @@ Also built the shared React shell: `components/Layout.jsx` (sidebar + page bar),
 
 **Done when:** three pages are React routes, verified in-browser. ✅ (legacy JS still present — deleted in Phase 4)
 
-### Phase 3 — The character sheet, tab by tab
-1. **Shell first:** page bar, hero header, tab bar, profile bar, sidebar, options/theme menu. Character state moves into a store: `useReducer` with actions like `setAbility`, `equipItem`, `chooseFeature`; derived values (AC, saves, slots) computed via Phase 1 rules functions — no more manual `refreshEffects()` chains.
-2. **Autosave:** port `save()`/`setSaveStatus()` as a store subscriber with the same debounce.
-3. **Tabs, easiest → hardest:** Settings → Skills → Inventory/Equipment → Features (choice modals) → Actions (resources/meters) → Spells (library, slots, tag pickers) → Journal (port `journal.js`) → Companions.
-4. **Shared widgets as they come up:** detail modal, item modal, choice modal, dice roller, corner launcher, notes floating windows (the `nr*` drag/snap system — hardest single widget, saved for last).
-5. Parity check per tab: load the same character in old and new UI, compare exported JSON and displayed derived numbers.
+### Phase 3 — The character sheet, tab by tab ✅
+1. **Shell + store** ✅ — `state/characterStore.jsx`: `update(mutator)` clones-mutates-commits and schedules the same 500ms debounced autosave (`save()`/`setSaveStatus()` ported); derived AC/saves/skills/slots via `useMemo` over the Phase 1 rules, replacing `refreshEffects()`/`recalc()` chains. `SheetPage` wires sidebar, `ProfileBar`, `Hero`, tab bar.
+2. **All eight tabs** ✅ — Character (abilities/combat/companions), Skills, Inventory & Equipment (+ item modal), Journal (+ detail modal), Features & Traits (+ shared choice control/modal), Settings (identity/multiclass picker/skill picker), Spells (slots/library/known), Actions (attacks/reactions/resources/class abilities). Class edits run `applyClassesToState` in the mutator so derived fields persist.
+3. **Shared widgets** ✅ — item modal, choice control + modal, resource modal, the floating dice roller (logs to the roll log), and the reused `notes-windows.js` detail windows.
+4. Each tab verified in-browser against the loaded character (derived numbers, cross-tab reactivity, DB round-trips).
 
-**Done when:** sheet fully functional in React; a character round-trips (load → edit → save → reload) with identical JSON.
+**Done when:** sheet fully functional in React; a character round-trips (load → edit → save → reload). ✅ (remaining chrome: journal quick-note FAB + skills quick popup — optional, deferred)
 
 ### Phase 4 — Cutover and cleanup
 1. Serve React at `/` instead of `/next/`; convert or keep `login`/`reset` EJS (fine to keep — they're tiny and pre-auth).

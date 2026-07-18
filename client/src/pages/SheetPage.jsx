@@ -31,10 +31,10 @@ function Sidebar({ open, onClose }) {
   const [user, setUser] = useState(null);
   useEffect(() => { api.authMe().then(setUser).catch(() => setUser(null)); }, []);
   const nav = [
-    { page: 'sheet', label: 'Character Sheet', href: '/next/' },
-    { page: 'library', label: 'Library', href: '/next/library' },
-    { page: 'sessions', label: 'Sessions', href: '/next/sessions' },
-    { page: 'import', label: 'Import', href: '/next/import' }
+    { page: 'sheet', label: 'Character Sheet', href: '/' },
+    { page: 'library', label: 'Library', href: '/library' },
+    { page: 'sessions', label: 'Sessions', href: '/sessions' },
+    { page: 'import', label: 'Import', href: '/import' }
   ];
   const logout = async () => { await api.logout().catch(() => {}); window.location.href = '/login'; };
   return (

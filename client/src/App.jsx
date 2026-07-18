@@ -4,11 +4,11 @@ import LibraryPage from './pages/LibraryPage.jsx';
 import ImportPage from './pages/ImportPage.jsx';
 import SheetPage from './pages/SheetPage.jsx';
 
-// Routes live under /next/ until cutover (see vite.config.js `base` and the
-// /next/* handler in src/app.js).
+// The React app is served at / (see vite.config.js `base` and the SPA fallback
+// in src/app.js). login/reset stay server-rendered by Express.
 export default function App() {
   return (
-    <BrowserRouter basename="/next">
+    <BrowserRouter basename="/">
       <Routes>
         <Route path="/" element={<SheetPage />} />
         <Route path="/sessions" element={<SessionsPage />} />
