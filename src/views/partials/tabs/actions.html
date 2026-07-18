@@ -1,38 +1,29 @@
-<!-- TAB: Actions (derived from attacks, spells, and inventory) -->
+<!-- TAB: Actions (derived from attacks, spells, companions, and inventory) -->
 <div class="tab-pane" id="tab-actions">
+
+  <!-- Row 1: combined attacks & spells (left) sit next to Resource Points (right) -->
   <div class="grid grid-half">
     <div>
       <div class="panel">
-        <h2><span>Attacks</span><span class="rune">⚔</span></h2>
+        <h2><span>Attacks &amp; Spells</span><span class="rune">⚔</span></h2>
         <table class="attacks">
           <thead><tr><th style="width:34%">Name</th><th style="width:16%">Bonus</th><th style="width:34%">Damage / Type</th><th></th></tr></thead>
           <tbody id="attacksBody"></tbody>
         </table>
         <button class="add-btn" id="addAttack">+ Add Attack</button>
         <div id="equipAttackList"></div>
+        <div class="equip-atk-head">Spells</div>
+        <div id="actSpells"></div>
       </div>
-      <div class="panel">
-        <h2><span>Standard Actions</span><span class="rune">⚔</span></h2>
-        <div id="actStandard"></div>
-      </div>
-      <div class="panel">
-        <h2><span>Companion Actions</span><span class="rune">🐾</span></h2>
-        <div id="actCompanions"></div>
-      </div>
+
+      <!-- Reactions sit directly under the combined attacks list -->
       <div class="panel">
         <h2><span>Reactions</span><span class="rune">⟲</span></h2>
         <div id="actReactions"></div>
       </div>
     </div>
+
     <div>
-      <div class="panel">
-        <h2><span>Class Abilities</span><span class="rune">⚔</span></h2>
-        <div id="actClassAbilities"></div>
-      </div>
-      <div class="panel">
-        <h2><span>Spellcasting</span><span class="rune">✶</span></h2>
-        <div id="actSpells"></div>
-      </div>
       <div class="panel">
         <h2><span>Resource Points</span><span class="rune">◈</span></h2>
         <table class="res-table">
@@ -42,9 +33,26 @@
         <button class="add-btn" id="addResource">+ Add Resource</button>
       </div>
       <div class="panel">
+        <h2><span>Standard Actions</span><span class="rune">⚔</span></h2>
+        <div id="actStandard"></div>
+      </div>
+      <div class="panel">
         <h2><span>Usable Items</span><span class="rune">◆</span></h2>
         <div id="actItems"></div>
       </div>
     </div>
   </div>
+
+  <!-- Companion actions, full width above the class abilities block -->
+  <div class="panel">
+    <h2><span>Companion Actions</span><span class="rune">🐾</span></h2>
+    <div id="actCompanions"></div>
+  </div>
+
+  <!-- Class Abilities: wide dedicated block near the bottom -->
+  <div class="panel class-ability-panel">
+    <h2><span>Class Abilities</span><span class="rune">✦</span></h2>
+    <div id="actClassAbilities" class="class-ability-grid"></div>
+  </div>
+
 </div>

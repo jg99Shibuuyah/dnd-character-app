@@ -2058,11 +2058,15 @@ function buildActions(){
     badge: f.cost || 'Reaction',
     kind: 'ability'
   }));
+  // Class abilities render as titled blocks (bold name + badge, then the
+  // description below), laid out across the wide dedicated panel.
   classEl.innerHTML = actionAbilities.length ? actionAbilities.map(f=>`
-    <div class="action-row">
-      <span class="a-name">${esc(f.name)}${showCls(f)?` <span class="chip-abbr">${esc(f.cls)}</span>`:''}</span>
-      <span class="a-detail">${esc(f.desc||'')}</span>
-      <span class="action-badge">${esc(f.use)}${f.cost?' · '+esc(f.cost):''}</span>
+    <div class="class-ability-card">
+      <div class="ca-head">
+        <span class="ca-name">${esc(f.name)}${showCls(f)?` <span class="chip-abbr">${esc(f.cls)}</span>`:''}</span>
+        <span class="action-badge">${esc(f.use)}${f.cost?' · '+esc(f.cost):''}</span>
+      </div>
+      <div class="ca-desc">${esc(f.desc||'')||'—'}</div>
     </div>`).join('')
     : '<div class="action-empty">No class ability data — pick a class with a detailed feature reference (e.g. Jaeger) in Settings.</div>';
 
@@ -2087,7 +2091,9 @@ function buildActions(){
     </div>`).join('');
 
   // Companion actions mirror the character's list: one sub-section per
-  // companion, rows from its computed stat block (auto) or free text (manual).
+  // companion. A companion's reactions are lifted out and shown in the shared
+  // Reactions section below (tagged with the companion's name), so this block
+  // only lists its action-type entries.
   const compEl = document.getElementById('actCompanions');
   if(compEl){
     const ctx = companionCtx();
@@ -2096,10 +2102,11 @@ function buildActions(){
       let rows = [];
       if(tpl){
         const stats = tpl.build(ctx);
-        rows = [
-          ...(stats.actions||[]).map(a=>({...a, badge:'Action'})),
-          ...(stats.reactions||[]).map(a=>({...a, badge:'Reaction'}))
-        ];
+        rows = (stats.actions||[]).map(a=>({...a, badge:'Action'}));
+        (stats.reactions||[]).forEach(a=> reactions.push({
+          name: a.name, cls: c.name||'Companion', detail: a.desc||'',
+          badge: 'Reaction', kind: 'companion'
+        }));
       } else {
         // Manual companions: one row per non-empty line of the Actions text.
         rows = (c.actionsText||'').split('\n').map(s=>s.trim()).filter(Boolean)
@@ -2135,7 +2142,7 @@ function buildActions(){
         <span class="action-badge">${esc(r.badge)}</span>
       </div>`;
     }).join('')
-      : '<div class="action-empty">No reactions — reaction spells (e.g. Shield, Counterspell) and reaction class abilities appear here.</div>';
+      : '<div class="action-empty">No reactions — reaction spells (e.g. Shield, Counterspell), reaction class abilities, and companion reactions appear here.</div>';
   }
 
   // Whole-row click opens the shared spell detail popup (Spells-tab parity).

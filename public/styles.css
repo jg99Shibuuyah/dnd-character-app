@@ -651,6 +651,19 @@ textarea.trait{
 .action-badge.dim{ color:var(--ink-dim); border-color:rgba(200,200,212,0.25); }
 .action-empty{ font-style:italic; color:var(--ink-dim); font-size:13px; padding:6px 2px; }
 
+/* Class Abilities: wide dedicated block of titled cards (bold name + description). */
+.class-ability-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px; }
+.class-ability-card{
+  border:1px solid var(--parchment-line); border-radius:4px;
+  padding:9px 12px; background:rgba(200,200,212,0.03);
+}
+.class-ability-card .ca-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px;
+}
+.class-ability-card .ca-name{ font-weight:700; font-size:14px; }
+.class-ability-card .ca-desc{ color:var(--ink-dim); font-size:13px; line-height:1.5; }
+.class-ability-grid .action-empty{ grid-column:1 / -1; }
+
 /* ---------- Proficiency markers (no checkboxes; bonus is precomputed) ---------- */
 .prof-dot{
   width:9px; height:9px; border-radius:50%;
