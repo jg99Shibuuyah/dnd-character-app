@@ -10,6 +10,7 @@ import InventoryTab from '../components/sheet/InventoryTab.jsx';
 import JournalTab from '../components/sheet/JournalTab.jsx';
 import FeaturesTab from '../components/sheet/FeaturesTab.jsx';
 import SettingsTab from '../components/sheet/SettingsTab.jsx';
+import SpellsTab from '../components/sheet/SpellsTab.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -92,7 +93,8 @@ function SheetShell() {
         {ready && tab === 'journal' && <JournalTab />}
         {ready && tab === 'features' && <FeaturesTab />}
         {ready && tab === 'settings' && <SettingsTab />}
-        {ready && !['sheet', 'skills', 'inventory', 'journal', 'features', 'settings'].includes(tab) && <ComingSoon label={TABS.find((t) => t.id === tab).label} />}
+        {ready && tab === 'spells' && <SpellsTab />}
+        {ready && !['sheet', 'skills', 'inventory', 'journal', 'features', 'settings', 'spells'].includes(tab) && <ComingSoon label={TABS.find((t) => t.id === tab).label} />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
     </>
