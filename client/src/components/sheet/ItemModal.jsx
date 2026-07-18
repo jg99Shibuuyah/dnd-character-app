@@ -76,9 +76,9 @@ export default function ItemModal({ ctx: initialCtx, abilities, skills, onSave, 
   };
 
   return (
-    <div className="app-modal-backdrop item-modal-backdrop open" aria-hidden="false"
+    <div className={'app-modal-backdrop item-modal-backdrop open ' + (ctx.kind === 'equip' ? 'mode-equip' : 'mode-item')} aria-hidden="false"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={'app-modal panel ' + (ctx.kind === 'equip' ? 'mode-equip' : 'mode-item')} role="dialog" aria-modal="true">
+      <div className="app-modal panel" role="dialog" aria-modal="true">
         <div className="app-modal-head">
           <span className="app-modal-heading">{(editing ? 'Edit ' : 'Add ') + (ctx.kind === 'equip' ? 'Equipment' : 'Item')}</span>
           <span className="app-modal-date">{ctx.kind === 'equip'
