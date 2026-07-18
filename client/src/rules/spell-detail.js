@@ -55,6 +55,16 @@ export function spellDetailEntry(customSpells, data, name, fallbackLevel, editLi
   };
 }
 
+// True when a spell casts as a reaction (imported casting time/tags, a Reaction
+// tag on the known-spell entry, or a built-in whose summary leads with Reaction).
+export function isReactionSpell(customSpells, data, s) {
+  if (Array.isArray(s.tags) && s.tags.some((t) => /^reaction$/i.test(t))) return true;
+  const imp = customSpells[s.name];
+  if (imp) return /reaction/i.test(imp.castingTime || '') || (imp.tags || []).some((t) => /^reaction$/i.test(t));
+  const det = data.spellDetails[s.name];
+  return !!(det && /^reaction\b/i.test(det.desc || ''));
+}
+
 // Class names offered in the Spell Library select: builtin caster classes plus
 // any class referenced by an imported spell.
 export function spellClassNames(customSpells, data) {

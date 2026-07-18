@@ -11,6 +11,7 @@ import JournalTab from '../components/sheet/JournalTab.jsx';
 import FeaturesTab from '../components/sheet/FeaturesTab.jsx';
 import SettingsTab from '../components/sheet/SettingsTab.jsx';
 import SpellsTab from '../components/sheet/SpellsTab.jsx';
+import ActionsTab from '../components/sheet/ActionsTab.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -22,19 +23,6 @@ const TABS = [
   { id: 'journal', label: 'Journal' },
   { id: 'settings', label: 'Character Settings' }
 ];
-
-// Placeholder for tabs not yet ported — keeps the sheet navigable end-to-end
-// while Phase 3 fills them in one at a time.
-function ComingSoon({ label }) {
-  return (
-    <div className="tab-pane active">
-      <div className="panel">
-        <h2><span>{label}</span><span className="rune">⋯</span></h2>
-        <div className="action-empty">This tab is being ported to React. Use the <a href="/">legacy sheet</a> for it in the meantime.</div>
-      </div>
-    </div>
-  );
-}
 
 // Sidebar shared with the other pages, minus the Layout wrapper (the sheet owns
 // its own profile bar rather than the standalone page bar).
@@ -94,7 +82,7 @@ function SheetShell() {
         {ready && tab === 'features' && <FeaturesTab />}
         {ready && tab === 'settings' && <SettingsTab />}
         {ready && tab === 'spells' && <SpellsTab />}
-        {ready && !['sheet', 'skills', 'inventory', 'journal', 'features', 'settings', 'spells'].includes(tab) && <ComingSoon label={TABS.find((t) => t.id === tab).label} />}
+        {ready && tab === 'actions' && <ActionsTab />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
     </>
