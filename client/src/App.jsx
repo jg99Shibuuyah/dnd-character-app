@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import SessionsPage from './pages/SessionsPage.jsx';
 import LibraryPage from './pages/LibraryPage.jsx';
+import ImportPage from './pages/ImportPage.jsx';
 import Home from './pages/Home.jsx';
 
 // Routes live under /next/ until cutover (see vite.config.js `base` and the
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/library" element={<LibraryPage />} />
+        <Route path="/import" element={<ImportPage />} />
       </Routes>
     </BrowserRouter>
   );

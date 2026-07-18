@@ -10,7 +10,7 @@ const NAV = [
   { page: 'sheet', label: 'Character Sheet', href: '/' },
   { page: 'library', label: 'Library', href: '/next/library' },
   { page: 'sessions', label: 'Sessions', href: '/next/sessions' },
-  { page: 'import', label: 'Import', href: '/import' }
+  { page: 'import', label: 'Import', href: '/next/import' }
 ];
 
 // Shared page chrome: slide-in sidebar + page bar (☰, title, Options menu).
