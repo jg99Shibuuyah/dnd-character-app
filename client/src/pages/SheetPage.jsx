@@ -5,6 +5,7 @@ import { applyTheme, storedTheme } from '../theme.js';
 import ProfileBar from '../components/sheet/ProfileBar.jsx';
 import Hero from '../components/sheet/Hero.jsx';
 import CharacterTab from '../components/sheet/CharacterTab.jsx';
+import SkillsTab from '../components/sheet/SkillsTab.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -82,7 +83,8 @@ function SheetShell() {
         </nav>
         {!ready && <div className="panel"><div className="action-empty">Loading character…</div></div>}
         {ready && tab === 'sheet' && <CharacterTab />}
-        {ready && tab !== 'sheet' && <ComingSoon label={TABS.find((t) => t.id === tab).label} />}
+        {ready && tab === 'skills' && <SkillsTab />}
+        {ready && !['sheet', 'skills'].includes(tab) && <ComingSoon label={TABS.find((t) => t.id === tab).label} />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
     </>
