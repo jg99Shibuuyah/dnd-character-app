@@ -51,7 +51,18 @@ export const subclasses = registry('subclasses');
 export const subspecies = registry('subspecies');
 export const spells = registry('spells');
 
-// ---- Auth & sessions ----
+// ---- Auth ----
 export const authMe = () => getJson('/api/auth/me');
 export const logout = () => send('/api/auth/logout', 'POST');
+
+// ---- Game sessions (campaigns) ----
 export const listSessions = () => getJson('/api/sessions');
+export const sessionDetail = (id) => send('/api/sessions/' + id, 'GET');
+export const createSession = (name) => send('/api/sessions', 'POST', { name });
+export const previewSession = (code) => send('/api/sessions/preview', 'POST', { code });
+export const joinSession = (body) => send('/api/sessions/join', 'POST', body);
+export const setSessionCharacter = (id, body) => send(`/api/sessions/${id}/character`, 'PUT', body);
+export const offerHostCharacter = (id, characterId) => send(`/api/sessions/${id}/host-characters`, 'POST', { characterId });
+export const withdrawHostCharacter = (id, characterId) => send(`/api/sessions/${id}/host-characters/${characterId}`, 'DELETE');
+export const leaveSession = (id) => send(`/api/sessions/${id}/leave`, 'POST');
+export const deleteSession = (id) => send('/api/sessions/' + id, 'DELETE');

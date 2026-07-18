@@ -76,10 +76,11 @@ export const companionTemplates = g('COMPANION_TEMPLATES');
 // omit the parameter and get this; Node tests build the same shape with
 // __tests__/test-helpers.js loadBuiltins().
 export const gameData = {
-  abilities, skills, skillDesc,
+  abilities, skills, skillDesc, passiveSenseInfo,
   speciesData, backgroundData, classData, subclassData, subspeciesData,
   spellData, spellClasses, spellDetails,
   fullSlots, halfSlots, pactSlots,
-  fightingStyles, mcReqs,
+  fightingStyles, mcReqs, classSources,
+  standardActions, usableItemWords, alignments, masteryProperties,
   companionTemplates
 };

@@ -30,12 +30,14 @@ export function loadBuiltins() {
   // Top-level consts live in the context's global lexical scope, not on the
   // context object — evaluate an object literal there to pull them out.
   cached = new vm.Script(`({
-    abilities: ABILITIES, skills: SKILLS, skillDesc: SKILL_DESC,
+    abilities: ABILITIES, skills: SKILLS, skillDesc: SKILL_DESC, passiveSenseInfo: PASSIVE_SENSE_INFO,
     speciesData: SPECIES_DATA, backgroundData: BACKGROUND_DATA,
     classData: CLASS_DATA, subclassData: SUBCLASS_DATA, subspeciesData: SUBSPECIES_DATA,
     spellData: SPELL_DATA, spellClasses: SPELL_CLASSES, spellDetails: SPELL_DETAILS,
     fullSlots: FULL_SLOTS, halfSlots: HALF_SLOTS, pactSlots: PACT_SLOTS,
-    fightingStyles: FIGHTING_STYLES, mcReqs: MC_REQS,
+    fightingStyles: FIGHTING_STYLES, mcReqs: MC_REQS, classSources: CLASS_SOURCES,
+    standardActions: STANDARD_ACTIONS, usableItemWords: USABLE_ITEM_WORDS,
+    alignments: ALIGNMENTS, masteryProperties: MASTERY_PROPERTIES,
     companionTemplates: COMPANION_TEMPLATES
   })`).runInContext(context);
   return cached;
