@@ -71,3 +71,15 @@ export const masteryProperties = g('MASTERY_PROPERTIES');
 
 // companions.js
 export const companionTemplates = g('COMPANION_TEMPLATES');
+
+// The bundle the rules modules take as their `data` parameter. Browser callers
+// omit the parameter and get this; Node tests build the same shape with
+// __tests__/test-helpers.js loadBuiltins().
+export const gameData = {
+  abilities, skills, skillDesc,
+  speciesData, backgroundData, classData, subclassData, subspeciesData,
+  spellData, spellClasses, spellDetails,
+  fullSlots, halfSlots, pactSlots,
+  fightingStyles, mcReqs,
+  companionTemplates
+};

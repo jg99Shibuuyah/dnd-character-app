@@ -39,13 +39,13 @@ public/                  ← legacy frontend, deleted at the end
 
 **Done when:** a React "hello" page renders at `/next/` with live data from `GET /api/characters`.
 
-### Phase 1 — Extract pure logic out of app.js (the big de-risker)
-1. Move rules functions into `client/src/rules/` as plain exported modules, grouped: `abilities.js`, `ac.js`, `spellcasting.js`, `equipment.js`, `features.js`, `companions.js`.
-2. Move the `api*()` fetch wrappers into `client/src/api/client.js`.
-3. Legacy `app.js` imports these (it already uses ES modules via `public/modules/`), deleting its local copies.
-4. Add unit tests for the extracted rules (node:test is enough) — AC stacking, multiclass slots, proficiency, save/skill math. These tests are the parity safety net for every later phase.
+### Phase 1 — Extract pure logic out of app.js (the big de-risker) ✅
+1. Rules functions extracted into `client/src/rules/` as plain exported modules: `core.js`, `equipment.js`, `abilities.js` (incl. `deriveStats`, the compute half of `recalc()`), `spellcasting.js`, `classes.js`, `companions.js`. Functions take the character and an optional game-data bundle explicitly (no globals).
+2. The `api*()` fetch wrappers became `client/src/api/client.js`.
+3. **Adaptation:** the legacy frontend turned out to be all classic scripts (no ES modules), so it cannot import the extracted code without a build step. Legacy keeps its copies untouched until Phase 4 deletes it; the historic branch + unit tests guard parity instead. Builtin game data stays classic-script globals shared by both frontends (`client/src/rules/builtin-data.js` bridges them into ESM; tests load the real data files via `node:vm`).
+4. 25 node:test unit tests cover AC stacking, gear ability effects, multiclass slot math, pact magic, granted proficiencies, feature-choice pruning, and companion context (`npm test` in `client/`).
 
-**Done when:** `app.js` drops to roughly ~3,500 lines, old app still works identically, rules tests pass.
+**Done when:** ~~app.js shrinks~~ (superseded by the adaptation) → extracted modules exist, browser + Node agree on the math, tests pass. ✅
 
 ### Phase 2 — Port the small pages first (learn the patterns cheap)
 Order by size and risk, each one deleting its legacy JS when done:
