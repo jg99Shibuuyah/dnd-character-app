@@ -12,6 +12,7 @@ import FeaturesTab from '../components/sheet/FeaturesTab.jsx';
 import SettingsTab from '../components/sheet/SettingsTab.jsx';
 import SpellsTab from '../components/sheet/SpellsTab.jsx';
 import ActionsTab from '../components/sheet/ActionsTab.jsx';
+import DiceRoller from '../components/sheet/DiceRoller.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -85,6 +86,7 @@ function SheetShell() {
         {ready && tab === 'actions' && <ActionsTab />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
+      {ready && <DiceRoller />}
     </>
   );
 }
