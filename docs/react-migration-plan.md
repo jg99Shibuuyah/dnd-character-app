@@ -47,13 +47,15 @@ public/                  ← legacy frontend, deleted at the end
 
 **Done when:** ~~app.js shrinks~~ (superseded by the adaptation) → extracted modules exist, browser + Node agree on the math, tests pass. ✅
 
-### Phase 2 — Port the small pages first (learn the patterns cheap)
-Order by size and risk, each one deleting its legacy JS when done:
-1. **Sessions page** (`sessions.js`, ~320 lines) — list + CRUD, ideal first component.
-2. **Library page** (search, alignment, mastery partials + notes-index code) — read-mostly.
-3. **Import page** (all `bindXxxImport`/`fillXxxForm`/bulk-import code, ~1,200 lines of `app.js`) — forms map naturally to controlled components; this is the single biggest lump of `app.js` outside the sheet.
+### Phase 2 — Port the small pages first (learn the patterns cheap) ✅
+Each ported as a React route under `/next/`, legacy left in place until Phase 4:
+1. **Sessions page** ✅ — `SessionsPage.jsx` (create/join/preview, member table, DM loaner pool).
+2. **Library page** ✅ — `LibraryPage.jsx` + `rules/notes-index.js` (searchable index) + `notes-windows.js` (the floating draggable/snappable detail windows, kept imperative outside React) + `state/registry.js` (merges DB-imported content into cloned builtin registries).
+3. **Import page** ✅ — `ImportPage.jsx` (six forms + bulk import + JSON reference) + `rules/import-forms.js` (pure parsers/bulk pipeline). Deep links from the Library (`?edit=type:key`) supported.
 
-**Done when:** those three pages are React routes, legacy versions removed, `app.js` is down to sheet-only code (~2,000 lines).
+Also built the shared React shell: `components/Layout.jsx` (sidebar + page bar), `components/OptionsMenu.jsx` + `theme.js` (full theme system, same localStorage keys as legacy).
+
+**Done when:** three pages are React routes, verified in-browser. ✅ (legacy JS still present — deleted in Phase 4)
 
 ### Phase 3 — The character sheet, tab by tab
 1. **Shell first:** page bar, hero header, tab bar, profile bar, sidebar, options/theme menu. Character state moves into a store: `useReducer` with actions like `setAbility`, `equipItem`, `chooseFeature`; derived values (AC, saves, slots) computed via Phase 1 rules functions — no more manual `refreshEffects()` chains.
