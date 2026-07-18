@@ -32,6 +32,7 @@ export function defaultCharacter() {
     abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
     saveProf: { str: false, dex: false, con: false, int: false, wis: false, cha: false },
     skillProf: {},
+    languages: [], // user-added languages; species-granted ones are derived, not stored
     ac: 10, speed: 30, hpMax: 10, hpCurrent: 10, hpTemp: 0, hitDice: '1d10',
     deathSuccess: [false, false, false], deathFail: [false, false, false],
     attacks: [{ name: '', bonus: '', dmg: '' }],

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CharacterProvider, useCharacter } from '../state/characterStore.jsx';
 import * as api from '../api/client.js';
 import { applyTheme, storedTheme } from '../theme.js';
@@ -12,7 +12,8 @@ import FeaturesTab from '../components/sheet/FeaturesTab.jsx';
 import SettingsTab from '../components/sheet/SettingsTab.jsx';
 import SpellsTab from '../components/sheet/SpellsTab.jsx';
 import ActionsTab from '../components/sheet/ActionsTab.jsx';
-import DiceRoller from '../components/sheet/DiceRoller.jsx';
+import QuickTools from '../components/sheet/QuickTools.jsx';
+import SheetWindow from '../components/sheet/SheetWindow.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -24,6 +25,33 @@ const TABS = [
   { id: 'journal', label: 'Journal' },
   { id: 'settings', label: 'Character Settings' }
 ];
+
+const TAB_COMPONENTS = {
+  sheet: CharacterTab, skills: SkillsTab, actions: ActionsTab, inventory: InventoryTab,
+  features: FeaturesTab, spells: SpellsTab, journal: JournalTab, settings: SettingsTab
+};
+const TAB_LABEL = Object.fromEntries(TABS.map((t) => [t.id, t.label]));
+
+// Tab order persists (drag to reorder); unknown/missing ids fall back to the
+// default order so tabs added later still show up.
+const TAB_ORDER_KEY = 'characterSheetTabOrder';
+function loadTabOrder() {
+  const known = TABS.map((t) => t.id);
+  try {
+    const saved = JSON.parse(localStorage.getItem(TAB_ORDER_KEY) || 'null');
+    if (!Array.isArray(saved)) return known;
+    const ordered = saved.filter((id) => known.includes(id));
+    return [...ordered, ...known.filter((id) => !ordered.includes(id))];
+  } catch { return known; }
+}
+
+// Renders one tab's content — used both inline and inside a popped-out panel.
+function TabView({ tabId, onGoToTab }) {
+  const C = TAB_COMPONENTS[tabId];
+  if (!C) return null;
+  if (tabId === 'inventory') return <C onGoToEquipment={() => onGoToTab('inventory')} />;
+  return <C />;
+}
 
 // Sidebar shared with the other pages, minus the Layout wrapper (the sheet owns
 // its own profile bar rather than the standalone page bar).
@@ -54,8 +82,11 @@ function Sidebar({ open, onClose }) {
 
 function SheetShell() {
   const { ready } = useCharacter();
-  const [tab, setTab] = useState('sheet');
+  const [order, setOrder] = useState(loadTabOrder);
+  const [tab, setTab] = useState(() => loadTabOrder()[0] || 'sheet');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [panels, setPanels] = useState([]); // popped-out tabs: [{ key, tabId }]
+  const dragId = useRef(null);
 
   useEffect(() => { applyTheme(storedTheme()); }, []);
   useEffect(() => {
@@ -64,29 +95,51 @@ function SheetShell() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  const reorder = (fromId, toId) => {
+    if (!fromId || fromId === toId) return;
+    const next = order.filter((id) => id !== fromId);
+    const idx = next.indexOf(toId);
+    next.splice(idx < 0 ? next.length : idx, 0, fromId);
+    setOrder(next);
+    localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(next));
+  };
+  const popOut = (tabId) => setPanels((p) => p.some((x) => x.tabId === tabId)
+    ? p : [...p, { key: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tabId }]);
+  const closePanel = (key) => setPanels((p) => p.filter((x) => x.key !== key));
+
   return (
     <>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="sheet">
         <ProfileBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} sidebarOpen={sidebarOpen} />
         <Hero />
-        <nav className="tab-bar">
-          {TABS.map((t) => (
-            <button key={t.id} className={'tab-btn' + (tab === t.id ? ' active' : '')} onClick={() => setTab(t.id)}>{t.label}</button>
+        <nav className="tab-bar" aria-label="Character sheet tabs">
+          {order.map((id) => (
+            <div key={id} className={'tab-btn' + (tab === id ? ' active' : '')}
+              role="button" tabIndex={0} draggable
+              title="Drag to reorder"
+              onClick={() => setTab(id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab(id); } }}
+              onDragStart={(e) => { dragId.current = id; e.dataTransfer.effectAllowed = 'move'; }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); reorder(dragId.current, id); dragId.current = null; }}>
+              <span className="tab-btn-label">{TAB_LABEL[id]}</span>
+              <span className="tab-pop" role="button" tabIndex={-1} aria-label={'Pop out ' + TAB_LABEL[id]}
+                title="Pop out into a floating panel"
+                onClick={(e) => { e.stopPropagation(); popOut(id); }}>⧉</span>
+            </div>
           ))}
         </nav>
         {!ready && <div className="panel"><div className="action-empty">Loading character…</div></div>}
-        {ready && tab === 'sheet' && <CharacterTab />}
-        {ready && tab === 'skills' && <SkillsTab />}
-        {ready && tab === 'inventory' && <InventoryTab onGoToEquipment={() => setTab('inventory')} />}
-        {ready && tab === 'journal' && <JournalTab />}
-        {ready && tab === 'features' && <FeaturesTab />}
-        {ready && tab === 'settings' && <SettingsTab />}
-        {ready && tab === 'spells' && <SpellsTab />}
-        {ready && tab === 'actions' && <ActionsTab />}
+        {ready && <TabView tabId={tab} onGoToTab={setTab} />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
-      {ready && <DiceRoller />}
+      {ready && panels.map((p, i) => (
+        <SheetWindow key={p.key} title={TAB_LABEL[p.tabId]} offset={i * 28} onClose={() => closePanel(p.key)}>
+          <TabView tabId={p.tabId} onGoToTab={setTab} />
+        </SheetWindow>
+      ))}
+      {ready && <QuickTools />}
     </>
   );
 }

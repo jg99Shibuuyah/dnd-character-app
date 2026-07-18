@@ -4,3 +4,6 @@ characters.db-shm
 characters.db-wal
 server.log
 client/dist/
+
+# Session-local marker for the changelog SessionEnd hook
+.claude/.changelog-last-commit

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { applyTheme, storedTheme, getStoredCustomTheme, getDefaultCustomTheme, saveCustomThemeField } from '../theme.js';
+import { storedZoom, applyZoom, nudgeZoom, ZOOM_STEP, ZOOM_MIN, ZOOM_MAX } from '../zoom.js';
 
 const THEMES = ['dark', 'light', 'ember', 'custom'];
 const CUSTOM_FIELDS = [
@@ -16,9 +17,13 @@ export default function OptionsMenu() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState(storedTheme);
   const [custom, setCustom] = useState(getStoredCustomTheme);
+  const [zoom, setZoom] = useState(storedZoom);
   const shellRef = useRef(null);
 
   useEffect(() => { applyTheme(theme); }, []); // apply persisted theme on mount
+
+  const changeZoom = (delta) => setZoom(nudgeZoom(delta));
+  const resetZoom = () => setZoom(applyZoom(1));
 
   useEffect(() => {
     const onDocClick = (e) => { if (!shellRef.current?.contains(e.target)) setOpen(false); };
@@ -62,6 +67,16 @@ export default function OptionsMenu() {
                   onChange={(e) => editCustom(field, e.target.value)} />
               </div>
             ))}
+          </div>
+        </div>
+        <div className="options-section">
+          <div className="options-label">Zoom</div>
+          <div className="zoom-control">
+            <button type="button" className="option-chip zoom-btn" aria-label="Zoom out"
+              disabled={zoom <= ZOOM_MIN + 1e-9} onClick={() => changeZoom(-ZOOM_STEP)}>−</button>
+            <button type="button" className="zoom-value" title="Reset to 100%" onClick={resetZoom}>{Math.round(zoom * 100)}%</button>
+            <button type="button" className="option-chip zoom-btn" aria-label="Zoom in"
+              disabled={zoom >= ZOOM_MAX - 1e-9} onClick={() => changeZoom(ZOOM_STEP)}>+</button>
           </div>
         </div>
       </div>

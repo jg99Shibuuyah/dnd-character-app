@@ -5,6 +5,7 @@ import { profBonus } from '../../rules/core.js';
 import { pickedClasses, applyClassesToState, choiceFeaturesFor, chosenFeatureOption, normalizeChoice } from '../../rules/classes.js';
 import { multiclassCasterLevel } from '../../rules/spellcasting.js';
 import { grantedSkillSources } from '../../rules/abilities.js';
+import { availableLanguagePool, characterLanguages } from '../../rules/languages.js';
 import { subclassNamesForClass, subspeciesNamesForSpecies } from '../../state/registry.js';
 import { classInfoCardHtml } from './ClassInfoCard.jsx';
 import ChoiceControl, { ChoiceModal } from './ChoiceControl.jsx';
@@ -14,6 +15,60 @@ const subKey = (parent, name) => parent + '::' + name;
 
 // Info box (species/background reference) rendered from an HTML string.
 function InfoBox({ html }) { return <div className="class-info" dangerouslySetInnerHTML={{ __html: html }} />; }
+
+// Languages management: species-granted languages show as locked chips; the
+// player adds any number more from a pool of 5E/5.5E species languages (or a
+// custom "Other" entry) and removes their own at will — no duplicates.
+function LanguagesPanel() {
+  const { character, data, update } = useCharacter();
+  const [customMode, setCustomMode] = useState(false);
+  const [custom, setCustom] = useState('');
+
+  const { granted, added } = characterLanguages(character, data);
+  const knownKeys = new Set([...granted, ...added].map((l) => l.toLowerCase()));
+  const options = availableLanguagePool(data).filter((l) => !knownKeys.has(l.toLowerCase()));
+
+  const addLanguage = (lang) => {
+    const name = (lang || '').trim();
+    if (!name || knownKeys.has(name.toLowerCase())) return;
+    update((d) => { d.languages = d.languages || []; d.languages.push(name); });
+  };
+  const removeLanguage = (lang) => update((d) => { d.languages = (d.languages || []).filter((l) => l !== lang); });
+
+  const onSelect = (v) => {
+    if (v === '__other__') { setCustomMode(true); return; }
+    if (v) addLanguage(v);
+  };
+  const commitCustom = () => { addLanguage(custom); setCustom(''); setCustomMode(false); };
+
+  return (
+    <div className="panel">
+      <h2><span>Languages</span><span className="rune">◈</span></h2>
+      <div className="picker-hint">Your <span className="hl">species languages</span> are granted automatically (locked). Add any others below and remove your own at will — no duplicates.</div>
+      <div className="lang-chips">
+        {granted.map((l) => <span key={'g' + l} className="lang-chip granted" title="Granted by your species">{l}<span className="chip-grant">species</span></span>)}
+        {added.map((l) => <span key={'a' + l} className="lang-chip">{l}<span className="row-del lang-del" title="Remove language" onClick={() => removeLanguage(l)}>✕</span></span>)}
+        {granted.length + added.length === 0 && <span className="picker-hint">None yet.</span>}
+      </div>
+      {customMode ? (
+        <div className="lang-add-row">
+          <input autoFocus value={custom} placeholder="Custom language" onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') commitCustom(); if (e.key === 'Escape') { setCustomMode(false); setCustom(''); } }} />
+          <button className="add-btn" type="button" onClick={commitCustom}>Add</button>
+          <button className="rest-btn" type="button" onClick={() => { setCustomMode(false); setCustom(''); }}>Cancel</button>
+        </div>
+      ) : (
+        <div className="lang-add-row">
+          <select value="" onChange={(e) => { onSelect(e.target.value); e.target.value = ''; }}>
+            <option value="">+ Add a language…</option>
+            {options.map((l) => <option key={l} value={l}>{l}</option>)}
+            <option value="__other__">Other (custom)…</option>
+          </select>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SettingsTab() {
   const { character, data, derived, update } = useCharacter();
@@ -232,6 +287,8 @@ export default function SettingsTab() {
               })}
             </div>
           </div>
+
+          <LanguagesPanel />
         </div>
       </div>
 

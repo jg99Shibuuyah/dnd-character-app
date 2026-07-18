@@ -91,6 +91,46 @@ function Combat() {
   );
 }
 
+function Rest() {
+  const { character, update } = useCharacter();
+
+  const longRest = () => {
+    if (!window.confirm('Take a long rest? This restores HP to full, clears death saves, and refills every resource point (spell slots, pact slots, and custom pools).')) return;
+    update((d) => {
+      d.hpCurrent = d.hpMax;
+      d.hpTemp = 0; // temporary HP expires on a long rest
+      d.deathSuccess = [false, false, false];
+      d.deathFail = [false, false, false];
+      (d.spellSlots || []).forEach((s) => { s.used = 0; });
+      if (d.pactSlots) d.pactSlots.used = 0;
+      (d.actionResources || []).forEach((r) => { r.used = 0; });
+      (d.companions || []).forEach((c) => (c.resources || []).forEach((r) => { r.used = 0; }));
+    });
+  };
+
+  const shortRest = () => {
+    // Short rest recovers Warlock pact magic (the resource that recharges on a
+    // short rest); HP and other pools stay as they are until a long rest.
+    update((d) => { if (d.pactSlots) d.pactSlots.used = 0; });
+  };
+
+  const hasPact = (character.pactSlots?.total || 0) > 0;
+
+  return (
+    <div className="panel">
+      <h2><span>Rest</span><span className="rune">☾</span></h2>
+      <div className="rest-buttons">
+        <button className="rest-btn short" type="button" onClick={shortRest}>Short Rest</button>
+        <button className="rest-btn long" type="button" onClick={longRest}>Long Rest</button>
+      </div>
+      <div className="picker-hint" style={{ marginTop: 8 }}>
+        <span className="hl">Long rest</span> restores HP and all resource points to full.{' '}
+        <span className="hl">Short rest</span> {hasPact ? 'restores your Warlock pact slots.' : 'recovers short-rest resources (e.g. Warlock pact slots).'}
+      </div>
+    </div>
+  );
+}
+
 export default function CharacterTab() {
   return (
     <div className="tab-pane active">
@@ -101,6 +141,7 @@ export default function CharacterTab() {
         </div>
         <div>
           <Combat />
+          <Rest />
           <Companions />
         </div>
       </div>

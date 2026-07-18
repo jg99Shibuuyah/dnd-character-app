@@ -91,6 +91,7 @@ export function openNotesModal(entry) {
   nrPlaceWindow(win);
   nrFocusWindow(win);
   nrNavigate(win, entry, 'fresh');
+  nrScheduleClamp(win); // once laid out, keep it fully on-screen
   nrUpdateClearAll();
   return win;
 }
@@ -141,6 +142,7 @@ function nrNavigate(win, entry, mode) {
     }
   }
   r.body.scrollTop = 0;
+  nrScheduleClamp(win); // navigating can change height — keep it on-screen
 }
 
 function nrFocusWindow(win) {
@@ -172,6 +174,31 @@ function nrPlaceWindow(win) {
   win.el.style.width = w + 'px';
   win.el.style.left = x + 'px';
   win.el.style.top = y + 'px';
+}
+
+// Keep a floating window fully on-screen. The CSS caps its width/height to the
+// viewport (and the body scrolls), so here we only nudge the position so its
+// bottom/right edge doesn't run off — call it once content (and thus height) is
+// in place. Larger-than-viewport windows pin to the top-left margin.
+function nrClampIntoView(win) {
+  if (win.el.classList.contains('nr-window-max') || win.el.classList.contains('nr-window-snapped')) return;
+  const { w: vw, h: vh } = nrViewport();
+  const rect = win.el.getBoundingClientRect();
+  let left = parseFloat(win.el.style.left);
+  let top = parseFloat(win.el.style.top);
+  if (!Number.isFinite(left)) left = rect.left;
+  if (!Number.isFinite(top)) top = rect.top;
+  left = rect.width >= vw - 20 ? 10 : Math.max(10, Math.min(left, vw - rect.width - 10));
+  top = rect.height >= vh - 20 ? 10 : Math.max(10, Math.min(top, vh - rect.height - 10));
+  win.el.style.left = left + 'px';
+  win.el.style.top = top + 'px';
+}
+
+// Clamp after layout settles: measuring in the same frame the content is set
+// reports the pre-layout (minimum) height, so wait two frames for the final
+// height before nudging the window on-screen.
+function nrScheduleClamp(win) {
+  requestAnimationFrame(() => requestAnimationFrame(() => nrClampIntoView(win)));
 }
 
 // ----- Dragging + Aero-style edge snapping -----

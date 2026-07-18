@@ -229,6 +229,9 @@ export function buildNotesIndex(data, customSpells) {
 // ordered by the canonical source list with any extras appended alphabetically.
 export function notesSourcesPresent(index, classSources) {
   const set = new Set(index.filter((e) => !NOTES_HIDDEN_TYPES.has(e.type)).map((e) => e.source));
+  // 'Companion' is the companions' internal source tag, not a real content
+  // source — keep it out of the Source filter chips.
+  set.delete('Companion');
   const ordered = classSources.filter((s) => set.has(s));
   const extra = [...set].filter((s) => !classSources.includes(s)).sort();
   return [...ordered, ...extra];

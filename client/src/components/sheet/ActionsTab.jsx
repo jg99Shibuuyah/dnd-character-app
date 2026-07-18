@@ -108,26 +108,35 @@ function useDerivedActions() {
   abilities.filter((f) => f.use === 'reaction').forEach((f) => reactions.push({ name: f.name, cls: showCls(f) ? f.cls : null, detail: f.desc || '', badge: f.cost || 'Reaction', kind: 'ability' }));
   const actionAbilities = abilities.filter((f) => f.use !== 'reaction');
 
-  // Companion actions (+ their reactions lifted into the shared list).
+  // Companion actions & features. Each companion's reactions are lifted into
+  // the shared reaction list; its actions and features get their own sections
+  // (a section only appears when the companion has rows of that kind).
   const ctx = companionCtx(character, data);
-  const companionSections = (character.companions || []).map((c) => {
+  const parseLines = (text) => (text || '').split('\n').map((s) => s.trim()).filter(Boolean).map((line) => {
+    const m = line.match(/^(.{1,40}?)(?:\s*[:.]\s*|\s+[—–-]\s+)(.*)$/); // "Bite: …" or "Keen Hearing — …"
+    return { name: m ? m[1] : line, desc: m ? m[2] : '' };
+  });
+  const companionSections = [];
+  const companionFeatureSections = [];
+  (character.companions || []).forEach((c) => {
     const tpl = c.templateId ? (data.companionTemplates || []).find((t) => t.id === c.templateId) : null;
-    let rows = [];
+    let actionRows, featureRows;
     if (tpl) {
       const stats = tpl.build(ctx);
-      rows = (stats.actions || []).map((a) => ({ ...a, badge: 'Action' }));
+      actionRows = (stats.actions || []).map((a) => ({ name: a.name, desc: a.desc, badge: 'Action' }));
+      featureRows = (stats.features || []).map((f) => ({ name: f.name, desc: f.desc }));
       (stats.reactions || []).forEach((a) => reactions.push({ name: a.name, cls: c.name || 'Companion', detail: a.desc || '', badge: 'Reaction', kind: 'companion' }));
     } else {
-      rows = (c.actionsText || '').split('\n').map((s) => s.trim()).filter(Boolean).map((line) => {
-        const m = line.match(/^([^:.]{1,40})[:.]\s*(.*)$/);
-        return { name: m ? m[1] : line, desc: m ? m[2] : '', badge: 'Action' };
-      });
+      actionRows = parseLines(c.actionsText).map((r) => ({ ...r, badge: 'Action' }));
+      featureRows = parseLines(c.featuresText);
     }
-    return rows.length ? { name: c.name || 'Companion', rows } : null;
-  }).filter(Boolean);
+    const name = c.name || 'Companion';
+    if (actionRows.length) companionSections.push({ name, rows: actionRows });
+    if (featureRows.length) companionFeatureSections.push({ name, rows: featureRows });
+  });
 
   reactions.sort((a, b) => a.name.localeCompare(b.name));
-  return { reactions, actionAbilities, showCls, companionSections };
+  return { reactions, actionAbilities, showCls, companionSections, companionFeatureSections };
 }
 
 function ResourcePoints() {
@@ -242,7 +251,7 @@ function ResourcePoints() {
 
 export default function ActionsTab() {
   const { character, data, customSpells } = useCharacter();
-  const { reactions, actionAbilities, showCls, companionSections } = useDerivedActions();
+  const { reactions, actionAbilities, showCls, companionSections, companionFeatureSections } = useDerivedActions();
   const openDetail = (name, level) => openNotesModal(spellDetailEntry(customSpells, data, name, level, editLink));
 
   const isUsableName = (n) => n && data.usableItemWords.some((w) => n.toLowerCase().includes(w));
@@ -290,12 +299,11 @@ export default function ActionsTab() {
         </div>
       </div>
 
-      <div className="panel">
-        <h2><span>Companion Actions</span><span className="rune">🐾</span></h2>
-        <div>
-          {companionSections.length === 0
-            ? <div className="action-empty">No companions — add one on the Character tab and its actions appear here.</div>
-            : companionSections.map((sec, si) => (
+      {companionSections.length > 0 && (
+        <div className="panel">
+          <h2><span>Companion Actions</span><span className="rune">🐾</span></h2>
+          <div>
+            {companionSections.map((sec, si) => (
               <div key={si}>
                 <div className="equip-atk-head">{sec.name}</div>
                 {sec.rows.map((a, ri) => (
@@ -303,8 +311,25 @@ export default function ActionsTab() {
                 ))}
               </div>
             ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {companionFeatureSections.length > 0 && (
+        <div className="panel">
+          <h2><span>Companion Features</span><span className="rune">🐾</span></h2>
+          <div>
+            {companionFeatureSections.map((sec, si) => (
+              <div key={si}>
+                <div className="equip-atk-head">{sec.name}</div>
+                {sec.rows.map((f, ri) => (
+                  <div className="action-row" key={ri}><span className="a-name">{f.name}</span><span className="a-detail">{f.desc || ''}</span></div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="panel class-ability-panel">
         <h2><span>Class Abilities</span><span className="rune">✦</span></h2>

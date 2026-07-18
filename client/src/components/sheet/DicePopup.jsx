@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useCharacter } from '../../state/characterStore.jsx';
 
-// Floating dice roller (ports modules/dice.js): a 🎲 FAB opens a tray to build
-// a dice pool, roll it (with d20 advantage/disadvantage and a flat modifier),
-// and log the result to the character's roll log (shown on the Journal tab).
+// Dice roller popup (ports modules/dice.js), one of the quick-tools. Build a
+// dice pool, roll it (with d20 advantage/disadvantage and a flat modifier), and
+// log the result to the character's roll log (shown on the Journal tab). The
+// launcher + open/close are owned by QuickTools.jsx.
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
 const SHAPES = {
@@ -25,9 +26,8 @@ function DieSvg({ sides }) {
 
 const rand = (sides) => Math.floor(Math.random() * sides) + 1;
 
-export default function DiceRoller() {
+export default function DicePopup({ open, onClose }) {
   const { update } = useCharacter();
-  const [open, setOpen] = useState(false);
   const [pool, setPool] = useState({}); // sides -> count
   const [advMode, setAdvMode] = useState('normal');
   const [modifier, setModifier] = useState('');
@@ -81,18 +81,12 @@ export default function DiceRoller() {
   };
 
   return (
-    <>
-      <div className="fab-stack">
-        <button className={'corner-fab fab-item' + (open ? ' open' : '')} type="button" title="Dice roller" aria-label="Open dice roller" onClick={() => setOpen(!open)}>
-          <span className="fab-label">Dice</span>
-          <span className="corner-fab-glyph">🎲</span>
-        </button>
+    <div className={'corner-popup' + (open ? ' open' : '')} role="dialog" aria-label="Dice roller">
+      <div className="corner-popup-head">
+        <div className="corner-popup-title"><span>Dice</span><span className="rune">◈</span></div>
+        <button className="corner-popup-close" type="button" aria-label="Close" onClick={onClose}>✕</button>
       </div>
-      <div className={'corner-popup' + (open ? ' open' : '')} role="dialog" aria-label="Dice roller">
-        <div className="corner-popup-head">
-          <div className="corner-popup-title"><span>Dice</span><span className="rune">◈</span></div>
-          <button className="corner-popup-close" type="button" aria-label="Close" onClick={() => setOpen(false)}>✕</button>
-        </div>
+      <div className="corner-popup-scroll">
         <div className="dice-tray">
           {DICE.map((s) => (
             <button key={s} className="die-btn" type="button" title={`Add d${s === 100 ? '100' : s} (right-click to remove)`}
@@ -135,6 +129,6 @@ export default function DiceRoller() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -2,6 +2,7 @@ import { useCharacter } from '../../state/characterStore.jsx';
 import { mod, fmt, esc } from '../../rules/core.js';
 import { grantedSkillSources, skillProficient } from '../../rules/abilities.js';
 import { equipSkillBonus } from '../../rules/equipment.js';
+import { characterLanguages } from '../../rules/languages.js';
 import { openNotesModal } from '../../notes-windows.js';
 
 // Skills tab (ports buildSkills / buildSaves / passive senses / their popups).
@@ -66,6 +67,8 @@ export default function SkillsTab() {
   const { skillDetail, passiveDetail, skillLegend } = useSkillHelpers();
 
   const profCount = data.skills.filter((s, i) => skillProficient(character, i, data)).length;
+  const { granted: grantedLangs, added: addedLangs } = characterLanguages(character, data);
+  const hasLangs = grantedLangs.length + addedLangs.length > 0;
 
   return (
     <div className="tab-pane active">
@@ -120,6 +123,22 @@ export default function SkillsTab() {
               </div>
             ))}
             <div className="picker-hint" style={{ marginTop: 8 }}>Click a sense for details. Passive scores are <span className="hl">10 + skill bonus</span> — what you notice without actively looking.</div>
+          </div>
+
+          <div className="panel">
+            <h2><span>Languages</span><span className="rune">✦</span></h2>
+            {!hasLangs && <div className="picker-hint">No languages yet — your species grants them automatically, and you can add more on the Character Settings tab.</div>}
+            {hasLangs && (
+              <div className="lang-chips">
+                {grantedLangs.map((l) => (
+                  <span key={'g' + l} className="lang-chip granted" title="Granted by your species">{l}<span className="chip-grant">species</span></span>
+                ))}
+                {addedLangs.map((l) => (
+                  <span key={'a' + l} className="lang-chip">{l}</span>
+                ))}
+              </div>
+            )}
+            <div className="picker-hint" style={{ marginTop: 8 }}>Species languages fill in automatically. Add or remove your own on the <span className="hl">Character Settings</span> tab.</div>
           </div>
         </div>
       </div>
