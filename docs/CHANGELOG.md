@@ -8,3 +8,7 @@ commit is captured here. Uncommitted work is **not** recorded — commit it to h
 logged. Edit or reword entries freely; the hook only appends, it never rewrites history.
 
 <!-- New entries are appended below. -->
+
+## 2026-07-18
+
+- React refactor pt2 (`874c351`)
