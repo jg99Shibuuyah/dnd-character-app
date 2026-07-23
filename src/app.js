@@ -8,6 +8,7 @@ const backgroundsRouter = require('./routes/backgrounds.routes');
 const subclassesRouter = require('./routes/subclasses.routes');
 const subspeciesRouter = require('./routes/subspecies.routes');
 const spellsRouter = require('./routes/spells.routes');
+const monstersRouter = require('./routes/monsters.routes');
 const authRouter = require('./routes/auth.routes');
 const sessionsRouter = require('./routes/sessions.routes');
 const { attachUser, requireAuthPage, requireAuthApi } = require('./middleware/auth');
@@ -55,6 +56,7 @@ app.use('/api/backgrounds', backgroundsRouter);
 app.use('/api/subclasses', subclassesRouter);
 app.use('/api/subspecies', subspeciesRouter);
 app.use('/api/spells', spellsRouter);
+app.use('/api/monsters', monstersRouter);
 
 // ---- React SPA fallback ----
 // Any non-API GET that isn't login/reset serves the React shell; the client
