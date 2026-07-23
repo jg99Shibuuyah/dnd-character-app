@@ -1,59 +1,27 @@
 import { useEffect, useState } from 'react';
-import DisplayOptions from './DisplayOptions.jsx';
-import * as api from '../api/client.js';
+import { applyTheme, storedTheme, reconcileTheme } from '../theme.js';
+import { SidebarNav, useSidebarCollapsed } from './SidebarNav.jsx';
+import ThemesWindow from './ThemesWindow.jsx';
 
-// Top-level pages. Plain <a> (full page loads) between them keeps this trivial
-// and is fine for this app.
-const NAV = [
-  { page: 'sheet', label: 'Character Sheet', href: '/' },
-  { page: 'library', label: 'Library', href: '/library' },
-  { page: 'sessions', label: 'Sessions', href: '/sessions' },
-  { page: 'import', label: 'Import', href: '/import' }
-];
-
-// Shared page chrome: slide-in sidebar + page bar (☰, title, Options menu).
-// Markup mirrors src/views/partials/{sidebar,page-bar}.html for styles.css.
+// Shared page chrome for the standalone pages: the persistent, collapsible
+// sidebar (its collapse toggle lives inside it) + a page bar with the title.
+// The sidebar and Themes window are shared with the character sheet.
 export default function Layout({ page, title, children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [collapsed, setCollapsed] = useSidebarCollapsed();
+  const [themesOpen, setThemesOpen] = useState(false);
 
-  useEffect(() => {
-    api.authMe().then(setUser).catch(() => setUser(null));
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setSidebarOpen(false); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
-
-  const logout = async () => {
-    await api.logout().catch(() => {});
-    window.location.href = '/login';
-  };
+  useEffect(() => { applyTheme(storedTheme()); reconcileTheme(); }, []);
 
   return (
     <>
-      <div className={'sidebar-backdrop' + (sidebarOpen ? ' open' : '')} onClick={() => setSidebarOpen(false)} />
-      <nav className={'sidebar' + (sidebarOpen ? ' open' : '')} aria-label="Pages">
-        <div className="sidebar-head">Character Ledger</div>
-        {NAV.map((n) => (
-          <a key={n.page} className={'side-link' + (n.page === page ? ' active' : '')} href={n.href}>{n.label}</a>
-        ))}
-        <DisplayOptions />
-        <div className="sidebar-account">
-          <span className="sidebar-user">Signed in as <strong>{user?.username || '…'}</strong></span>
-          <button className="pbtn" type="button" onClick={logout}>Sign out</button>
-        </div>
-      </nav>
+      <SidebarNav activePage={page} collapsed={collapsed} onCollapse={setCollapsed} onOpenThemes={() => setThemesOpen(true)} />
       <div className="sheet">
         <div className="profile-bar page-bar">
-          <button className="sidebar-toggle" type="button" aria-expanded={sidebarOpen}
-            title="Menu" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
           <span className="page-title">{title}</span>
         </div>
         {children}
       </div>
+      {themesOpen && <ThemesWindow onClose={() => setThemesOpen(false)} />}
     </>
   );
 }

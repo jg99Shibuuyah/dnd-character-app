@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout.jsx';
+import SheetWindow from '../components/sheet/SheetWindow.jsx';
+import LibraryDetail from '../components/LibraryDetail.jsx';
 import { useRegistry } from '../state/registry.js';
 import { buildNotesIndex, notesSourcesPresent, NOTES_TYPES, NOTES_HIDDEN_TYPES, NOTES_PAGE_SIZE } from '../rules/notes-index.js';
-import { openNotesModal, setNotesIndex } from '../notes-windows.js';
 
 // Library page — React port of the legacy reference search (initNotesPage in
-// public/app.js). Searches everything the app knows; results open in the
-// floating draggable windows from notes-windows.js. Result-row detail HTML
+// public/app.js). Searches everything the app knows; results open in floating
+// SheetWindow panels (the same window chrome as the character sheet), with each
+// window keeping its own back/sub-link navigation stack. Result-row detail HTML
 // comes pre-escaped from rules/notes-index.js, hence dangerouslySetInnerHTML.
 
 function ResultRow({ entry, onOpen }) {
@@ -95,8 +97,27 @@ export default function LibraryPage() {
     () => registry ? buildNotesIndex(registry.data, registry.customSpells) : [],
     [registry]);
 
-  // The floating-window module resolves parent/sub-links through the index.
-  useEffect(() => { setNotesIndex(index); }, [index]);
+  // Open reference windows: each is { key, stack, current } — its own back/
+  // sub-link navigation history, rendered in a floating SheetWindow below.
+  const [windows, setWindows] = useState([]);
+  const openWindow = (entry) => setWindows((ws) => [...ws,
+    { key: 'lw' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), stack: [], current: entry }]);
+  const closeWindow = (key) => setWindows((ws) => ws.filter((w) => w.key !== key));
+  const closeAllWindows = () => setWindows([]);
+  const navigate = (key, entry, mode) => setWindows((ws) => ws.map((w) => {
+    if (w.key !== key) return w;
+    if (mode === 'push') return { ...w, stack: [...w.stack, w.current], current: entry };
+    if (mode === 'pop') { const st = w.stack.slice(); const prev = st.pop(); return { ...w, stack: st, current: prev || w.current }; }
+    return { ...w, stack: [], current: entry };
+  }));
+
+  // Esc closes the most-recently-opened window.
+  useEffect(() => {
+    if (windows.length === 0) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setWindows((ws) => ws.slice(0, -1)); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [windows.length]);
 
   const sources = useMemo(
     () => registry ? notesSourcesPresent(index, registry.data.classSources) : [],
@@ -174,7 +195,7 @@ export default function LibraryPage() {
           {hits && NOTES_TYPES.slice(1).map((type) => grouped[type] && (
             <div key={type}>
               <div className="nr-group">{type}</div>
-              {grouped[type].map((e, i) => <ResultRow key={e.type + e.name + i} entry={e} onOpen={openNotesModal} />)}
+              {grouped[type].map((e, i) => <ResultRow key={e.type + e.name + i} entry={e} onOpen={openWindow} />)}
             </div>
           ))}
           {hits && hits.length > MAX &&
@@ -184,7 +205,7 @@ export default function LibraryPage() {
           {browse && browse.length > 0 && (
             <div>
               <div className="nr-group">{[...(typeSet.size === 0 ? ['All'] : typeSet), ...sourceSet].join(' · ')} — {browse.length} total</div>
-              {pageItems.map((e, i) => <ResultRow key={e.type + e.name + i} entry={e} onOpen={openNotesModal} />)}
+              {pageItems.map((e, i) => <ResultRow key={e.type + e.name + i} entry={e} onOpen={openWindow} />)}
               {pageCount > 1 && (
                 <div className="nr-pager">
                   <button className="pbtn" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>‹ Prev</button>
@@ -206,6 +227,16 @@ export default function LibraryPage() {
       )}
 
       <div className="footer-note">Rules reference — nothing on this page is saved per character.</div>
+
+      {windows.map((w, i) => (
+        <SheetWindow key={w.key} title={w.current.name} icon="📖" offset={i * 26} onClose={() => closeWindow(w.key)}>
+          <LibraryDetail entry={w.current} stack={w.stack} index={index}
+            onNavigate={(entry, mode) => navigate(w.key, entry, mode)} onOpenNew={openWindow} />
+        </SheetWindow>
+      ))}
+      {windows.length >= 2 && (
+        <button type="button" className="pbtn nr-clear-all" onClick={closeAllWindows}>✕ Close all ({windows.length})</button>
+      )}
     </Layout>
   );
 }

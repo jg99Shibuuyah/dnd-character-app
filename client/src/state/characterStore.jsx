@@ -120,6 +120,13 @@ export function CharacterProvider({ viewCharacterId = null, viewOnly = false, ch
     await refreshProfiles(characterRef.current.id);
   }, [loadCharacter, refreshProfiles, setLoaded]);
 
+  // Serialize the current character for download (a clone, id stripped so a
+  // re-import lands as a new profile). Matches the shape importCharacterJson reads.
+  const exportCharacter = useCallback(() => {
+    const { id, ...rest } = characterRef.current; // eslint-disable-line no-unused-vars
+    return clone(rest);
+  }, []);
+
   // Import a character from parsed JSON: a raw character object or an
   // API-style { name, data } wrapper. Saves it as a new profile and loads it.
   const importCharacterJson = useCallback(async (parsed) => {
@@ -176,7 +183,7 @@ export function CharacterProvider({ viewCharacterId = null, viewOnly = false, ch
     derived,
     profiles, refreshProfiles,
     saveStatus, ready, editable, viewOnly,
-    loadCharacter, newCharacter, duplicateCharacter, deleteCharacter, importCharacterJson
+    loadCharacter, newCharacter, duplicateCharacter, deleteCharacter, importCharacterJson, exportCharacter
   };
 
   return <CharacterContext.Provider value={value}>{children}</CharacterContext.Provider>;

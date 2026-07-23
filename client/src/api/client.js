@@ -54,6 +54,8 @@ export const spells = registry('spells');
 // ---- Auth ----
 export const authMe = () => getJson('/api/auth/me');
 export const logout = () => send('/api/auth/logout', 'POST');
+// Persist per-account preferences (theme, custom colors). Merges server-side.
+export const updateSettings = (settings) => send('/api/auth/settings', 'PUT', { settings });
 
 // ---- Game sessions (campaigns) ----
 export const listSessions = () => getJson('/api/sessions');

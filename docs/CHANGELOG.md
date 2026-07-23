@@ -12,3 +12,8 @@ logged. Edit or reword entries freely; the hook only appends, it never rewrites 
 ## 2026-07-18
 
 - React refactor pt2 (`874c351`)
+
+## 2026-07-22
+
+- Refactor PT (`d5f5c63`)
+- Refactor Pt2 (`d585429`)

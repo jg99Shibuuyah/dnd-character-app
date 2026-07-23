@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CharacterProvider, useCharacter } from '../state/characterStore.jsx';
-import * as api from '../api/client.js';
-import { applyTheme, storedTheme } from '../theme.js';
+import { applyTheme, storedTheme, reconcileTheme } from '../theme.js';
 import ProfileBar from '../components/sheet/ProfileBar.jsx';
 import Hero from '../components/sheet/Hero.jsx';
 import CharacterTab from '../components/sheet/CharacterTab.jsx';
@@ -14,7 +13,8 @@ import SpellsTab from '../components/sheet/SpellsTab.jsx';
 import ActionsTab from '../components/sheet/ActionsTab.jsx';
 import QuickTools from '../components/sheet/QuickTools.jsx';
 import SheetWindow from '../components/sheet/SheetWindow.jsx';
-import DisplayOptions from '../components/DisplayOptions.jsx';
+import ThemesWindow from '../components/ThemesWindow.jsx';
+import { SidebarNav, useSidebarCollapsed } from '../components/SidebarNav.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -54,51 +54,18 @@ function TabView({ tabId, onGoToTab }) {
   return <C />;
 }
 
-// Sidebar shared with the other pages, minus the Layout wrapper (the sheet owns
-// its own profile bar rather than the standalone page bar).
-function Sidebar({ open, onClose }) {
-  const [user, setUser] = useState(null);
-  useEffect(() => { api.authMe().then(setUser).catch(() => setUser(null)); }, []);
-  const nav = [
-    { page: 'sheet', label: 'Character Sheet', href: '/' },
-    { page: 'library', label: 'Library', href: '/library' },
-    { page: 'sessions', label: 'Sessions', href: '/sessions' },
-    { page: 'import', label: 'Import', href: '/import' }
-  ];
-  const logout = async () => { await api.logout().catch(() => {}); window.location.href = '/login'; };
-  return (
-    <>
-      <div className={'sidebar-backdrop' + (open ? ' open' : '')} onClick={onClose} />
-      <nav className={'sidebar' + (open ? ' open' : '')} aria-label="Pages">
-        <div className="sidebar-head">Character Ledger</div>
-        {nav.map((n) => <a key={n.page} className={'side-link' + (n.page === 'sheet' ? ' active' : '')} href={n.href}>{n.label}</a>)}
-        <DisplayOptions />
-        <div className="sidebar-account">
-          <span className="sidebar-user">Signed in as <strong>{user?.username || '…'}</strong></span>
-          <button className="pbtn" type="button" onClick={logout}>Sign out</button>
-        </div>
-      </nav>
-    </>
-  );
-}
-
-const SNAP_EDGE = 48; // px from a viewport edge that pops-out a dragged tab already docked
-
 function SheetShell() {
   const { ready } = useCharacter();
   const [order, setOrder] = useState(loadTabOrder);
   const [tab, setTab] = useState(() => loadTabOrder()[0] || 'sheet');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [panels, setPanels] = useState([]); // popped-out tabs: [{ key, tabId, spawn }]
-  const [drag, setDrag] = useState(null); // { id, label, x, y, snap } while dragging a tab out
+  const [collapsed, setCollapsed] = useSidebarCollapsed();
+  const [themesOpen, setThemesOpen] = useState(false);
+  const [panels, setPanels] = useState([]); // popped-out tabs: [{ key, tabId }]
+  const [drag, setDrag] = useState(null); // { id, label, x, y } while dragging a tab out
   const tabBarRef = useRef(null);
 
-  useEffect(() => { applyTheme(storedTheme()); }, []);
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setSidebarOpen(false); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
+  // Apply the cached theme instantly, then adopt the account's saved theme.
+  useEffect(() => { applyTheme(storedTheme()); reconcileTheme(); }, []);
 
   const reorder = (fromId, toId) => {
     if (!fromId || fromId === toId) return;
@@ -108,14 +75,14 @@ function SheetShell() {
     setOrder(next);
     localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(next));
   };
-  const popOut = (tabId, spawn) => setPanels((p) => p.some((x) => x.tabId === tabId)
-    ? p : [...p, { key: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tabId, spawn }]);
+  // Popped windows open centred (see SheetWindow); dedupe by tab.
+  const popOut = (tabId) => setPanels((p) => p.some((x) => x.tabId === tabId)
+    ? p : [...p, { key: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tabId }]);
   const closePanel = (key) => setPanels((p) => p.filter((x) => x.key !== key));
 
   // Pointer-based tab gesture: a plain click switches tabs; dragging sideways
   // within the bar reorders; dragging a tab out of the bar pops it into a
-  // floating window at the drop point (or docked, if dropped in an edge zone).
-  const snapZone = (x) => (x < SNAP_EDGE ? 'left' : x > window.innerWidth - SNAP_EDGE ? 'right' : null);
+  // floating window (which opens centred mid-screen).
   const tabIdAtPoint = (x, y) => document.elementFromPoint(x, y)?.closest('[data-tab-id]')?.getAttribute('data-tab-id') || null;
 
   const startTabDrag = (e, id) => {
@@ -126,7 +93,7 @@ function SheetShell() {
     const onMove = (ev) => {
       if (!moved && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 6) return;
       moved = true;
-      setDrag({ id, label: TAB_LABEL[id], x: ev.clientX, y: ev.clientY, snap: snapZone(ev.clientX) });
+      setDrag({ id, label: TAB_LABEL[id], x: ev.clientX, y: ev.clientY });
     };
     const onUp = (ev) => {
       document.removeEventListener('mousemove', onMove);
@@ -139,8 +106,7 @@ function SheetShell() {
         const targetId = tabIdAtPoint(ev.clientX, ev.clientY);
         if (targetId) reorder(id, targetId);
       } else {
-        const zone = snapZone(ev.clientX);
-        popOut(id, zone ? { snap: zone } : { left: ev.clientX - 60, top: ev.clientY - 12 });
+        popOut(id);
       }
     };
     document.addEventListener('mousemove', onMove);
@@ -151,9 +117,9 @@ function SheetShell() {
 
   return (
     <>
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <SidebarNav activePage="sheet" collapsed={collapsed} onCollapse={setCollapsed} onOpenThemes={() => setThemesOpen(true)} />
       <div className="sheet">
-        <ProfileBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} sidebarOpen={sidebarOpen} />
+        <ProfileBar />
         <Hero onOpenSettings={() => setTab('settings')} settingsActive={tab === 'settings'} />
         <nav ref={tabBarRef} className="tab-bar" aria-label="Character sheet tabs">
           {visibleTabs.map((id) => (
@@ -170,17 +136,13 @@ function SheetShell() {
         {ready && <TabView tabId={tab} onGoToTab={setTab} />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
-      {drag && (
-        <>
-          {drag.snap && <div className="snap-preview" style={{ left: drag.snap === 'left' ? 0 : '50vw' }} />}
-          <div className="tab-drag-ghost" style={{ left: drag.x + 14, top: drag.y + 14 }}>{drag.label}</div>
-        </>
-      )}
+      {drag && <div className="tab-drag-ghost" style={{ left: drag.x + 14, top: drag.y + 14 }}>{drag.label}</div>}
       {ready && panels.map((p, i) => (
-        <SheetWindow key={p.key} title={TAB_LABEL[p.tabId]} spawn={p.spawn} offset={i * 28} onClose={() => closePanel(p.key)}>
+        <SheetWindow key={p.key} title={TAB_LABEL[p.tabId]} icon="◳" offset={i * 28} onClose={() => closePanel(p.key)}>
           <TabView tabId={p.tabId} onGoToTab={setTab} />
         </SheetWindow>
       ))}
+      {themesOpen && <ThemesWindow onClose={() => setThemesOpen(false)} />}
       {ready && <QuickTools />}
     </>
   );

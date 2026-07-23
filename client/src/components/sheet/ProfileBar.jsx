@@ -2,9 +2,9 @@ import { useRef } from 'react';
 import { useCharacter } from '../../state/characterStore.jsx';
 
 // Profile switcher + save status (ports partials/profile-bar.html and
-// bindProfileBar). Sidebar toggle is owned by the parent shell.
-export default function ProfileBar({ onToggleSidebar, sidebarOpen }) {
-  const { character, profiles, loadCharacter, newCharacter, duplicateCharacter, deleteCharacter, importCharacterJson, saveStatus, viewOnly } = useCharacter();
+// bindProfileBar). The sidebar collapse toggle now lives inside the sidebar.
+export default function ProfileBar() {
+  const { character, profiles, loadCharacter, newCharacter, duplicateCharacter, importCharacterJson, saveStatus, viewOnly } = useCharacter();
   const fileRef = useRef(null);
 
   const onImportFile = async (e) => {
@@ -24,8 +24,6 @@ export default function ProfileBar({ onToggleSidebar, sidebarOpen }) {
 
   return (
     <div className="profile-bar">
-      <button className="sidebar-toggle" type="button" aria-expanded={sidebarOpen}
-        title="Menu" onClick={onToggleSidebar}>☰</button>
       <label>Profile</label>
       <select value={character.id || ''} onChange={(e) => { if (e.target.value) loadCharacter(e.target.value); }}>
         {profiles.length === 0 && <option value="">No saved characters</option>}
@@ -34,10 +32,9 @@ export default function ProfileBar({ onToggleSidebar, sidebarOpen }) {
         ))}
       </select>
       <button className="pbtn" onClick={newCharacter}>+ New</button>
-      <button className="pbtn" onClick={duplicateCharacter}>Duplicate</button>
       <button className="pbtn" title="Import a character from a JSON file" onClick={() => fileRef.current?.click()}>Import</button>
       <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onImportFile} />
-      <button className="pbtn danger" onClick={deleteCharacter}>Delete</button>
+      <button className="pbtn" onClick={duplicateCharacter}>Duplicate</button>
       <span className={'save-status' + (saveStatus === 'saving' ? ' saving' : '')}>
         {viewOnly ? 'View only' : statusText}
       </span>

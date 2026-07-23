@@ -93,6 +93,41 @@ export function storedTheme() {
   return localStorage.getItem('characterSheetTheme') || 'dark';
 }
 
+// ---- Per-account persistence ----
+// localStorage stays the instant-apply cache (and the only store under
+// SKIP_AUTH / when signed out); the server copy follows the account across
+// devices. persistTheme() debounces a PUT of the current theme + custom colors;
+// reconcileTheme() runs once on load to adopt the account's saved theme.
+
+let persistTimer = null;
+export function persistTheme() {
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    import('./api/client.js')
+      .then((api) => api.updateSettings({ theme: storedTheme(), customTheme: getStoredCustomTheme() }))
+      .catch(() => {}); // best-effort; the localStorage cache already holds it
+  }, 400);
+}
+
+export async function reconcileTheme() {
+  try {
+    const { authMe } = await import('./api/client.js');
+    const s = (await authMe())?.settings || {};
+    if (s.customTheme && typeof s.customTheme === 'object') {
+      localStorage.setItem('characterSheetCustomTheme', JSON.stringify(s.customTheme));
+    }
+    if (typeof s.theme === 'string' && s.theme && s.theme !== storedTheme()) {
+      applyTheme(s.theme); // updates the cache + repaints
+      return s.theme;
+    }
+    // Same named theme but custom colors may have changed on another device.
+    if (storedTheme() === 'custom' && s.customTheme) applyCustomTheme(getStoredCustomTheme());
+    return storedTheme();
+  } catch {
+    return storedTheme();
+  }
+}
+
 export function saveCustomThemeField(field, value) {
   const current = getStoredCustomTheme();
   current[field] = value;

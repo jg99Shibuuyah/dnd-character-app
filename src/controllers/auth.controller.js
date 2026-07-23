@@ -60,7 +60,19 @@ function logout(req, res) {
 
 function me(req, res) {
   if (!req.user) return res.status(401).json({ error: 'Not signed in' });
-  res.json(req.user);
+  res.json({ ...req.user, settings: User.getSettings(req.user.id) });
+}
+
+// Persist per-account preferences (theme, custom colors). Merges over whatever
+// is stored so a partial update never clobbers unrelated keys.
+function updateSettings(req, res) {
+  const patch = req.body && req.body.settings;
+  if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+    return res.status(400).json({ error: 'settings must be an object' });
+  }
+  const merged = { ...User.getSettings(req.user.id), ...patch };
+  User.setSettings(req.user.id, merged);
+  res.json({ settings: merged });
 }
 
 // No SMTP in a self-hosted install: the reset link is printed to the server
@@ -90,4 +102,4 @@ function reset(req, res) {
   res.json({ ok: true });
 }
 
-module.exports = { register, login, logout, me, forgot, reset };
+module.exports = { register, login, logout, me, updateSettings, forgot, reset };

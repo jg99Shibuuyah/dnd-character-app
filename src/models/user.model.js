@@ -7,7 +7,9 @@ const statements = {
   byEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
   count: db.prepare('SELECT COUNT(*) AS n FROM users'),
   setPassword: db.prepare('UPDATE users SET password_hash = ? WHERE id = ?'),
-  adoptOrphanCharacters: db.prepare('UPDATE characters SET user_id = ? WHERE user_id IS NULL')
+  adoptOrphanCharacters: db.prepare('UPDATE characters SET user_id = ? WHERE user_id IS NULL'),
+  getSettings: db.prepare('SELECT settings FROM users WHERE id = ?'),
+  setSettings: db.prepare('UPDATE users SET settings = ? WHERE id = ?')
 };
 
 function create(username, email, passwordHash) {
@@ -42,4 +44,15 @@ function adoptOrphanCharacters(userId) {
   statements.adoptOrphanCharacters.run(userId);
 }
 
-module.exports = { create, findById, findByUsername, findByEmail, count, setPassword, adoptOrphanCharacters };
+// Preferences JSON (or {} when unset / unparseable).
+function getSettings(id) {
+  const row = statements.getSettings.get(id);
+  if (!row || !row.settings) return {};
+  try { return JSON.parse(row.settings); } catch { return {}; }
+}
+
+function setSettings(id, settings) {
+  statements.setSettings.run(JSON.stringify(settings || {}), id);
+}
+
+module.exports = { create, findById, findByUsername, findByEmail, count, setPassword, adoptOrphanCharacters, getSettings, setSettings };

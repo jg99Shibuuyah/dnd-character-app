@@ -71,7 +71,7 @@ function LanguagesPanel() {
 }
 
 export default function SettingsTab() {
-  const { character, data, derived, update } = useCharacter();
+  const { character, data, derived, update, exportCharacter, deleteCharacter, viewOnly } = useCharacter();
   const [classFilter, setClassFilter] = useState('all');
   const [modal, setModal] = useState(null); // choice modal { label, key, entryIndex }
 
@@ -128,6 +128,18 @@ export default function SettingsTab() {
   const clearChoiceModal = () => {
     update((d) => { const e = d.classes[modal.entryIndex]; if (e.featureChoices) { delete e.featureChoices[modal.key]; if (!Object.keys(e.featureChoices).length) delete e.featureChoices; } });
     setModal(null);
+  };
+
+  // ---- Manage character (export / delete) ----
+  // Download the current character as JSON (round-trips through Import).
+  const onExport = () => {
+    const d = exportCharacter();
+    const safe = (d.name || 'character').replace(/[^\w.-]+/g, '_').slice(0, 60) || 'character';
+    const url = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = safe + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   // ---- Reference HTML ----
@@ -292,6 +304,17 @@ export default function SettingsTab() {
           </div>
 
           <LanguagesPanel />
+
+          {!viewOnly && (
+            <div className="panel">
+              <h2><span>Manage Character</span><span className="rune">◈</span></h2>
+              <div className="picker-hint">Save a backup copy of this character, or remove it permanently. <span className="hl">Deleting can't be undone.</span></div>
+              <div className="manage-actions">
+                <button className="pbtn" type="button" title="Download this character as a JSON file" onClick={onExport}>Export JSON</button>
+                <button className="pbtn danger" type="button" onClick={deleteCharacter}>Delete Character</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

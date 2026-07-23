@@ -128,4 +128,11 @@ if (!characterColumns.includes('user_id')) {
   db.exec('ALTER TABLE characters ADD COLUMN user_id INTEGER REFERENCES users(id)');
 }
 
+// Per-account preferences (theme, custom colors, …) live in a JSON blob so new
+// settings never need another migration.
+const userColumns = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+if (!userColumns.includes('settings')) {
+  db.exec('ALTER TABLE users ADD COLUMN settings TEXT');
+}
+
 module.exports = db;
