@@ -13,5 +13,9 @@ router.post('/:id/host-characters', controller.addHostCharacter);
 router.delete('/:id/host-characters/:characterId', controller.removeHostCharacter);
 router.post('/:id/leave', controller.leave);
 router.delete('/:id', controller.remove);
+router.get('/:id/dm-notes', controller.getNotes);
+router.put('/:id/dm-notes', controller.setNotes);
+router.get('/:id/combat', controller.getCombat);
+router.put('/:id/combat', controller.setCombat);
 
 module.exports = router;

@@ -69,7 +69,11 @@ const statements = {
     JOIN session_characters sc ON sc.session_id = m.session_id AND sc.character_id = m.character_id
     WHERE m.user_id = ? AND m.character_id = ?
     LIMIT 1
-  `)
+  `),
+  getNotes: db.prepare('SELECT dm_notes FROM game_sessions WHERE id = ?'),
+  setNotes: db.prepare('UPDATE game_sessions SET dm_notes = ? WHERE id = ?'),
+  getCombat: db.prepare('SELECT combat FROM game_sessions WHERE id = ?'),
+  setCombat: db.prepare('UPDATE game_sessions SET combat = ? WHERE id = ?')
 };
 
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no 0/O/1/I/L lookalikes
@@ -162,9 +166,31 @@ function borrowerCanEditCharacter(userId, characterId) {
   return !!statements.borrowerCanEditCharacter.get(userId, characterId);
 }
 
+function getNotes(sessionId) {
+  const row = statements.getNotes.get(sessionId);
+  if (!row || !row.dm_notes) return [];
+  try { return JSON.parse(row.dm_notes); } catch (e) { return []; }
+}
+
+function setNotes(sessionId, notes) {
+  statements.setNotes.run(JSON.stringify(notes || []), sessionId);
+}
+
+function getCombat(sessionId) {
+  const row = statements.getCombat.get(sessionId);
+  const empty = { combatants: [], activeIndex: 0, round: 1 };
+  if (!row || !row.combat) return empty;
+  try { return { ...empty, ...JSON.parse(row.combat) }; } catch (e) { return empty; }
+}
+
+function setCombat(sessionId, combat) {
+  statements.setCombat.run(JSON.stringify(combat || {}), sessionId);
+}
+
 module.exports = {
   create, findById, findByCode, listForUser, members, membership,
   addMember, removeMember, setMemberCharacter, remove, dmCanViewCharacter,
   hostCharacters, isHostCharacter, addHostCharacter, removeHostCharacter,
-  claimant, borrowerCanEditCharacter
+  claimant, borrowerCanEditCharacter,
+  getNotes, setNotes, getCombat, setCombat
 };

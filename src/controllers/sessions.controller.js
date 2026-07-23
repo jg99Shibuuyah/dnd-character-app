@@ -177,7 +177,48 @@ function remove(req, res) {
   res.json({ ok: true });
 }
 
+// DM-only: read/write the per-session notepad and combat tracker. Both blobs
+// are the DM's private screen state, so only the session's DM may touch them.
+function requireDm(req, res) {
+  const session = GameSession.findById(req.params.id);
+  if (!session) { res.status(404).json({ error: 'Session not found' }); return null; }
+  if (session.dm_user_id !== req.user.id) {
+    res.status(403).json({ error: 'Only the DM can use the DM screen' });
+    return null;
+  }
+  return session;
+}
+
+function getNotes(req, res) {
+  if (!requireDm(req, res)) return;
+  res.json({ notes: GameSession.getNotes(req.params.id) });
+}
+
+function setNotes(req, res) {
+  if (!requireDm(req, res)) return;
+  const notes = (req.body && req.body.notes) || [];
+  if (!Array.isArray(notes)) return res.status(400).json({ error: 'notes must be an array' });
+  GameSession.setNotes(req.params.id, notes);
+  res.json({ ok: true });
+}
+
+function getCombat(req, res) {
+  if (!requireDm(req, res)) return;
+  res.json({ combat: GameSession.getCombat(req.params.id) });
+}
+
+function setCombat(req, res) {
+  if (!requireDm(req, res)) return;
+  const combat = (req.body && req.body.combat) || {};
+  if (typeof combat !== 'object' || Array.isArray(combat)) {
+    return res.status(400).json({ error: 'combat must be an object' });
+  }
+  GameSession.setCombat(req.params.id, combat);
+  res.json({ ok: true });
+}
+
 module.exports = {
   list, create, preview, join, detail, setCharacter, leave, remove,
-  addHostCharacter, removeHostCharacter
+  addHostCharacter, removeHostCharacter,
+  getNotes, setNotes, getCombat, setCombat
 };

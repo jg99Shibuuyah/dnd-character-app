@@ -144,4 +144,15 @@ if (!userColumns.includes('settings')) {
   db.exec('ALTER TABLE users ADD COLUMN settings TEXT');
 }
 
+// Per-session DM-only blobs: the notepad (JSON array of entries) and the combat
+// tracker state (JSON {combatants, activeIndex, round}). JSON columns so new
+// fields never need another migration.
+const sessionColumns = db.prepare('PRAGMA table_info(game_sessions)').all().map(c => c.name);
+if (!sessionColumns.includes('dm_notes')) {
+  db.exec('ALTER TABLE game_sessions ADD COLUMN dm_notes TEXT');
+}
+if (!sessionColumns.includes('combat')) {
+  db.exec('ALTER TABLE game_sessions ADD COLUMN combat TEXT');
+}
+
 module.exports = db;
