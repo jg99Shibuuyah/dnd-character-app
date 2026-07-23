@@ -146,6 +146,55 @@ export function prepareBulkQueue(collected) {
   return { queue, problems, dupes };
 }
 
+// ---- Monsters (DM Screen library) ----
+// The import form uses flat string fields; the stored `data` uses numbers for
+// scalars and {name,desc} lists (parsed with the shared trait-line parser).
+const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+const numOr = (v, dflt = 0) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : dflt; };
+const trimOr = (v) => (v == null ? '' : String(v).trim());
+
+export function monsterFormToData(form) {
+  const abilities = {};
+  ABILITY_KEYS.forEach((k) => { abilities[k] = numOr(form[k], 10); });
+  return {
+    name: trimOr(form.name),
+    size: trimOr(form.size), type: trimOr(form.type), alignment: trimOr(form.alignment),
+    ac: numOr(form.ac, 10), acNote: trimOr(form.acNote),
+    hpMax: numOr(form.hpMax, 1), hpFormula: trimOr(form.hpFormula),
+    speed: trimOr(form.speed), abilities,
+    saves: trimOr(form.saves), skills: trimOr(form.skills),
+    resistances: trimOr(form.resistances), immunities: trimOr(form.immunities),
+    vulnerabilities: trimOr(form.vulnerabilities), conditionImmunities: trimOr(form.conditionImmunities),
+    senses: trimOr(form.senses), languages: trimOr(form.languages),
+    cr: trimOr(form.cr), pb: trimOr(form.pb), xp: trimOr(form.xp),
+    legendaryCount: numOr(form.legendaryCount, 0), legendaryNote: trimOr(form.legendaryNote),
+    traits: parseTraitLines(form.traits), actions: parseTraitLines(form.actions),
+    reactions: parseTraitLines(form.reactions), legendary: parseTraitLines(form.legendary),
+    items: parseTraitLines(form.items), lore: trimOr(form.lore)
+  };
+}
+
+export function monsterDataToForm(data) {
+  const d = data || {};
+  const ab = d.abilities || {};
+  const form = {
+    name: d.name || '', size: d.size || '', type: d.type || '', alignment: d.alignment || '',
+    ac: String(d.ac ?? ''), acNote: d.acNote || '',
+    hpMax: String(d.hpMax ?? ''), hpFormula: d.hpFormula || '', speed: d.speed || '',
+    saves: d.saves || '', skills: d.skills || '',
+    resistances: d.resistances || '', immunities: d.immunities || '',
+    vulnerabilities: d.vulnerabilities || '', conditionImmunities: d.conditionImmunities || '',
+    senses: d.senses || '', languages: d.languages || '',
+    cr: d.cr || '', pb: d.pb || '', xp: d.xp || '',
+    legendaryCount: String(d.legendaryCount ?? 0), legendaryNote: d.legendaryNote || '',
+    traits: traitsToLines(d.traits), actions: traitsToLines(d.actions),
+    reactions: traitsToLines(d.reactions), legendary: traitsToLines(d.legendary),
+    items: traitsToLines(d.items), lore: d.lore || ''
+  };
+  ABILITY_KEYS.forEach((k) => { form[k] = String(ab[k] ?? ''); });
+  return form;
+}
+
 // Every imported entry in the bulk format, for export / re-import round-trips.
 export function exportLibraryEntries(data, customSpells) {
   const strip = (obj) => { const { source, custom, customId, builtin, homebrew, parent, name, ...rest } = obj; return rest; };
