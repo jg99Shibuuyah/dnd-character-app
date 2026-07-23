@@ -6,7 +6,8 @@ server.log
 client/dist/
 
 # Session-local marker for the changelog SessionEnd hook
-.claude/.changelog-last-commit
+.claude/
+docs/
 
 # graphify knowledge-graph output — kept local, never committed
 graphify-out/
