@@ -45,3 +45,20 @@ test('monsterDataToForm round-trips the numeric and list fields to strings', () 
   assert.equal(f.actions, 'Dagger | +4 to hit, 4 (1d4 + 2) piercing.');
   assert.equal(f.legendaryCount, '0');
 });
+
+test('monsterDataToForm coerces non-string cr/xp to strings', () => {
+  const data = {
+    name: 'Adult Copper Dragon', size: 'Gargantuan', type: 'Dragon', alignment: 'Chaotic Good',
+    ac: 18, acNote: 'natural armor', hpMax: 184, hpFormula: '16d12 + 80', speed: '40 ft., fly 80 ft.',
+    abilities: { str: 23, dex: 12, con: 21, int: 18, wis: 15, cha: 17 },
+    saves: 'Dex +6, Con +10', skills: 'Perception +12', senses: 'darkvision 120 ft.',
+    languages: 'Common, Draconic', cr: 14, pb: '+5', xp: 11500, legendaryCount: 3,
+    legendaryNote: 'The dragon can take 3 legendary actions.',
+    traits: [], actions: [], reactions: [], legendary: [], items: [], lore: ''
+  };
+  const f = monsterDataToForm(data);
+  assert.equal(typeof f.cr, 'string');
+  assert.equal(typeof f.xp, 'string');
+  assert.equal(f.cr, '14');
+  assert.equal(f.xp, '11500');
+});

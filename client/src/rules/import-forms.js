@@ -178,18 +178,18 @@ export function monsterDataToForm(data) {
   const d = data || {};
   const ab = d.abilities || {};
   const form = {
-    name: d.name || '', size: d.size || '', type: d.type || '', alignment: d.alignment || '',
-    ac: String(d.ac ?? ''), acNote: d.acNote || '',
-    hpMax: String(d.hpMax ?? ''), hpFormula: d.hpFormula || '', speed: d.speed || '',
-    saves: d.saves || '', skills: d.skills || '',
-    resistances: d.resistances || '', immunities: d.immunities || '',
-    vulnerabilities: d.vulnerabilities || '', conditionImmunities: d.conditionImmunities || '',
-    senses: d.senses || '', languages: d.languages || '',
-    cr: d.cr || '', pb: d.pb || '', xp: d.xp || '',
-    legendaryCount: String(d.legendaryCount ?? 0), legendaryNote: d.legendaryNote || '',
+    name: String(d.name ?? ''), size: String(d.size ?? ''), type: String(d.type ?? ''), alignment: String(d.alignment ?? ''),
+    ac: String(d.ac ?? ''), acNote: String(d.acNote ?? ''),
+    hpMax: String(d.hpMax ?? ''), hpFormula: String(d.hpFormula ?? ''), speed: String(d.speed ?? ''),
+    saves: String(d.saves ?? ''), skills: String(d.skills ?? ''),
+    resistances: String(d.resistances ?? ''), immunities: String(d.immunities ?? ''),
+    vulnerabilities: String(d.vulnerabilities ?? ''), conditionImmunities: String(d.conditionImmunities ?? ''),
+    senses: String(d.senses ?? ''), languages: String(d.languages ?? ''),
+    cr: String(d.cr ?? ''), pb: String(d.pb ?? ''), xp: String(d.xp ?? ''),
+    legendaryCount: String(d.legendaryCount ?? 0), legendaryNote: String(d.legendaryNote ?? ''),
     traits: traitsToLines(d.traits), actions: traitsToLines(d.actions),
     reactions: traitsToLines(d.reactions), legendary: traitsToLines(d.legendary),
-    items: traitsToLines(d.items), lore: d.lore || ''
+    items: traitsToLines(d.items), lore: String(d.lore ?? '')
   };
   ABILITY_KEYS.forEach((k) => { form[k] = String(ab[k] ?? ''); });
   return form;
