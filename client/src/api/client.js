@@ -50,6 +50,7 @@ export const backgrounds = registry('backgrounds');
 export const subclasses = registry('subclasses');
 export const subspecies = registry('subspecies');
 export const spells = registry('spells');
+export const monsters = registry('monsters');
 
 // ---- Auth ----
 export const authMe = () => getJson('/api/auth/me');
@@ -68,3 +69,9 @@ export const offerHostCharacter = (id, characterId) => send(`/api/sessions/${id}
 export const withdrawHostCharacter = (id, characterId) => send(`/api/sessions/${id}/host-characters/${characterId}`, 'DELETE');
 export const leaveSession = (id) => send(`/api/sessions/${id}/leave`, 'POST');
 export const deleteSession = (id) => send('/api/sessions/' + id, 'DELETE');
+
+// ---- DM screen (per-session, DM-only) ----
+export const getDmNotes = (id) => send(`/api/sessions/${id}/dm-notes`, 'GET');
+export const setDmNotes = (id, notes) => send(`/api/sessions/${id}/dm-notes`, 'PUT', { notes });
+export const getCombat = (id) => send(`/api/sessions/${id}/combat`, 'GET');
+export const setCombat = (id, combat) => send(`/api/sessions/${id}/combat`, 'PUT', { combat });

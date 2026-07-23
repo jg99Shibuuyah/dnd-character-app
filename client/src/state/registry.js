@@ -24,13 +24,14 @@ const subKey = (parent, name) => parent + '::' + name;
 // Fetch all six custom-content lists and return { data, customSpells }.
 // `data` has the same shape as rules/builtin-data.js gameData.
 export async function loadRegistry() {
-  const [classes, species, backgrounds, subclasses, subspecies, spells] = await Promise.all([
+  const [classes, species, backgrounds, subclasses, subspecies, spells, monsters] = await Promise.all([
     api.classes.list().catch(() => []),
     api.species.list().catch(() => []),
     api.backgrounds.list().catch(() => []),
     api.subclasses.list().catch(() => []),
     api.subspecies.list().catch(() => []),
-    api.spells.list().catch(() => [])
+    api.spells.list().catch(() => []),
+    api.monsters.list().catch(() => [])
   ]);
 
   const data = { ...gameData };
@@ -61,7 +62,14 @@ export async function loadRegistry() {
     });
   });
 
-  return { data, customSpells };
+  const customMonsters = {};
+  monsters.forEach((rec) => {
+    customMonsters[rec.name] = Object.assign({}, rec.data, {
+      source: rec.source, custom: true, customId: rec.id
+    });
+  });
+
+  return { data, customSpells, customMonsters };
 }
 
 // Combined builtin + imported subclass/subspecies name lists (the merged-data
