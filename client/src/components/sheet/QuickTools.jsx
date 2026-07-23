@@ -28,6 +28,9 @@ export default function QuickTools() {
   }, [active]);
 
   const pick = (tool) => { setActive(tool); setStackOpen(false); };
+  // Toggling the launcher always dismisses any open tool popup first, so the
+  // tools list is never left hidden behind an on-screen popup.
+  const toggleStack = () => { setActive(null); setStackOpen((v) => !v); };
 
   return (
     <>
@@ -50,7 +53,7 @@ export default function QuickTools() {
         </button>
         <button className={'corner-fab fab-launcher' + (stackOpen ? ' open' : '')} type="button"
           title="Quick tools" aria-label="Open quick tools menu" aria-expanded={stackOpen}
-          onClick={() => setStackOpen((v) => !v)}>
+          onClick={toggleStack}>
           <span className="corner-fab-glyph">⋯</span>
         </button>
       </div>

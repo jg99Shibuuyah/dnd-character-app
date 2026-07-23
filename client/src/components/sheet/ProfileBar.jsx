@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { useCharacter } from '../../state/characterStore.jsx';
-import OptionsMenu from '../OptionsMenu.jsx';
 
 // Profile switcher + save status (ports partials/profile-bar.html and
 // bindProfileBar). Sidebar toggle is owned by the parent shell.
@@ -39,7 +38,6 @@ export default function ProfileBar({ onToggleSidebar, sidebarOpen }) {
       <button className="pbtn" title="Import a character from a JSON file" onClick={() => fileRef.current?.click()}>Import</button>
       <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onImportFile} />
       <button className="pbtn danger" onClick={deleteCharacter}>Delete</button>
-      <OptionsMenu />
       <span className={'save-status' + (saveStatus === 'saving' ? ' saving' : '')}>
         {viewOnly ? 'View only' : statusText}
       </span>

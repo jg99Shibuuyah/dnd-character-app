@@ -81,6 +81,53 @@ body[data-theme="ember"]{
   --shadow: 0 0 0 1px rgba(255,177,107,0.08), 0 0 18px rgba(255,177,107,0.08);
 }
 
+/* Rain — a cool blue-grey theme with an animated falling-rain backdrop. */
+body[data-theme="rain"]{
+  --void:#0e141b;
+  --void-2:#131c26;
+  --void-3:#1a2531;
+  --neon-cyan:#84b6da;
+  --neon-magenta:#9fb6ce;
+  --neon-green:#8fc6b3;
+  --neon-yellow:#c8d0af;
+  --dark-panel: rgba(19,28,38,0.86);
+  --ink:#cfdae6;
+  --ink-dim: rgba(207,218,230,0.5);
+  --border-glow: rgba(132,182,218,0.28);
+  --glow-cyan: 0 0 8px rgba(132,182,218,0.28), 0 0 24px rgba(132,182,218,0.12);
+  --glow-magenta: 0 0 8px rgba(159,182,206,0.22), 0 0 24px rgba(159,182,206,0.1);
+  --parchment:#141d27;
+  --parchment-2:#0f1620;
+  --parchment-line: rgba(132,182,218,0.18);
+  --gold: var(--neon-cyan);
+  --gold-bright:#aad0ec;
+  --crimson: var(--neon-magenta);
+  --crimson-bright:#bfcedf;
+  --ink-soft: rgba(207,218,230,0.72);
+  --green: var(--neon-green);
+  --shadow: 0 0 0 1px rgba(132,182,218,0.08), 0 0 18px rgba(132,182,218,0.06);
+}
+/* Falling-rain droplets on the fixed background layer (behind all content):
+   several sparse grids of short vertical dashes, each drifting down at its own
+   speed for a scattered, parallaxed shower rather than continuous streaks. */
+body[data-theme="rain"]::before{
+  background-image:
+    radial-gradient(1.6px 9px at 15% 20%, rgba(214,234,252,0.72), transparent 64%),
+    radial-gradient(1.6px 8px at 55% 60%, rgba(196,222,246,0.62), transparent 64%),
+    radial-gradient(1.4px 7px at 82% 32%, rgba(214,234,252,0.58), transparent 64%),
+    radial-gradient(1.6px 8px at 38% 84%, rgba(186,214,240,0.54), transparent 64%),
+    radial-gradient(1.4px 7px at 92% 74%, rgba(204,228,248,0.50), transparent 64%);
+  background-size: 120px 150px, 165px 190px, 105px 140px, 190px 215px, 145px 175px;
+  animation: rain-fall 0.85s linear infinite;
+}
+@keyframes rain-fall{
+  from{ background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+  to{ background-position: 0 150px, 0 190px, 0 140px, 0 215px, 0 175px; }
+}
+@media (prefers-reduced-motion: reduce){
+  body[data-theme="rain"]::before{ animation:none; }
+}
+
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
@@ -154,6 +201,16 @@ input, select, textarea, button{ font-family:'JetBrains Mono', monospace; }
 .seal .lvl-num{ font-size:26px; font-weight:700; line-height:1;}
 .seal .lvl-label{ font-size:9px; letter-spacing:2px; text-transform:uppercase; opacity:0.85; margin-top:2px;}
 
+.hero-name-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.hero-settings-btn{
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  background: var(--void-2); color: var(--ink-soft);
+  border:1px solid rgba(0,255,213,0.25); border-radius:4px;
+  padding:6px 12px; cursor:pointer; white-space:nowrap;
+  transition:color 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.hero-settings-btn:hover{ color: var(--neon-cyan); border-color: var(--border-glow); }
+.hero-settings-btn.active{ color: var(--neon-cyan); border-color: var(--border-glow); box-shadow: var(--glow-cyan); }
 .hero-name{
   font-family:'Orbitron', sans-serif;
   font-size: 30px;
@@ -538,18 +595,29 @@ textarea.trait{
   background: var(--void-2); color: var(--ink-dim);
   border:1px solid rgba(0,255,213,0.2); border-bottom:none;
   border-radius:4px 4px 0 0;
-  padding:10px 18px; cursor:pointer;
+  padding:10px 18px; cursor:grab;
   position:relative; top:1px;
   display:inline-flex; align-items:center; gap:9px; user-select:none;
 }
 .tab-btn:hover{ color: var(--ink); }
-/* Pop-out affordance on each tab: opens the tab as a floating panel. */
-.tab-pop{
-  font-size:13px; line-height:1; cursor:pointer; color: var(--ink-dim);
-  opacity:0; transition:opacity 0.12s, color 0.12s; margin:-2px -6px -2px -2px; padding:2px 4px;
+.tab-btn:active{ cursor:grabbing; }
+/* The tab being dragged out fades so the cursor ghost reads as the "real" one. */
+.tab-btn.dragging{ opacity:0.4; }
+
+/* Ghost label that follows the cursor while a tab is dragged out of the bar. */
+.tab-drag-ghost{
+  position:fixed; z-index:4000; pointer-events:none;
+  font-family:'Orbitron', sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+  background: var(--void-3); color: var(--neon-cyan);
+  border:1px solid var(--border-glow); border-radius:4px;
+  padding:8px 14px; box-shadow: var(--glow-cyan);
 }
-.tab-btn:hover .tab-pop, .tab-btn.active .tab-pop{ opacity:0.75; }
-.tab-pop:hover{ color: var(--neon-magenta); opacity:1; }
+/* Half-viewport highlight shown while a drag hovers a left/right snap zone. */
+.snap-preview{
+  position:fixed; top:0; height:100vh; width:50vw; z-index:3900; pointer-events:none;
+  background: rgba(0,255,213,0.10);
+  border:2px dashed var(--neon-cyan); box-shadow: inset 0 0 40px rgba(0,255,213,0.15);
+}
 
 /* ---------- Popped-out tab panels (floating, draggable) ---------- */
 .sheet-window{
@@ -559,6 +627,11 @@ textarea.trait{
   max-width:calc(100vw - 20px); max-height:calc(100vh - 30px);
   overflow:hidden; resize:both; min-width:300px; min-height:200px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+/* Docked to a viewport half (snapped side-by-side with the sheet). */
+.sheet-window.snapped{
+  resize:none; border-radius:0; max-width:100vw; max-height:100vh;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
 }
 .sheet-window-head{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -727,6 +800,13 @@ textarea.trait{
 .set-field input:focus, .set-field select:focus{
   outline:none; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);
 }
+/* Inline checkbox row (e.g. "Show Experience on sheet"). */
+.set-toggle{
+  display:flex; align-items:center; gap:9px; cursor:pointer; margin:-4px 0 12px;
+  font-family:'Orbitron', sans-serif; font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--ink-soft);
+}
+.set-toggle input{ width:15px; height:15px; accent-color: var(--neon-cyan); cursor:pointer; }
 .class-info{
   margin-top:10px; padding:10px 12px; font-size:12.5px; line-height:1.55;
   background: var(--void-2); border:1px solid var(--parchment-line); border-radius:2px;
@@ -1117,6 +1197,14 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 }
 .side-link:hover{ color: var(--ink); background: rgba(255,255,255,0.06); }
 .side-link.active{ color: var(--neon-cyan); background: var(--void-3); border-color: var(--parchment-line); }
+
+/* Display options (theme + zoom) hosted inline in the sidebar drawer. */
+.sidebar-options{
+  margin-top:12px; padding-top:12px; border-top:1px solid var(--parchment-line);
+}
+.sidebar-options .options-section{ margin-top:12px; padding-top:12px; }
+.sidebar-options .options-section:first-child{ margin-top:0; padding-top:0; border-top:none; }
+.sidebar-options .option-chip{ font-size:11px; padding:6px 4px; }
 
 /* ---------- Standalone pages (Library, Notes) ---------- */
 .page-bar .page-title{

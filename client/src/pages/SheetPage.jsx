@@ -14,6 +14,7 @@ import SpellsTab from '../components/sheet/SpellsTab.jsx';
 import ActionsTab from '../components/sheet/ActionsTab.jsx';
 import QuickTools from '../components/sheet/QuickTools.jsx';
 import SheetWindow from '../components/sheet/SheetWindow.jsx';
+import DisplayOptions from '../components/DisplayOptions.jsx';
 
 const TABS = [
   { id: 'sheet', label: 'Character' },
@@ -71,6 +72,7 @@ function Sidebar({ open, onClose }) {
       <nav className={'sidebar' + (open ? ' open' : '')} aria-label="Pages">
         <div className="sidebar-head">Character Ledger</div>
         {nav.map((n) => <a key={n.page} className={'side-link' + (n.page === 'sheet' ? ' active' : '')} href={n.href}>{n.label}</a>)}
+        <DisplayOptions />
         <div className="sidebar-account">
           <span className="sidebar-user">Signed in as <strong>{user?.username || '…'}</strong></span>
           <button className="pbtn" type="button" onClick={logout}>Sign out</button>
@@ -80,13 +82,16 @@ function Sidebar({ open, onClose }) {
   );
 }
 
+const SNAP_EDGE = 48; // px from a viewport edge that pops-out a dragged tab already docked
+
 function SheetShell() {
   const { ready } = useCharacter();
   const [order, setOrder] = useState(loadTabOrder);
   const [tab, setTab] = useState(() => loadTabOrder()[0] || 'sheet');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [panels, setPanels] = useState([]); // popped-out tabs: [{ key, tabId }]
-  const dragId = useRef(null);
+  const [panels, setPanels] = useState([]); // popped-out tabs: [{ key, tabId, spawn }]
+  const [drag, setDrag] = useState(null); // { id, label, x, y, snap } while dragging a tab out
+  const tabBarRef = useRef(null);
 
   useEffect(() => { applyTheme(storedTheme()); }, []);
   useEffect(() => {
@@ -103,30 +108,61 @@ function SheetShell() {
     setOrder(next);
     localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(next));
   };
-  const popOut = (tabId) => setPanels((p) => p.some((x) => x.tabId === tabId)
-    ? p : [...p, { key: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tabId }]);
+  const popOut = (tabId, spawn) => setPanels((p) => p.some((x) => x.tabId === tabId)
+    ? p : [...p, { key: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tabId, spawn }]);
   const closePanel = (key) => setPanels((p) => p.filter((x) => x.key !== key));
+
+  // Pointer-based tab gesture: a plain click switches tabs; dragging sideways
+  // within the bar reorders; dragging a tab out of the bar pops it into a
+  // floating window at the drop point (or docked, if dropped in an edge zone).
+  const snapZone = (x) => (x < SNAP_EDGE ? 'left' : x > window.innerWidth - SNAP_EDGE ? 'right' : null);
+  const tabIdAtPoint = (x, y) => document.elementFromPoint(x, y)?.closest('[data-tab-id]')?.getAttribute('data-tab-id') || null;
+
+  const startTabDrag = (e, id) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const start = { x: e.clientX, y: e.clientY };
+    let moved = false;
+    const onMove = (ev) => {
+      if (!moved && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 6) return;
+      moved = true;
+      setDrag({ id, label: TAB_LABEL[id], x: ev.clientX, y: ev.clientY, snap: snapZone(ev.clientX) });
+    };
+    const onUp = (ev) => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      setDrag(null);
+      if (!moved) { setTab(id); return; }
+      const bar = tabBarRef.current?.getBoundingClientRect();
+      const inBar = bar && ev.clientY >= bar.top && ev.clientY <= bar.bottom && ev.clientX >= bar.left && ev.clientX <= bar.right;
+      if (inBar) {
+        const targetId = tabIdAtPoint(ev.clientX, ev.clientY);
+        if (targetId) reorder(id, targetId);
+      } else {
+        const zone = snapZone(ev.clientX);
+        popOut(id, zone ? { snap: zone } : { left: ev.clientX - 60, top: ev.clientY - 12 });
+      }
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
+  const visibleTabs = order.filter((id) => id !== 'settings');
 
   return (
     <>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="sheet">
         <ProfileBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} sidebarOpen={sidebarOpen} />
-        <Hero />
-        <nav className="tab-bar" aria-label="Character sheet tabs">
-          {order.map((id) => (
-            <div key={id} className={'tab-btn' + (tab === id ? ' active' : '')}
-              role="button" tabIndex={0} draggable
-              title="Drag to reorder"
-              onClick={() => setTab(id)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab(id); } }}
-              onDragStart={(e) => { dragId.current = id; e.dataTransfer.effectAllowed = 'move'; }}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => { e.preventDefault(); reorder(dragId.current, id); dragId.current = null; }}>
+        <Hero onOpenSettings={() => setTab('settings')} settingsActive={tab === 'settings'} />
+        <nav ref={tabBarRef} className="tab-bar" aria-label="Character sheet tabs">
+          {visibleTabs.map((id) => (
+            <div key={id} data-tab-id={id} className={'tab-btn' + (tab === id ? ' active' : '') + (drag?.id === id ? ' dragging' : '')}
+              role="button" tabIndex={0}
+              title="Click to open · drag out to pop into a floating panel"
+              onMouseDown={(e) => startTabDrag(e, id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab(id); } }}>
               <span className="tab-btn-label">{TAB_LABEL[id]}</span>
-              <span className="tab-pop" role="button" tabIndex={-1} aria-label={'Pop out ' + TAB_LABEL[id]}
-                title="Pop out into a floating panel"
-                onClick={(e) => { e.stopPropagation(); popOut(id); }}>⧉</span>
             </div>
           ))}
         </nav>
@@ -134,8 +170,14 @@ function SheetShell() {
         {ready && <TabView tabId={tab} onGoToTab={setTab} />}
         <div className="footer-note">Saved to your local database — switch profiles above to load a different character.</div>
       </div>
+      {drag && (
+        <>
+          {drag.snap && <div className="snap-preview" style={{ left: drag.snap === 'left' ? 0 : '50vw' }} />}
+          <div className="tab-drag-ghost" style={{ left: drag.x + 14, top: drag.y + 14 }}>{drag.label}</div>
+        </>
+      )}
       {ready && panels.map((p, i) => (
-        <SheetWindow key={p.key} title={TAB_LABEL[p.tabId]} offset={i * 28} onClose={() => closePanel(p.key)}>
+        <SheetWindow key={p.key} title={TAB_LABEL[p.tabId]} spawn={p.spawn} offset={i * 28} onClose={() => closePanel(p.key)}>
           <TabView tabId={p.tabId} onGoToTab={setTab} />
         </SheetWindow>
       ))}

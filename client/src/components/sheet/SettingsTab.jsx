@@ -85,6 +85,8 @@ export default function SettingsTab() {
   // ---- Identity handlers ----
   const setName = (v) => update((d) => { d.name = v; });
   const setXp = (v) => update((d) => { d.xp = parseInt(v) || 0; });
+  const setShowXp = (v) => update((d) => { d.showXp = v; });
+  const showXp = character.showXp !== false;
   const setAlignment = (v) => update((d) => { d.alignment = v; });
 
   const setRace = (v) => update((d) => {
@@ -213,6 +215,7 @@ export default function SettingsTab() {
               </select>
             </div>
             <div className="set-field"><label>Experience</label><input type="number" min="0" value={character.xp || 0} onChange={(e) => setXp(e.target.value)} /></div>
+            <label className="set-toggle"><input type="checkbox" checked={showXp} onChange={(e) => setShowXp(e.target.checked)} /><span>Show Experience on sheet</span></label>
           </div>
 
           <div className="panel">

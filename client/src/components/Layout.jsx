@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import OptionsMenu from './OptionsMenu.jsx';
+import DisplayOptions from './DisplayOptions.jsx';
 import * as api from '../api/client.js';
 
 // Top-level pages. Plain <a> (full page loads) between them keeps this trivial
@@ -40,6 +40,7 @@ export default function Layout({ page, title, children }) {
         {NAV.map((n) => (
           <a key={n.page} className={'side-link' + (n.page === page ? ' active' : '')} href={n.href}>{n.label}</a>
         ))}
+        <DisplayOptions />
         <div className="sidebar-account">
           <span className="sidebar-user">Signed in as <strong>{user?.username || '…'}</strong></span>
           <button className="pbtn" type="button" onClick={logout}>Sign out</button>
@@ -50,7 +51,6 @@ export default function Layout({ page, title, children }) {
           <button className="sidebar-toggle" type="button" aria-expanded={sidebarOpen}
             title="Menu" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
           <span className="page-title">{title}</span>
-          <OptionsMenu />
         </div>
         {children}
       </div>
