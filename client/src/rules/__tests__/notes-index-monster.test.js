@@ -43,3 +43,14 @@ test('buildNotesIndex includes Monsters only when monsters are passed', () => {
 test('NOTES_TYPES_DM adds Monsters to the base type list', () => {
   assert.ok(NOTES_TYPES_DM.includes('Monsters'));
 });
+
+test('monsterStatblockHtml single-escapes special characters in acNote/cr (no double-escaping)', () => {
+  const monster = {
+    ...dragon,
+    acNote: 'A & B <x>',
+    cr: '5 & up',
+  };
+  const html = monsterStatblockHtml(monster);
+  assert.match(html, /A &amp; B &lt;x&gt;/);
+  assert.doesNotMatch(html, /&amp;amp;/);
+});

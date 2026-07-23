@@ -88,9 +88,9 @@ export function monsterStatblockHtml(data) {
   const ab = d.abilities || {};
   const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
   const line = (label, val) => val ? `<div class="comp-line"><b>${label}:</b> ${esc(String(val))}</div>` : '';
-  const acText = d.ac != null ? String(d.ac) + (d.acNote ? ` (${esc(d.acNote)})` : '') : '';
-  const hpText = d.hpMax != null ? String(d.hpMax) + (d.hpFormula ? ` (${esc(d.hpFormula)})` : '') : '';
-  const crText = d.cr ? `${esc(d.cr)}${d.xp ? ` (${esc(d.xp)} XP)` : ''}${d.pb ? ` · PB ${esc(d.pb)}` : ''}` : '';
+  const acText = d.ac != null ? String(d.ac) + (d.acNote ? ` (${d.acNote})` : '') : '';
+  const hpText = d.hpMax != null ? String(d.hpMax) + (d.hpFormula ? ` (${d.hpFormula})` : '') : '';
+  const crText = d.cr ? `${d.cr}${d.xp ? ` (${d.xp} XP)` : ''}${d.pb ? ` · PB ${d.pb}` : ''}` : '';
   const section = (label, rows) => (rows && rows.length)
     ? `<div class="equip-atk-head">${label}</div>` + rows.map((r) =>
         `<div class="comp-line"><b>${esc(r.name)}.</b> ${esc(r.desc || '')}</div>`).join('')
