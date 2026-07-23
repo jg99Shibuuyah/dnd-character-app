@@ -7,32 +7,38 @@
 ## Summary
 
 Give the DM of a session a dedicated screen, opened from the Sessions page, that
-combines three tools: a reference/library search that also finds **monsters**
-(monsters appear only here, never on the public Library), read-only **snapshots**
-of the party's character sheets, and a persisted per-session **notepad** modeled
-on the character Journal tab.
+combines four tools: a reference/library search that also finds **monsters**
+(monsters appear only here, never on the public Library), **snapshots** of the
+party's character sheets (frozen at open, refreshable), a **turn-order tracker**
+for running combat, and a persisted per-session **notepad** modeled on the
+character Journal tab.
 
 Supporting this requires a new server-side monster model with its own import
-flow, and per-session DM-notes storage.
+flow, and per-session storage for DM notes and combat state.
 
 ## Goals
 
 - The DM opens a screen from within a session that behaves like the Library and
   the character sheet combined.
 - The DM can open read-only snapshots of each attached character showing the
-  main tab: ability scores + derived stats + combat block.
+  main tab: ability scores + derived stats + combat block. Snapshots load frozen
+  at open with a Refresh button that re-fetches and flags any changes.
 - The DM can look up monsters through this screen's library. Monsters are
   lookup-restricted to the DM Screen; they never surface on the public Library.
 - Anyone can create/import monsters (a new model + import form).
+- The DM has a free-form, persisted turn-order / initiative tracker for running
+  combat, reached from a clear, prominent **Turn Order** button. Combatants carry
+  interactive legendary-action and resource counters.
 - The DM has a freeform, persisted notepad scoped to the session.
 
 ## Non-Goals (YAGNI)
 
-- No initiative/combat tracker or turn order.
 - No editing of character snapshots from the DM Screen (read-only).
-- No sharing of monsters with players.
-- No legendary-action / resource counters on monster statblocks.
-- No frozen point-in-time snapshots — snapshots are always live reads.
+- No sharing of monsters, notes, or the tracker with players (all DM-only).
+- No auto-live snapshots — snapshots are frozen at open and updated only by the
+  Refresh button.
+- No auto-rolled initiative or automated monster AI — the tracker is free-form
+  (the DM types combatants), though a monster statblock can seed a combatant.
 
 ## Part A — Monster model & import
 
@@ -98,6 +104,8 @@ fields:
   reactions: [{ name, desc }],
   legendary: [{ name, desc }],
   legendaryNote,        // "The dragon can take 3 legendary actions…"
+  legendaryCount,       // 3 — seeds the tracker's legendary counter
+  items:     [{ name, desc }],   // generic gear/loot list (swords, etc.)
   lore                  // optional flavor/description
 }
 ```
@@ -108,9 +116,9 @@ New "Monsters" tab on the Import page (`client/src/pages/ImportPage.jsx`),
 following the Spells tab pattern:
 
 - Form fields for the scalar attributes above.
-- Text-line fields for `traits` / `actions` / `reactions` / `legendary`, parsed
-  with the existing `name | desc` line parser (`parseTraitLines` in
-  `client/src/rules/import-forms.js`).
+- Text-line fields for `traits` / `actions` / `reactions` / `legendary` /
+  `items`, parsed with the existing `name | desc` line parser (`parseTraitLines`
+  in `client/src/rules/import-forms.js`).
 - Shared `SubmitRow` with the paste-JSON override and Delete-loaded-entry.
 - On submit → `POST /api/monsters` → registry `reload()` re-merges.
 
@@ -139,6 +147,8 @@ URL is used only to confirm which fields the model needs.
   Screen"** button, rendered only when `detail.isDm`.
 - The page loads session detail and guards on DM ownership; a non-DM sees a
   "not authorized" notice.
+- The page exposes four regions: reference search, party snapshots, a
+  prominently-labeled **Turn Order** button/tracker, and the DM notepad.
 
 ### Region 1 — Reference search (with monsters)
 
@@ -157,7 +167,13 @@ Refactor the search core out of `LibraryPage.jsx` into a shared component
   filters `'Monsters'` out when `includeMonsters` is false).
 - Monster results open in a `SheetWindow` via a new
   `client/src/components/MonsterDetail.jsx` that renders the statblock (reusing
-  the `companionStatsHtml`-style markup, extended for monster-only fields).
+  the `companionStatsHtml`-style markup, extended for monster-only fields:
+  resistances/vulnerabilities/condition immunities, CR/PB/XP, legendary actions,
+  and the `items` list).
+- The statblock includes an **"Add to turn order"** button that seeds a
+  free-form combatant in the tracker, pre-filled with the monster's name, HP, and
+  legendary-action count (`legendaryCount`). This links monster lookup to the
+  tracker without hard-linking records.
 
 ### Region 2 — Party snapshots
 
@@ -170,13 +186,42 @@ Refactor the search core out of `LibraryPage.jsx` into a shared component
 - Data fetched via `api.getCharacter(id)` (the DM is already authorized by
   `GameSession.dmCanViewCharacter`), then run through the existing
   `deriveCharacter` rules for computed values.
-- A refresh control re-fetches to show live values.
+- **Frozen at open:** the fetched data is captured when the window opens and does
+  not auto-update. A **Refresh** button re-fetches; if the character changed since
+  the captured copy (compared via the character's `updated_at` / a key-field
+  diff), the button flags "changes available" and applies them on click.
 
 `CharacterTab` is tightly bound to `useCharacter`/`update`, so `SnapshotSheet`
 renders its own static markup from fetched data rather than reusing that
 component directly.
 
-### Region 3 — DM notepad
+### Region 3 — Turn-order tracker
+
+A free-form initiative tracker for running combat, opened from a clear,
+prominent **Turn Order** button on the DM Screen. New
+`client/src/components/TurnOrderTracker.jsx`.
+
+- **Combatants** are free-form: the DM types `name`, `initiative`, and `hp`
+  (current + max). Rows are not hard-linked to character or monster records, but
+  a monster statblock's "Add to turn order" (Region 1) can seed a row, and party
+  snapshots can offer the same.
+- The list sorts by `initiative` descending, with a **current-turn** marker and a
+  **round** counter. Controls: **Next turn** (advances the marker; wrapping past
+  the last combatant increments the round and resets each combatant's
+  legendary counter), **Previous turn**, **Add combatant**, **Remove combatant**,
+  and **Clear/Reset**.
+- **Interactive counters per combatant:**
+  - Legendary actions — `legendaryMax` / `legendaryUsed`, spent/restored by the
+    DM and auto-reset at the start of each round.
+  - Resource counters — an arbitrary list `resources: [{ name, max, used }]` the
+    DM can add to any combatant (e.g. Legendary Resistance 3/day, spell slots).
+- Combatant shape:
+  `{ id, name, initiative, hp, hpMax, legendaryMax, legendaryUsed,
+     resources: [{ name, max, used }], note }`.
+- Tracker state — `{ combatants, activeIndex, round }` — persists to the session
+  (Part C) and reloads intact.
+
+### Region 4 — DM notepad
 
 Mirrors the Journal tab (`client/src/components/sheet/JournalTab.jsx`):
 
@@ -187,17 +232,22 @@ Mirrors the Journal tab (`client/src/components/sheet/JournalTab.jsx`):
 - Persisted server-side per session (Part C). Client autosaves changes,
   debounced, like the character store's autosave.
 
-## Part C — DM notes persistence
+## Part C — DM notes & combat persistence
 
-- Add a `dm_notes` TEXT column (JSON array) to `game_sessions` via the migration
-  pattern already at the bottom of `src/db.js` (PRAGMA `table_info` → conditional
-  `ALTER TABLE`).
-- `gameSession.model.js`: `getNotes(sessionId)` / `setNotes(sessionId, json)`.
-- `sessions.controller.js`: `getNotes` / `setNotes`, both gated to
-  `session.dm_user_id === req.user.id`.
-- Routes: `GET /api/sessions/:id/dm-notes`, `PUT /api/sessions/:id/dm-notes`.
-- Client API: `getDmNotes(id)` / `setDmNotes(id, notes)` in
-  `client/src/api/client.js`.
+Both blobs are DM-only, per-session JSON, stored on `game_sessions` and gated to
+`session.dm_user_id === req.user.id`.
+
+- Add two TEXT columns to `game_sessions` via the migration pattern already at
+  the bottom of `src/db.js` (PRAGMA `table_info` → conditional `ALTER TABLE`):
+  - `dm_notes` — JSON array of notepad entries.
+  - `combat` — JSON `{ combatants, activeIndex, round }` for the tracker.
+- `gameSession.model.js`: `getNotes/setNotes` and `getCombat/setCombat`.
+- `sessions.controller.js`: `getNotes/setNotes` and `getCombat/setCombat`, all
+  DM-gated (403 otherwise).
+- Routes: `GET|PUT /api/sessions/:id/dm-notes`, `GET|PUT /api/sessions/:id/combat`.
+- Client API: `getDmNotes/setDmNotes` and `getCombat/setCombat` in
+  `client/src/api/client.js`. Both regions autosave changes, debounced, like the
+  character store's autosave.
 
 ## Data flow summary
 
@@ -205,9 +255,11 @@ Mirrors the Journal tab (`client/src/components/sheet/JournalTab.jsx`):
   registry `reload()` → merged with `public/resources/monsters.js` → DM library
   index (`includeMonsters=true`).
 - **Snapshots:** DM Screen → `GET /api/characters/:id` (DM-authorized) →
-  `deriveCharacter` → read-only render.
+  `deriveCharacter` → read-only render, frozen at open; Refresh re-fetches.
 - **Notes:** DM Screen → `GET/PUT /api/sessions/:id/dm-notes` (DM-only) →
   `dm_notes` column.
+- **Combat:** DM Screen tracker → `GET/PUT /api/sessions/:id/combat` (DM-only) →
+  `combat` column; a monster statblock's "Add to turn order" seeds a combatant.
 
 ## Error handling
 
@@ -226,20 +278,25 @@ Mirrors the Journal tab (`client/src/components/sheet/JournalTab.jsx`):
 - **Browser verification:**
   - "Open DM Screen" appears for a DM and not for a player.
   - An imported monster appears in the DM library search and is absent from the
-    public Library.
-  - A snapshot shows correct live numbers, read-only, and refreshes.
+    public Library; its statblock shows the `items` list and legendary actions.
+  - A snapshot shows correct numbers read-only, stays frozen, and the Refresh
+    button flags + applies changes made to the character afterward.
+  - The Turn Order tracker sorts by initiative, advances turns/rounds, resets
+    legendary counters on a new round, and persists across a page reload.
+  - "Add to turn order" from a monster statblock seeds a combatant with HP and
+    legendary count.
   - The notepad persists across a page reload.
 
 ## Affected files
 
 **Server**
-- `src/db.js` — `custom_monsters` table + `dm_notes` column migration.
+- `src/db.js` — `custom_monsters` table + `dm_notes` and `combat` column migrations.
 - `src/models/customMonster.model.js` — new.
-- `src/models/gameSession.model.js` — notes get/set.
+- `src/models/gameSession.model.js` — notes + combat get/set.
 - `src/controllers/monsters.controller.js` — new.
-- `src/controllers/sessions.controller.js` — notes get/set.
+- `src/controllers/sessions.controller.js` — notes + combat get/set.
 - `src/routes/monsters.routes.js` — new.
-- `src/routes/sessions.routes.js` — notes routes.
+- `src/routes/sessions.routes.js` — notes + combat routes.
 - `src/app.js` — register monster routes.
 
 **Client**
@@ -249,10 +306,11 @@ Mirrors the Journal tab (`client/src/components/sheet/JournalTab.jsx`):
 - `client/src/pages/LibraryPage.jsx` — use shared `LibrarySearch`.
 - `client/src/pages/ImportPage.jsx` — Monsters tab.
 - `client/src/components/LibrarySearch.jsx` — new (extracted).
-- `client/src/components/MonsterDetail.jsx` — new.
-- `client/src/components/SnapshotSheet.jsx` — new.
+- `client/src/components/MonsterDetail.jsx` — new (+ "Add to turn order").
+- `client/src/components/SnapshotSheet.jsx` — new (frozen + refresh).
+- `client/src/components/TurnOrderTracker.jsx` — new.
 - `client/src/rules/notes-index.js` — monsters in the index (guarded).
 - `client/src/rules/import-forms.js` — monster parse/serialize helpers.
-- `client/src/api/client.js` — monster + dm-notes API.
+- `client/src/api/client.js` — monster + dm-notes + combat API.
 - `public/resources/monsters.js` — new (Adult Copper Dragon seed).
-- `public/styles.css` — DM Screen / statblock styling as needed.
+- `public/styles.css` — DM Screen / statblock / tracker styling as needed.
