@@ -10,6 +10,9 @@ import { companionBaselineCtx } from './companions.js';
 import { subclassNamesForClass, subspeciesNamesForSpecies } from '../state/registry.js';
 
 export const NOTES_TYPES = ['All', 'Classes', 'Species', 'Spells', 'Companions', 'Fighting Styles', 'Alignments', 'Mastery'];
+// The DM Screen's library adds Monsters to the base type list; the public
+// Library uses NOTES_TYPES (no Monsters) so monsters never surface there.
+export const NOTES_TYPES_DM = [...NOTES_TYPES, 'Monsters'];
 // Subclasses and subspecies stay in the index (chips inside a class/species
 // window open them by key) but never appear as their own search results.
 export const NOTES_HIDDEN_TYPES = new Set(['Subclasses', 'Subspecies']);
@@ -77,7 +80,51 @@ export function companionStatsHtml(stats, abilities) {
     ${stats.note ? `<div class="comp-line comp-note">${esc(stats.note)}</div>` : ''}`;
 }
 
-export function buildNotesIndex(data, customSpells) {
+// Full monster statblock HTML for a SheetWindow (DM Screen only). Mirrors the
+// companion stat-block style but adds the monster-only lines (CR/PB/XP,
+// resistances/vulnerabilities/condition immunities, legendary actions, items).
+export function monsterStatblockHtml(data) {
+  const d = data || {};
+  const ab = d.abilities || {};
+  const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  const line = (label, val) => val ? `<div class="comp-line"><b>${label}:</b> ${esc(String(val))}</div>` : '';
+  const acText = d.ac != null ? String(d.ac) + (d.acNote ? ` (${esc(d.acNote)})` : '') : '';
+  const hpText = d.hpMax != null ? String(d.hpMax) + (d.hpFormula ? ` (${esc(d.hpFormula)})` : '') : '';
+  const crText = d.cr ? `${esc(d.cr)}${d.xp ? ` (${esc(d.xp)} XP)` : ''}${d.pb ? ` · PB ${esc(d.pb)}` : ''}` : '';
+  const section = (label, rows) => (rows && rows.length)
+    ? `<div class="equip-atk-head">${label}</div>` + rows.map((r) =>
+        `<div class="comp-line"><b>${esc(r.name)}.</b> ${esc(r.desc || '')}</div>`).join('')
+    : '';
+  return `
+    <div class="comp-typeline">${esc([d.size, d.type, d.alignment].filter(Boolean).join(', '))}</div>
+    ${line('Armor Class', acText)}
+    ${line('Hit Points', hpText)}
+    ${line('Speed', d.speed)}
+    <div class="comp-abilities">
+      ${abilities.map((a) => {
+        const v = ab[a];
+        return `<div class="comp-ab"><label>${a.toUpperCase()}</label><span>${v == null ? '—' : v + ' (' + fmt(mod(v)) + ')'}</span></div>`;
+      }).join('')}
+    </div>
+    ${line('Saving Throws', d.saves)}
+    ${line('Skills', d.skills)}
+    ${line('Damage Resistances', d.resistances)}
+    ${line('Damage Immunities', d.immunities)}
+    ${line('Damage Vulnerabilities', d.vulnerabilities)}
+    ${line('Condition Immunities', d.conditionImmunities)}
+    ${line('Senses', d.senses)}
+    ${line('Languages', d.languages)}
+    ${line('Challenge', crText)}
+    ${section('Traits', d.traits)}
+    ${section('Actions', d.actions)}
+    ${section('Reactions', d.reactions)}
+    ${d.legendaryNote ? `<div class="equip-atk-head">Legendary Actions</div><div class="comp-line comp-note">${esc(d.legendaryNote)}</div>` : (d.legendary && d.legendary.length ? '<div class="equip-atk-head">Legendary Actions</div>' : '')}
+    ${(d.legendary || []).map((r) => `<div class="comp-line"><b>${esc(r.name)}.</b> ${esc(r.desc || '')}</div>`).join('')}
+    ${section('Items', d.items)}
+    ${d.lore ? `<div class="comp-line comp-note">${esc(d.lore)}</div>` : ''}`;
+}
+
+export function buildNotesIndex(data, customSpells, monsters) {
   const ix = [];
 
   // Classes and their features.
@@ -221,6 +268,19 @@ export function buildNotesIndex(data, customSpells) {
   data.masteryProperties.forEach((m) => ix.push(notesEntry('Mastery', m.name, '5.5E', ['weapon mastery'],
     m.desc + ' ' + m.weapons.join(' '),
     `<div class="feat-desc">${esc(m.desc)}</div><div class="nr-meta">weapons: ${esc(m.weapons.join(', '))}</div>`)));
+
+  // Monsters — DM Screen only. Callers on the public Library never pass this
+  // argument, so monsters never surface there.
+  (monsters || []).forEach((m) => {
+    const d = m.data || {};
+    const badges = [d.cr ? 'CR ' + d.cr : '', d.type].filter(Boolean);
+    const haystack = [d.type, d.alignment, d.size, d.languages,
+      ...(d.traits || []).map((t) => t.name + ' ' + (t.desc || '')),
+      ...(d.actions || []).map((t) => t.name + ' ' + (t.desc || ''))].filter(Boolean).join(' ');
+    ix.push(notesEntry('Monsters', m.name, m.source, badges, haystack,
+      `<div class="nr-cite">${esc([d.size, d.type, d.alignment].filter(Boolean).join(', '))}${d.cr ? ' · CR ' + esc(d.cr) : ''}</div>`,
+      null));
+  });
 
   return ix;
 }
