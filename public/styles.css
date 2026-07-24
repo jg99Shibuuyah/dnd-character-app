@@ -236,6 +236,10 @@ body::after{
   mix-blend-mode: multiply;
 }
 
+/* Cyberpunk line overlays are individually switchable from the Customize pane. */
+body.no-cyber-grid::before{ display:none; }
+body.no-cyber-scanlines::after{ display:none; }
+
 input, select, textarea, button{ font-family:'JetBrains Mono', monospace; }
 
 .sheet{
@@ -1370,7 +1374,17 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
   border:1px solid var(--parchment-line); border-radius:2px;
   padding:1px 6px; white-space:nowrap;
 }
-.nr-item{ cursor:pointer; }
+.nr-item{
+  cursor:pointer;
+  border:1px solid var(--border-glow);
+  border-radius:6px;
+  background: var(--dark-panel);
+  padding:10px 12px;
+  margin:6px 0;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.nr-item:last-child{ border-bottom:1px solid var(--border-glow); } /* override .feat-item:last-child */
+.nr-item:hover{ border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
 .nr-item:hover .f-name{ color: var(--neon-cyan); }
 .nr-pager{ display:flex; align-items:center; justify-content:center; gap:14px; margin:16px 0 4px; }
 .nr-pager .pbtn:disabled{ opacity:0.35; cursor:default; }
@@ -1950,6 +1964,9 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
   text-shadow: 0 0 6px rgba(255,42,109,0.3);
 }
 .dm-screen-open:hover{ background: rgba(255,42,109,0.12); box-shadow: var(--glow-magenta); }
+/* Session detail header: title left, DM Screen button pinned top-right by the code. */
+.session-detail-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.session-detail-head h2{ margin:0; }
 
 .dm-party-row{ display:flex; flex-wrap:wrap; gap:8px; }
 .dm-party-chip{ text-align:left; display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
@@ -2025,6 +2042,37 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 .turn-legendary span, .turn-resource span{ font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600; }
 .turn-resource-del{ cursor:pointer; opacity:.6; color: var(--ink-dim); }
 .turn-resource-del:hover{ opacity:1; color: var(--neon-magenta); }
+.turn-drag{ cursor:grab; opacity:.5; user-select:none; font-size:14px; }
+.turn-drag:active{ cursor:grabbing; }
+.turn-row.dragging{ opacity:.5; }
+.turn-mode{ font-size:10px; text-transform:uppercase; letter-spacing:1px; color: var(--neon-cyan); }
+.turn-ref{ font-size:11px; }
+
+/* Snapshot popup tabs + add-to-tracker */
+.snapshot-tabs{ display:flex; gap:4px; margin:4px 0 8px; flex-wrap:wrap; }
+.snapshot-tab{
+  cursor:pointer; padding:4px 10px; border:1px solid var(--parchment-line); border-radius:4px;
+  background: rgba(255,255,255,0.03); color: var(--ink-soft); font-size:12px;
+}
+.snapshot-tab.active{ border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+.snapshot-add{ margin-left:auto; border-color: var(--neon-magenta); color: var(--crimson-bright); }
+.snapshot-freeform{ white-space:pre-wrap; margin-bottom:8px; color: var(--ink-soft); }
+
+/* Combat log */
+.combat-log-list{ display:flex; flex-direction:column; gap:4px; }
+.combat-log-row{ display:flex; gap:8px; padding:4px 6px; border-radius:3px; background: rgba(255,255,255,0.03); }
+.combat-log-row.manual{ border-left:2px solid var(--neon-magenta); }
+.combat-log-time{ font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-dim); min-width:52px; }
+.combat-log-text{ flex:1; }
+
+/* DM Notes history page */
+.dm-notes-history{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+.dm-notes-sessions{ flex:0 0 240px; display:flex; flex-direction:column; gap:6px; }
+.dm-notes-view{ flex:1 1 320px; display:flex; flex-direction:column; gap:10px; }
+.session-row.active{ border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+.dm-note-card{ padding:10px 12px; }
+.dm-note-text{ white-space:pre-wrap; margin-top:6px; color: var(--ink-soft); }
+@media (max-width: 640px){ .dm-notes-sessions{ flex-basis:100%; } }
 
 @media (max-width: 700px){
   .dm-party-chip{ width:100%; }

@@ -5,6 +5,7 @@ const NAV = [
   { page: 'sheet', label: 'Character Sheet', href: '/', icon: '📜' },
   { page: 'library', label: 'Library', href: '/library', icon: '📚' },
   { page: 'sessions', label: 'Sessions', href: '/sessions', icon: '🎲' },
+  { page: 'dm-notes', label: 'DM Notes', href: '/dm-notes', icon: '🗒️' },
   { page: 'import', label: 'Import', href: '/import', icon: '📥' }
 ];
 

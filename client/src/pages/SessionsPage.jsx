@@ -118,7 +118,11 @@ function SessionDetail({ detail, myCharacters, onError, refresh, onClosed }) {
 
   return (
     <div className="panel">
-      <h2><span>{detail.name}</span></h2>
+      <div className="session-detail-head">
+        <h2><span>{detail.name}</span></h2>
+        {detail.isDm && <button className="pbtn dm-screen-open" type="button"
+          onClick={() => navigate('/dm/' + detail.id)} title="Open the DM Screen for this session">⚔ DM Screen</button>}
+      </div>
       <div className="session-meta">
         Join code: <span className="session-code big">{detail.code}</span> — share it with your players.
       </div>
@@ -157,8 +161,6 @@ function SessionDetail({ detail, myCharacters, onError, refresh, onClosed }) {
         </label>
         {!detail.isDm && <button className="pbtn danger" type="button" onClick={leave}>Leave session</button>}
         {detail.isDm && <button className="pbtn danger" type="button" onClick={remove}>Delete session</button>}
-        {detail.isDm && <button className="pbtn dm-screen-open" type="button"
-          onClick={() => navigate('/dm/' + detail.id)}>Open DM Screen</button>}
       </div>
     </div>
   );

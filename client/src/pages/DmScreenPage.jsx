@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import CombatLog from '../components/CombatLog.jsx';
 import DmNotes from '../components/DmNotes.jsx';
 import Layout from '../components/Layout.jsx';
 import LibrarySearch from '../components/LibrarySearch.jsx';
@@ -23,6 +24,7 @@ export default function DmScreenPage() {
   // "Add to turn order" button on monster windows can mutate it.
   const [combat, setCombat] = useState(null);
   const [showTracker, setShowTracker] = useState(false);
+  const [notesTab, setNotesTab] = useState('notes'); // 'notes' | 'log'
   const combatSaveTimer = useRef(null);
   const combatLoaded = useRef(false);
 
@@ -69,19 +71,41 @@ export default function DmScreenPage() {
       ].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i)
     : [];
 
-  // Seed a free-form combatant from a monster (used in Task 13).
+  const newCombatantId = () => 'cb' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const appendCombatant = (combatant) => setCombat((c) => {
+    const base = c || { combatants: [], activeIndex: 0, round: 1 };
+    return { ...base, combatants: [...base.combatants, combatant] };
+  });
+
+  // Seed a free-form combatant from a monster. Keeps the monster record so the
+  // combatant row can reopen its reference statblock.
   const addMonsterToTracker = useCallback((monster) => {
     const d = monster.data || {};
-    setCombat((c) => {
-      const base = c || { combatants: [], activeIndex: 0, round: 1 };
-      const combatant = {
-        id: 'cb' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-        name: monster.name, initiative: 0, hp: d.hpMax || 0, hpMax: d.hpMax || 0,
-        legendaryMax: d.legendaryCount || 0, legendaryUsed: 0, resources: [], note: d.cr ? 'CR ' + d.cr : ''
-      };
-      return { ...base, combatants: [...base.combatants, combatant] };
+    appendCombatant({
+      id: newCombatantId(), name: monster.name, initiative: 0, hp: d.hpMax || 0, hpMax: d.hpMax || 0,
+      legendaryMax: d.legendaryCount || 0, legendaryUsed: 0, resources: [], note: d.cr ? 'CR ' + d.cr : '',
+      monster
     });
   }, []);
+
+  // Seed a combatant from a party character (from a snapshot's Add button, or
+  // the tracker's link dropdown). linkedCharacterId lets the row reopen the snapshot.
+  const addCharacterToTracker = useCallback((p) => {
+    appendCombatant({
+      id: newCombatantId(), name: p.name, initiative: 0, hp: p.hp || 0, hpMax: p.hpMax || 0,
+      legendaryMax: 0, legendaryUsed: 0, resources: [], note: '',
+      linkedCharacterId: p.characterId
+    });
+  }, []);
+
+  // Combat log lives in the persisted combat state; the tracker appends
+  // round/turn changes, the DM can add manual entries here.
+  const addLogEntry = (text) => setCombat((cur) => {
+    const base = cur || { combatants: [], activeIndex: 0, round: 1 };
+    const log = [...(base.log || []), { id: 'lg' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), time: new Date().toISOString(), text, manual: true }];
+    return { ...base, log: log.length > 200 ? log.slice(log.length - 200) : log };
+  });
+  const clearLog = () => setCombat((cur) => (cur ? { ...cur, log: [] } : cur));
 
   if (error) {
     return (
@@ -131,13 +155,24 @@ export default function DmScreenPage() {
         </div>
       )}
       {detail && showTracker && combat && (
-        <TurnOrderTracker combat={combat} onChange={setCombat} />
+        <TurnOrderTracker combat={combat} onChange={setCombat} party={party}
+          onOpenSnapshot={openSnapshot}
+          onOpenMonster={(monster) => openMonster({ name: monster.name, monster })} />
       )}
 
       {/* Region 1 — Reference + monsters */}
       {registry && <LibrarySearch registry={registry} includeMonsters onOpenMonster={openMonster} />}
 
-      {detail && <DmNotes sessionId={sessionId} />}
+      {detail && (
+        <nav className="tab-bar dm-notes-tabbar">
+          <button type="button" className={'tab-btn' + (notesTab === 'notes' ? ' active' : '')} onClick={() => setNotesTab('notes')}>DM Notes</button>
+          <button type="button" className={'tab-btn' + (notesTab === 'log' ? ' active' : '')} onClick={() => setNotesTab('log')}>
+            Combat Log{combat && combat.log && combat.log.length ? ` (${combat.log.length})` : ''}
+          </button>
+        </nav>
+      )}
+      {detail && notesTab === 'notes' && <DmNotes sessionId={sessionId} />}
+      {detail && notesTab === 'log' && <CombatLog log={(combat && combat.log) || []} onAdd={addLogEntry} onClear={clearLog} />}
 
       {monsterWindows.map((w, i) => (
         <SheetWindow key={w.key} title={w.monster.name} icon="🐉" offset={i * 26} onClose={() => closeMonster(w.key)}>
@@ -147,7 +182,7 @@ export default function DmScreenPage() {
 
       {snapshotWindows.map((w, i) => (
         <SheetWindow key={w.key} title={w.name} icon="✦" offset={i * 26} onClose={() => closeSnapshot(w.key)}>
-          <SnapshotSheet characterId={w.id} name={w.name} registry={registry} />
+          <SnapshotSheet characterId={w.id} name={w.name} registry={registry} onAddToTracker={addCharacterToTracker} />
         </SheetWindow>
       ))}
     </Layout>
