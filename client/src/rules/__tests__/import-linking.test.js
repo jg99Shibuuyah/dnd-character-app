@@ -138,6 +138,17 @@ test('applyResolutions rewrites linked names everywhere, leaves keep/stub alone'
   assert.equal(c.classes[0].name, 'Wizzard');
 });
 
+test('applyResolutions keeps two parents sharing a subclass name separate via refKey parent', () => {
+  const c = char({
+    classes: [{ name: 'Wizard', subclass: 'Champion' }, { name: 'Fighter', subclass: 'Champion' }]
+  });
+  const out = applyResolutions(c, [
+    { type: 'subclass', name: 'Champion', parent: 'Wizard', action: 'link', linkTo: 'Evoker' }
+  ]);
+  assert.equal(out.classes[0].subclass, 'Evoker'); // Wizard-parented Champion rewritten
+  assert.equal(out.classes[1].subclass, 'Champion'); // Fighter-parented Champion untouched
+});
+
 test('stubPayloadFor builds per-type Homebrew payloads with stub flag', () => {
   const c = char({ knownSpells: [{ name: 'Chrono Blast', level: 4 }] });
   assert.deepEqual(stubPayloadFor({ type: 'class', name: 'Chronomancer' }, c), {

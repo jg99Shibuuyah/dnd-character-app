@@ -829,7 +829,7 @@ git commit -m "feat: character import runs reference auto-linking with review mo
 }
 ```
 
-Expected report: `Wizzard` near→Wizard, `Evoken` near→Evoker, `Elf`/`High Elf`/`Fireball` exact, `Urchen` near→Urchin, `Chrono Blast` missing.
+Expected report: `Wizzard` near→Wizard, `Evoken` missing→stub (real builtin subclass is "Evocation"; near-match to "Evoker" only occurs against the unit-test fixture, and Evoken→Evocation edit distance exceeds 2), `Elf`/`High Elf`/`Fireball` exact, `Urchen` near→Urchin, `Chrono Blast` missing.
 
 - [ ] **Step 2: Start the server and open the preview**
 

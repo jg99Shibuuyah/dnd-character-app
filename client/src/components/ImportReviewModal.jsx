@@ -70,7 +70,7 @@ export default function ImportReviewModal({ report, busy, error, onCancel, onCon
               })}
             </div>
           ))}
-          {error ? <div className="import-msg err">{error}</div> : null}
+          {error ? <div className="import-msg err">{error} — some stub library entries may already have been created; they're marked as stubs in the Library and are safe to keep or delete.</div> : null}
         </div>
         <div className="app-modal-foot">
           <button className="add-btn" onClick={confirm} disabled={busy}>{busy ? 'Importing…' : 'Import Character'}</button>

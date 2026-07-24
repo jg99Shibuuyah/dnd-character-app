@@ -3,8 +3,6 @@
 // Pure module — no DOM, no api/state imports — so node:test can exercise it.
 // Spec: docs/superpowers/specs/2026-07-24-import-auto-linking-design.md
 
-const subKey = (parent, name) => parent + '::' + name;
-
 /** Lowercase, strip diacritics + punctuation, collapse whitespace. */
 export function normalizeName(s) {
   return String(s || '')
