@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DmNotes from '../components/DmNotes.jsx';
 import Layout from '../components/Layout.jsx';
@@ -6,6 +6,7 @@ import LibrarySearch from '../components/LibrarySearch.jsx';
 import MonsterDetail from '../components/MonsterDetail.jsx';
 import SheetWindow from '../components/sheet/SheetWindow.jsx';
 import SnapshotSheet from '../components/SnapshotSheet.jsx';
+import TurnOrderTracker from '../components/TurnOrderTracker.jsx';
 import { useRegistry } from '../state/registry.js';
 import * as api from '../api/client.js';
 
@@ -21,6 +22,9 @@ export default function DmScreenPage() {
   // Combat tracker state is owned here so both the tracker (Task 13) and the
   // "Add to turn order" button on monster windows can mutate it.
   const [combat, setCombat] = useState(null);
+  const [showTracker, setShowTracker] = useState(false);
+  const combatSaveTimer = useRef(null);
+  const combatLoaded = useRef(false);
 
   useEffect(() => {
     api.sessionDetail(sessionId)
@@ -34,8 +38,18 @@ export default function DmScreenPage() {
   // Load persisted combat once we know the user is the DM.
   useEffect(() => {
     if (!detail) return;
-    api.getCombat(sessionId).then((r) => setCombat(r.combat)).catch(() => setCombat({ combatants: [], activeIndex: 0, round: 1 }));
+    api.getCombat(sessionId)
+      .then((r) => { setCombat(r.combat); combatLoaded.current = true; })
+      .catch(() => { setCombat({ combatants: [], activeIndex: 0, round: 1 }); combatLoaded.current = true; });
   }, [detail, sessionId]);
+
+  // Debounced autosave (500ms) once the initial combat load has resolved.
+  useEffect(() => {
+    if (!combatLoaded.current || combat == null) return undefined;
+    clearTimeout(combatSaveTimer.current);
+    combatSaveTimer.current = setTimeout(() => { api.setCombat(sessionId, combat).catch(() => {}); }, 500);
+    return () => clearTimeout(combatSaveTimer.current);
+  }, [combat, sessionId]);
 
   const openMonster = (entry) => setMonsterWindows((ws) => [...ws,
     { key: 'mw' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), monster: entry.monster || { name: entry.name, data: {} } }]);
@@ -109,7 +123,16 @@ export default function DmScreenPage() {
         </div>
       )}
 
-      {/* Region 3 — Turn order (Task 13 inserts the button + <TurnOrderTracker …/> here) */}
+      {detail && (
+        <div className="panel dm-turn-order-launch">
+          <button className="add-btn dm-turn-order-btn" type="button" onClick={() => setShowTracker((v) => !v)}>
+            ⚔ Turn Order{combat && combat.combatants.length ? ` (${combat.combatants.length})` : ''}
+          </button>
+        </div>
+      )}
+      {detail && showTracker && combat && (
+        <TurnOrderTracker combat={combat} onChange={setCombat} />
+      )}
 
       {/* Region 1 — Reference + monsters */}
       {registry && <LibrarySearch registry={registry} includeMonsters onOpenMonster={openMonster} />}
