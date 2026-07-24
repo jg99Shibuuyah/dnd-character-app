@@ -2096,3 +2096,18 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
   .dm-party-chip{ width:100%; }
   .turn-name{ flex-basis:100%; }
 }
+
+/* ---- Import review modal (character import auto-linking) ---- */
+.import-review .ir-group { margin-top: 12px; }
+.import-review .ir-group h3 {
+  margin: 0 0 6px; font-size: 0.8rem; text-transform: uppercase;
+  letter-spacing: 0.08em; opacity: 0.75;
+}
+.import-review .ir-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 6px 0;
+}
+.import-review .ir-name { font-weight: 600; }
+.import-review .ir-parent { font-weight: 400; opacity: 0.65; font-size: 0.85em; }
+.import-review .ir-stub { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.import-review select { max-width: 60%; }
