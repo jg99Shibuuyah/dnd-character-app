@@ -4,6 +4,7 @@ import Layout from '../components/Layout.jsx';
 import LibrarySearch from '../components/LibrarySearch.jsx';
 import MonsterDetail from '../components/MonsterDetail.jsx';
 import SheetWindow from '../components/sheet/SheetWindow.jsx';
+import SnapshotSheet from '../components/SnapshotSheet.jsx';
 import { useRegistry } from '../state/registry.js';
 import * as api from '../api/client.js';
 
@@ -14,6 +15,7 @@ export default function DmScreenPage() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState('');
   const [monsterWindows, setMonsterWindows] = useState([]); // [{key, monster}]
+  const [snapshotWindows, setSnapshotWindows] = useState([]); // [{key, id, name}]
 
   // Combat tracker state is owned here so both the tracker (Task 13) and the
   // "Add to turn order" button on monster windows can mutate it.
@@ -37,6 +39,20 @@ export default function DmScreenPage() {
   const openMonster = (entry) => setMonsterWindows((ws) => [...ws,
     { key: 'mw' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), monster: entry.monster || { name: entry.name, data: {} } }]);
   const closeMonster = (key) => setMonsterWindows((ws) => ws.filter((w) => w.key !== key));
+
+  const openSnapshot = (c) => setSnapshotWindows((ws) => [...ws,
+    { key: 'sn' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), id: c.id, name: c.name }]);
+  const closeSnapshot = (key) => setSnapshotWindows((ws) => ws.filter((w) => w.key !== key));
+
+  // Openable party characters: members' visible character ids (players see only
+  // their own id unless the requester is the DM — the server already enforces
+  // that), plus the host loaner pool. Deduped by id.
+  const party = detail
+    ? [
+        ...detail.members.map((m) => m.character).filter((c) => c && c.id),
+        ...detail.hostCharacters.filter((c) => c && c.id)
+      ].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i)
+    : [];
 
   // Seed a free-form combatant from a monster (used in Task 13).
   const addMonsterToTracker = useCallback((monster) => {
@@ -77,7 +93,20 @@ export default function DmScreenPage() {
         <h2 style={{ display: 'inline-block', marginLeft: 12 }}><span>{detail ? detail.name : 'Loading…'}</span></h2>
       </div>
 
-      {/* Region 2 — Party snapshots (Task 11 inserts <PartySnapshots …/> here) */}
+      {detail && (
+        <div className="panel dm-party">
+          <h2><span>Party snapshots</span><span className="rune">✦</span></h2>
+          {party.length === 0
+            ? <div className="action-empty">No attached characters yet.</div>
+            : <div className="dm-party-row">
+                {party.map((c) => (
+                  <button key={c.id} type="button" className="pbtn dm-party-chip" onClick={() => openSnapshot(c)}>
+                    {c.name} <span className="session-dim">{c.class || ''} {c.level || ''}</span>
+                  </button>
+                ))}
+              </div>}
+        </div>
+      )}
 
       {/* Region 3 — Turn order (Task 13 inserts the button + <TurnOrderTracker …/> here) */}
 
@@ -89,6 +118,12 @@ export default function DmScreenPage() {
       {monsterWindows.map((w, i) => (
         <SheetWindow key={w.key} title={w.monster.name} icon="🐉" offset={i * 26} onClose={() => closeMonster(w.key)}>
           <MonsterDetail entry={{ name: w.monster.name, monster: w.monster }} onAddToTracker={addMonsterToTracker} />
+        </SheetWindow>
+      ))}
+
+      {snapshotWindows.map((w, i) => (
+        <SheetWindow key={w.key} title={w.name} icon="✦" offset={i * 26} onClose={() => closeSnapshot(w.key)}>
+          <SnapshotSheet characterId={w.id} name={w.name} registry={registry} />
         </SheetWindow>
       ))}
     </Layout>
