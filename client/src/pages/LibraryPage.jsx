@@ -55,16 +55,17 @@ function MasteryPanel({ masteryProperties }) {
 export default function LibraryPage() {
   const { registry, error } = useRegistry();
 
+  const renderReference = (typeSet) => {
+    if (!registry) return null;
+    return (<>
+      {(typeSet.size === 0 || typeSet.has('Alignments')) && <AlignmentPanel alignments={registry.data.alignments} />}
+      {(typeSet.size === 0 || typeSet.has('Mastery')) && <MasteryPanel masteryProperties={registry.data.masteryProperties} />}
+    </>);
+  };
+
   return (
     <Layout page="library" title="Library">
-      {error && <div className="panel"><div className="action-empty">Could not load imported content: {error}</div></div>}
-      {registry && <LibrarySearch registry={registry} includeMonsters={false} />}
-      {registry && (
-        <div>
-          <AlignmentPanel alignments={registry.data.alignments} />
-          <MasteryPanel masteryProperties={registry.data.masteryProperties} />
-        </div>
-      )}
+      <LibrarySearch registry={registry} includeMonsters={false} error={error} renderReference={renderReference} />
       <div className="footer-note">Rules reference — nothing on this page is saved per character.</div>
     </Layout>
   );

@@ -48,7 +48,7 @@ function FilterBar({ label, options, selected, onToggle }) {
   );
 }
 
-export default function LibrarySearch({ registry, includeMonsters = false, onOpenMonster }) {
+export default function LibrarySearch({ registry, includeMonsters = false, onOpenMonster, error, renderReference }) {
   const types = includeMonsters ? NOTES_TYPES_DM : NOTES_TYPES;
   const [query, setQuery] = useState('');
   // Multi-select filters — empty set means "All". A chip can be toggled off to
@@ -158,6 +158,7 @@ export default function LibrarySearch({ registry, includeMonsters = false, onOpe
     <>
       <div className="panel">
         <h2><span>{includeMonsters ? 'DM Reference & Monsters' : 'Search the Reference'}</span><span className="rune">◈</span></h2>
+        {error && <div className="action-empty">Could not load imported content: {error}</div>}
         <input id="notesSearch" type="text" autoComplete="off" value={query}
           placeholder={includeMonsters ? 'Search anything — Fireball, Rage, Adult Copper Dragon…' : 'Search anything — Fireball, Darkvision, Rage, Elf, Lawful Good…'}
           onChange={(e) => setQuery(e.target.value)} />
@@ -199,6 +200,8 @@ export default function LibrarySearch({ registry, includeMonsters = false, onOpe
           <div className="picker-hint" style={{ marginBottom: 0 }}>Looks up classes &amp; their features, species &amp; traits, spells (built-in <span className="hl">and imported</span>), standard actions, alignments, and weapon mastery properties. Subclasses and subspecies open from within their parent class or species. Click a result for full details and editing.</div>
         )}
       </div>
+
+      {!includeMonsters && showReference && renderReference && renderReference(typeSet)}
 
       {windows.map((w, i) => (
         <SheetWindow key={w.key} title={w.current.name} icon="📖" offset={i * 26} onClose={() => closeWindow(w.key)}>
