@@ -43,28 +43,34 @@ export default function SnapshotSheet({ characterId, name, registry, onAddToTrac
   const applyPending = () => { setSnap(pending); setPending(null); };
 
   // Mirror characterStore's derive pipeline: clone, apply class-driven fields
-  // (mutates the clone), then derive display numbers.
+  // (mutates the clone), then derive display numbers. Guarded so a partial or
+  // malformed character never crashes the whole DM Screen — the render falls
+  // back to the raw stored values when derivation fails.
   const derived = useMemo(() => {
     if (!registry || !snap) return null;
-    const c = clone(snap.data);
-    applyClassesToState(c, registry.data);
-    return deriveStats(c, registry.data);
+    try {
+      const c = clone(snap.data);
+      applyClassesToState(c, registry.data);
+      return deriveStats(c, registry.data);
+    } catch (e) { return null; }
   }, [registry, snap]);
 
   // Class features (up to each picked class's level) + species traits, read-only.
   const featureList = useMemo(() => {
     if (!registry || !snap) return [];
-    const data = registry.data;
-    const ch = snap.data;
-    const out = [];
-    pickedClasses(ch, data).forEach((pc) => {
-      const cd = data.classData[pc.name];
-      (cd && cd.features || []).filter((f) => (f.lv || 1) <= (pc.level || 1))
-        .forEach((f) => out.push({ src: pc.name, lv: f.lv, name: f.name, desc: f.desc }));
-    });
-    const sp = ch.race && data.speciesData[ch.race];
-    (sp && sp.traits || []).forEach((t) => out.push({ src: ch.race, name: t.name, desc: t.desc }));
-    return out;
+    try {
+      const data = registry.data;
+      const ch = snap.data;
+      const out = [];
+      pickedClasses(ch, data).forEach((pc) => {
+        const cd = data.classData[pc.name];
+        (cd && cd.features || []).filter((f) => (f.lv || 1) <= (pc.level || 1))
+          .forEach((f) => out.push({ src: pc.name, lv: f.lv, name: f.name, desc: f.desc }));
+      });
+      const sp = ch.race && data.speciesData[ch.race];
+      (sp && sp.traits || []).forEach((t) => out.push({ src: ch.race, name: t.name, desc: t.desc }));
+      return out;
+    } catch (e) { return []; }
   }, [registry, snap]);
 
   if (loading) return <div className="snapshot-sheet"><div className="action-empty">Loading…</div></div>;
