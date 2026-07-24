@@ -130,6 +130,18 @@
       "autoPort": true
     },
     {
+      "name": "task14-verify",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DB_FILE=/private/tmp/claude-501/-Users-jg-Projects-D-D-app-dnd-character-app/9e8fba90-2391-4f0b-98be-779bc483afcf/scratchpad/task14.db",
+        "PORT=4190",
+        "node",
+        "src/server.js"
+      ],
+      "port": 4190,
+      "autoPort": true
+    },
+    {
       "name": "client-dev-lang",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

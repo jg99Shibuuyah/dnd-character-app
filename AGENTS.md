@@ -1,6 +1,6 @@
-# CLAUDE.md — D&D Character Ledger
+# AGENTS.md — D&D Character Ledger
 
-Context primer for Claude Code sessions on this repo. For living project memory
+Context primer for Codex sessions on this repo. For living project memory
 (status, diary, decisions), see the Obsidian vault at
 `/Users/jg/Documents/Obsidian/AI-Workflow/AI Memory/Dnd-character-app/`.
 
@@ -11,17 +11,12 @@ REST API and a React 19 + Vite frontend. Everything runs on the user's machine
 against a single `characters.db` file — no cloud, no external network calls.
 Multi-user accounts + a DM session/loaner pool are supported.
 
-## Current state (as of 2026-07-23)
+## Current state (as of 2026-07-22)
 
 - **React migration is complete** (all 4 phases). React serves at `/`; the legacy
   vanilla frontend is deleted (recover from the `historic-vanilla-frontend`
   branch). EJS renders only `login`/`reset`.
-- **Active branch:** `react-refactor`, not yet merged into `main`.
-- **Library rebuilt onto `SheetWindow`:** Library reference details now render
-  as `LibraryDetail.jsx` inside the shared `SheetWindow` chrome (rounded
-  corners, accent border, split-view autofill, space theme), unifying it with
-  character-sheet popups. See the legacy-system note under Layout — this did
-  not migrate everything.
+- **Active branch:** `react-refactor` — 19 commits ahead of `main`, not yet merged.
 - **Open thread:** the perf pass on `local/session-2026-07-22-perf` may be ahead of
   `docs/react-perf-optimizations.md` (still marked ☐). Confirm what merged before
   trusting the doc.
@@ -41,14 +36,6 @@ docs/                CHANGELOG, react-migration-plan, react-perf-optimizations, 
 
 `client/` (build source) and `public/` (served static) are intentionally
 separate — see `docs/architecture-client-vs-public.md`. Don't merge them.
-
-**Two coexisting popup/window systems:** `client/src/notes-windows.js` is a
-legacy floating-window system still imported by SpellsTab, SkillsTab,
-SkillsPopup, Companions, SettingsTab, ActionsTab, and InventoryTab for
-spell/legend popups. It has not been migrated to the newer `SheetWindow`
-component (which Library now uses). Account for both when touching popup/modal
-behavior, and treat unmigrated tabs as candidates for a future `SheetWindow`
-migration.
 
 ## Run / build / test
 
@@ -74,7 +61,7 @@ npm run test:client        # node:test suite in client/src/rules/__tests__
 ## Conventions
 
 - New branches: `local/session-YYYY-MM-DD`.
-- `docs/CHANGELOG.md` is auto-appended by `.claude/hooks/update-changelog.sh` at
+- `docs/CHANGELOG.md` is auto-appended by `.Codex/hooks/update-changelog.sh` at
   session end — only committed work is logged.
 - Frontend is JSX + JSDoc (not TypeScript, by choice).
 - Pure rules logic goes in `client/src/rules/` (unit-tested); builtin game data
