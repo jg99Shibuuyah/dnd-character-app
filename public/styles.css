@@ -107,25 +107,38 @@ body[data-theme="rain"]{
   --green: var(--neon-green);
   --shadow: 0 0 0 1px rgba(132,182,218,0.08), 0 0 18px rgba(132,182,218,0.06);
 }
-/* Falling-rain droplets on the fixed background layer (behind all content):
-   several sparse grids of short vertical dashes, each drifting down at its own
-   speed for a scattered, parallaxed shower rather than continuous streaks. */
-body[data-theme="rain"]::before{
-  background-image:
-    radial-gradient(1.6px 9px at 15% 20%, rgba(214,234,252,0.72), transparent 64%),
-    radial-gradient(1.6px 8px at 55% 60%, rgba(196,222,246,0.62), transparent 64%),
-    radial-gradient(1.4px 7px at 82% 32%, rgba(214,234,252,0.58), transparent 64%),
-    radial-gradient(1.6px 8px at 38% 84%, rgba(186,214,240,0.54), transparent 64%),
-    radial-gradient(1.4px 7px at 92% 74%, rgba(204,228,248,0.50), transparent 64%);
-  background-size: 120px 150px, 165px 190px, 105px 140px, 190px 215px, 145px 175px;
-  animation: rain-fall 0.85s linear infinite;
+/* Falling rain. Rendered as many INDIVIDUAL droplets by the ThemeBackdrop
+   component, each carrying its own randomized column, length, speed, start
+   offset and sideways drift (inline styles + the --drift var). This replaced an
+   earlier tiled-gradient approach: tiled backgrounds are inherently periodic —
+   every tile is identical and the whole layer resets on one shared clock, so it
+   always beats visibly. Independent per-drop timing has no shared period, so the
+   shower never looks in sync. The ::before rule just suppresses the cyberpunk
+   grid overlay (defined on the base body::before) for this calm theme. */
+body[data-theme="rain"]::before{ background-image:none; animation:none; }
+
+body[data-theme="rain"] .theme-backdrop{ display:block; }
+body[data-theme="rain"] .theme-backdrop .shooting-star{ display:none; }
+
+.theme-backdrop .rain-drop{
+  position:absolute; top:0; left:0;
+  width:1.5px; border-radius:2px;
+  background: linear-gradient(to bottom, transparent, rgba(214,234,252,0.9));
+  display:none;                 /* only shown under the rain theme, below */
+  will-change: transform;
+  animation-name: rain-drop-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
-@keyframes rain-fall{
-  from{ background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
-  to{ background-position: 0 150px, 0 190px, 0 140px, 0 215px, 0 175px; }
+body[data-theme="rain"] .theme-backdrop .rain-drop{ display:block; }
+/* Fall from just above the viewport to just below, drifting sideways for a
+   wind-blown diagonal. Distance is fixed (vh); per-drop duration sets speed. */
+@keyframes rain-drop-fall{
+  from{ transform: translate3d(0, -14vh, 0); }
+  to{   transform: translate3d(var(--drift, 0px), 114vh, 0); }
 }
 @media (prefers-reduced-motion: reduce){
-  body[data-theme="rain"]::before{ animation:none; }
+  .theme-backdrop .rain-drop{ animation:none; display:none; }
 }
 
 /* Space — a deep interstellar palette with a static starfield + faint nebula on
@@ -208,14 +221,17 @@ body[data-theme="space"] .theme-backdrop{ display:block; }
 @keyframes orbit-drift{ from{ offset-distance:0%; } to{ offset-distance:100%; } }
 
 /* Seven orbits: varied ellipse radius, center, speed, direction and brightness
-   so the streaks arc around the sky instead of tracking straight across. */
+   so the streaks arc around the sky instead of tracking straight across.
+   offset-rotate:auto faces the path's forward tangent regardless of
+   animation-direction, so reversed orbits also need offset-rotate:reverse to
+   keep the bright head of the streak leading. */
 .theme-backdrop .ss-1{ offset-path: ellipse(42% 30% at 48% 42%); animation-duration:16s; animation-delay:-2s;  opacity:0.9;  }
-.theme-backdrop .ss-2{ offset-path: ellipse(30% 40% at 62% 55%); animation-duration:23s; animation-delay:-9s;  opacity:0.7;  width:48px; animation-direction:reverse; }
+.theme-backdrop .ss-2{ offset-path: ellipse(30% 40% at 62% 55%); animation-duration:23s; animation-delay:-9s;  opacity:0.7;  width:48px; animation-direction:reverse; offset-rotate:reverse; }
 .theme-backdrop .ss-3{ offset-path: ellipse(48% 24% at 38% 60%); animation-duration:19s; animation-delay:-5s;  opacity:0.8;  }
 .theme-backdrop .ss-4{ offset-path: ellipse(24% 44% at 70% 38%); animation-duration:27s; animation-delay:-14s; opacity:0.6;  width:44px; }
-.theme-backdrop .ss-5{ offset-path: ellipse(38% 34% at 55% 50%); animation-duration:21s; animation-delay:-7s;  opacity:0.85; animation-direction:reverse; }
+.theme-backdrop .ss-5{ offset-path: ellipse(38% 34% at 55% 50%); animation-duration:21s; animation-delay:-7s;  opacity:0.85; animation-direction:reverse; offset-rotate:reverse; }
 .theme-backdrop .ss-6{ offset-path: ellipse(52% 20% at 45% 30%); animation-duration:18s; animation-delay:-11s; opacity:0.75; width:72px; }
-.theme-backdrop .ss-7{ offset-path: ellipse(26% 46% at 32% 48%); animation-duration:25s; animation-delay:-3s;  opacity:0.65; width:40px; animation-direction:reverse; }
+.theme-backdrop .ss-7{ offset-path: ellipse(26% 46% at 32% 48%); animation-duration:25s; animation-delay:-3s;  opacity:0.65; width:40px; animation-direction:reverse; offset-rotate:reverse; }
 
 @media (prefers-reduced-motion: reduce){
   .theme-backdrop .shooting-star{ animation:none; opacity:0; }
