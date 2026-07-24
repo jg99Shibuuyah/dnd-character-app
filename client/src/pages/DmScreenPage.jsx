@@ -62,6 +62,14 @@ export default function DmScreenPage() {
     );
   }
 
+  if (!detail) {
+    return (
+      <Layout page="sessions" title="DM Screen">
+        <div className="panel"><div className="action-empty">Loading…</div></div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout page="sessions" title={detail ? `DM Screen — ${detail.name}` : 'DM Screen'}>
       <div className="panel dm-screen-head">
