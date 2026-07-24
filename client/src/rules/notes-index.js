@@ -277,9 +277,11 @@ export function buildNotesIndex(data, customSpells, monsters) {
     const haystack = [d.type, d.alignment, d.size, d.languages,
       ...(d.traits || []).map((t) => t.name + ' ' + (t.desc || '')),
       ...(d.actions || []).map((t) => t.name + ' ' + (t.desc || ''))].filter(Boolean).join(' ');
-    ix.push(notesEntry('Monsters', m.name, m.source, badges, haystack,
+    const entry = notesEntry('Monsters', m.name, m.source, badges, haystack,
       `<div class="nr-cite">${esc([d.size, d.type, d.alignment].filter(Boolean).join(', '))}${d.cr ? ' · CR ' + esc(d.cr) : ''}</div>`,
-      null));
+      null);
+    entry.monster = m; // full { name, source, data } for MonsterDetail
+    ix.push(entry);
   });
 
   return ix;
