@@ -167,3 +167,64 @@ export function resolveReferences(character, data, customSpells = {}) {
     return Object.assign({}, ref, { status, candidates });
   });
 }
+
+/**
+ * Rewrite the character's names per the review decisions. Only decisions with
+ * a `linkTo` different from the original name cause a rewrite ('keep' rows
+ * carry linkTo:'' and 'stub' rows carry none). Returns a deep clone.
+ */
+export function applyResolutions(character, decisions) {
+  const c = JSON.parse(JSON.stringify(character));
+  const map = {};
+  (decisions || []).forEach((d) => {
+    if (d.linkTo && d.linkTo !== d.name) map[refKey(d)] = d.linkTo;
+  });
+  const rename = (type, name, parent) => {
+    if (typeof name !== 'string' || !name.trim()) return name;
+    const hit = map[refKey({ type, name, parent })];
+    return hit !== undefined ? hit : name;
+  };
+  (Array.isArray(c.classes) ? c.classes : []).forEach((cls) => {
+    const oldName = cls.name;
+    cls.name = rename('class', cls.name);
+    if (cls.subclass) cls.subclass = rename('subclass', cls.subclass, oldName);
+  });
+  if (typeof c.class === 'string' && c.class) c.class = rename('class', c.class);
+  const oldRace = c.race;
+  c.race = rename('species', c.race);
+  if (c.subrace) c.subrace = rename('subspecies', c.subrace, oldRace);
+  c.background = rename('background', c.background);
+  (Array.isArray(c.knownSpells) ? c.knownSpells : []).forEach((s) => {
+    if (s && s.name) s.name = rename('spell', s.name);
+  });
+  return c;
+}
+
+/**
+ * Minimal Homebrew library entry for a missing reference. `path` is the
+ * api/client.js registry key; `payload` matches the existing POST bodies.
+ * Spell stubs take their level from the character's knownSpells entry.
+ */
+export function stubPayloadFor(ref, character) {
+  const base = { name: ref.name, source: 'Homebrew' };
+  switch (ref.type) {
+    case 'class':
+      return { path: 'classes', payload: { ...base, data: { hitDie: 8, saves: [], stub: true } } };
+    case 'species':
+      return { path: 'species', payload: { ...base, data: { stub: true } } };
+    case 'background':
+      return { path: 'backgrounds', payload: { ...base, data: { stub: true } } };
+    case 'subclass':
+      return { path: 'subclasses', payload: { name: ref.name, parent: ref.parent, source: 'Homebrew', data: { stub: true } } };
+    case 'subspecies':
+      return { path: 'subspecies', payload: { name: ref.name, parent: ref.parent, source: 'Homebrew', data: { stub: true } } };
+    case 'spell': {
+      const entry = (Array.isArray(character.knownSpells) ? character.knownSpells : [])
+        .find((s) => s && s.name === ref.name);
+      const level = Number.isFinite(entry?.level) ? entry.level : 0;
+      return { path: 'spells', payload: { ...base, data: { level, classes: [], stub: true } } };
+    }
+    default:
+      throw new Error('Unknown reference type: ' + ref.type);
+  }
+}
