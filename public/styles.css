@@ -129,8 +129,8 @@ body[data-theme="rain"]::before{
 }
 
 /* Space — a deep interstellar palette with a static starfield + faint nebula on
-   the body, a twinkling star layer (::before), and a periodic shooting star
-   (::after, replacing the CRT scanlines). */
+   the body and a twinkling star layer (::before). Orbital shooting stars are
+   rendered by the ThemeBackdrop component (.theme-backdrop), below. */
 body[data-theme="space"]{
   --void:#05070f;
   --void-2:#090c1a;
@@ -186,25 +186,39 @@ body[data-theme="space"]::before{
   0%, 100%{ opacity:0.35; }
   50%{ opacity:1; }
 }
-/* Shooting star streaking across the sky (over the CRT scanline layer). */
-body[data-theme="space"]::after{
-  inset:auto; top:0; left:0; right:auto; bottom:auto; z-index:9998;
-  width:150px; height:2px; mix-blend-mode:normal;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95));
-  filter: drop-shadow(0 0 6px rgba(180,210,255,0.9));
-  opacity:0; transform: translate(-170px, 8vh) rotate(24deg);
-  animation: shooting-star 7s ease-in infinite;
-}
-@keyframes shooting-star{
-  0%   { opacity:0; transform: translate(-170px, 8vh) rotate(24deg); }
-  5%   { opacity:1; }
-  17%  { opacity:1; }
-  24%  { opacity:0; transform: translate(96vw, 44vh) rotate(24deg); }
-  100% { opacity:0; transform: translate(96vw, 44vh) rotate(24deg); }
-}
 @media (prefers-reduced-motion: reduce){
   body[data-theme="space"]::before{ animation:none; opacity:0.85; }
-  body[data-theme="space"]::after{ animation:none; opacity:0; }
+}
+
+/* ---------- Space theme: orbital shooting stars (ThemeBackdrop) ---------- */
+/* Rendered once at the app root; hidden unless the Space theme is active. Each
+   streak drifts along an elliptical offset-path orbit (offset-rotate:auto keeps
+   it tangent to its arc), staggered so they don't move in lockstep. */
+.theme-backdrop{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; display:none; }
+body[data-theme="space"] .theme-backdrop{ display:block; }
+
+.theme-backdrop .shooting-star{
+  position:absolute; top:0; left:0;
+  width:64px; height:2px; border-radius:2px;
+  background: linear-gradient(90deg, transparent, rgba(190,214,255,0.12), rgba(255,255,255,0.95));
+  filter: drop-shadow(0 0 6px rgba(180,210,255,0.85));
+  offset-rotate: auto;
+  animation: orbit-drift 15s linear infinite;
+}
+@keyframes orbit-drift{ from{ offset-distance:0%; } to{ offset-distance:100%; } }
+
+/* Seven orbits: varied ellipse radius, center, speed, direction and brightness
+   so the streaks arc around the sky instead of tracking straight across. */
+.theme-backdrop .ss-1{ offset-path: ellipse(42% 30% at 48% 42%); animation-duration:16s; animation-delay:-2s;  opacity:0.9;  }
+.theme-backdrop .ss-2{ offset-path: ellipse(30% 40% at 62% 55%); animation-duration:23s; animation-delay:-9s;  opacity:0.7;  width:48px; animation-direction:reverse; }
+.theme-backdrop .ss-3{ offset-path: ellipse(48% 24% at 38% 60%); animation-duration:19s; animation-delay:-5s;  opacity:0.8;  }
+.theme-backdrop .ss-4{ offset-path: ellipse(24% 44% at 70% 38%); animation-duration:27s; animation-delay:-14s; opacity:0.6;  width:44px; }
+.theme-backdrop .ss-5{ offset-path: ellipse(38% 34% at 55% 50%); animation-duration:21s; animation-delay:-7s;  opacity:0.85; animation-direction:reverse; }
+.theme-backdrop .ss-6{ offset-path: ellipse(52% 20% at 45% 30%); animation-duration:18s; animation-delay:-11s; opacity:0.75; width:72px; }
+.theme-backdrop .ss-7{ offset-path: ellipse(26% 46% at 32% 48%); animation-duration:25s; animation-delay:-3s;  opacity:0.65; width:40px; animation-direction:reverse; }
+
+@media (prefers-reduced-motion: reduce){
+  .theme-backdrop .shooting-star{ animation:none; opacity:0; }
 }
 
 *{box-sizing:border-box;}
@@ -1250,6 +1264,10 @@ textarea.import-ta:focus{ outline:none; border-color: var(--neon-cyan); box-shad
 .custom-theme-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; font-size:12px; }
 .custom-theme-row label{ color:var(--ink-soft); }
 .custom-theme-row input[type="color"]{ width:38px; height:24px; padding:0; border:none; background:none; cursor:pointer; }
+
+/* Cyberpunk-line toggle chips (Customize pane): stacked full-width buttons. */
+.line-toggle-controls{ display:flex; flex-direction:column; gap:6px; }
+.line-toggle{ text-align:left; }
 
 /* Zoom control in the Options menu: − [value%] + */
 .zoom-control{ display:flex; align-items:center; gap:6px; }

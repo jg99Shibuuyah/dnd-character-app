@@ -26,7 +26,6 @@ function ResultRow({ entry, onOpen }) {
         <span className="f-name">{entry.name}</span>
         {entry.badges.map((b, i) => <span key={i} className="nr-badge">{b}</span>)}
       </div>
-      <div dangerouslySetInnerHTML={{ __html: entry.detail }} />
     </div>
   );
 }

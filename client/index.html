@@ -29,6 +29,20 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+    /* Stamp the saved-or-default theme + line-overlay toggles onto <body>
+       before React mounts, so the first paint matches the user's choice
+       (default: rain) with no flash of the terminal/dark palette.
+       Defensive: never throws. */
+    (function () {
+      try {
+        var t = localStorage.getItem('characterSheetTheme') || 'rain';
+        if (t && t !== 'dark') document.body.dataset.theme = t;
+        if (localStorage.getItem('characterSheetCyberGrid') === 'false') document.body.classList.add('no-cyber-grid');
+        if (localStorage.getItem('characterSheetCyberScanlines') === 'false') document.body.classList.add('no-cyber-scanlines');
+      } catch (e) {}
+    })();
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

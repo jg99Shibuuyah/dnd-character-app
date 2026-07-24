@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { applyTheme, storedTheme, reconcileTheme } from '../theme.js';
+import { applyTheme, storedTheme, reconcileTheme, applyLineToggles, storedLineToggles } from '../theme.js';
 import { SidebarNav, useSidebarCollapsed } from './SidebarNav.jsx';
 import ThemesWindow from './ThemesWindow.jsx';
 
@@ -10,7 +10,7 @@ export default function Layout({ page, title, children }) {
   const [collapsed, setCollapsed] = useSidebarCollapsed();
   const [themesOpen, setThemesOpen] = useState(false);
 
-  useEffect(() => { applyTheme(storedTheme()); reconcileTheme(); }, []);
+  useEffect(() => { applyTheme(storedTheme()); applyLineToggles(storedLineToggles()); reconcileTheme(); }, []);
 
   return (
     <>

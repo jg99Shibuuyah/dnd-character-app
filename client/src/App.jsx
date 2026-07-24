@@ -4,6 +4,7 @@ import LibraryPage from './pages/LibraryPage.jsx';
 import ImportPage from './pages/ImportPage.jsx';
 import SheetPage from './pages/SheetPage.jsx';
 import DmScreenPage from './pages/DmScreenPage.jsx';
+import ThemeBackdrop from './components/ThemeBackdrop.jsx';
 import DmNotesHistoryPage from './pages/DmNotesHistoryPage.jsx';
 
 // The React app is served at / (see vite.config.js `base` and the SPA fallback
@@ -11,6 +12,7 @@ import DmNotesHistoryPage from './pages/DmNotesHistoryPage.jsx';
 export default function App() {
   return (
     <BrowserRouter basename="/">
+      <ThemeBackdrop />
       <Routes>
         <Route path="/" element={<SheetPage />} />
         <Route path="/sessions" element={<SessionsPage />} />

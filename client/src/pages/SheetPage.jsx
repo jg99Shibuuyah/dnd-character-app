@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CharacterProvider, useCharacter } from '../state/characterStore.jsx';
-import { applyTheme, storedTheme, reconcileTheme } from '../theme.js';
+import { applyTheme, storedTheme, reconcileTheme, applyLineToggles, storedLineToggles } from '../theme.js';
 import ProfileBar from '../components/sheet/ProfileBar.jsx';
 import Hero from '../components/sheet/Hero.jsx';
 import CharacterTab from '../components/sheet/CharacterTab.jsx';
@@ -65,7 +65,7 @@ function SheetShell() {
   const tabBarRef = useRef(null);
 
   // Apply the cached theme instantly, then adopt the account's saved theme.
-  useEffect(() => { applyTheme(storedTheme()); reconcileTheme(); }, []);
+  useEffect(() => { applyTheme(storedTheme()); applyLineToggles(storedLineToggles()); reconcileTheme(); }, []);
 
   const reorder = (fromId, toId) => {
     if (!fromId || fromId === toId) return;

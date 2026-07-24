@@ -90,7 +90,7 @@ export function applyTheme(theme) {
 }
 
 export function storedTheme() {
-  return localStorage.getItem('characterSheetTheme') || 'dark';
+  return localStorage.getItem('characterSheetTheme') || 'rain';
 }
 
 // ---- Per-account persistence ----
@@ -103,8 +103,12 @@ let persistTimer = null;
 export function persistTheme() {
   clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
+    const lt = storedLineToggles();
     import('./api/client.js')
-      .then((api) => api.updateSettings({ theme: storedTheme(), customTheme: getStoredCustomTheme() }))
+      .then((api) => api.updateSettings({
+        theme: storedTheme(), customTheme: getStoredCustomTheme(),
+        cyberGrid: lt.grid, cyberScanlines: lt.scanlines,
+      }))
       .catch(() => {}); // best-effort; the localStorage cache already holds it
   }, 400);
 }
@@ -116,6 +120,9 @@ export async function reconcileTheme() {
     if (s.customTheme && typeof s.customTheme === 'object') {
       localStorage.setItem('characterSheetCustomTheme', JSON.stringify(s.customTheme));
     }
+    if (typeof s.cyberGrid === 'boolean') localStorage.setItem('characterSheetCyberGrid', s.cyberGrid ? 'true' : 'false');
+    if (typeof s.cyberScanlines === 'boolean') localStorage.setItem('characterSheetCyberScanlines', s.cyberScanlines ? 'true' : 'false');
+    applyLineToggles(storedLineToggles());
     if (typeof s.theme === 'string' && s.theme && s.theme !== storedTheme()) {
       applyTheme(s.theme); // updates the cache + repaints
       return s.theme;
@@ -135,4 +142,29 @@ export function saveCustomThemeField(field, value) {
   localStorage.setItem('characterSheetTheme', 'custom');
   applyCustomTheme(current);
   return current;
+}
+
+// ---- Cyberpunk line overlays (grid + CRT scanlines) ----
+// Global body::before (grid) and body::after (scanlines) can each be switched
+// off. Stored as 'true'/'false' strings; absent means on. Persisted alongside
+// the theme via persistTheme()/reconcileTheme().
+
+export function storedLineToggles() {
+  const on = (k) => localStorage.getItem(k) !== 'false'; // absent or 'true' => on
+  return { grid: on('characterSheetCyberGrid'), scanlines: on('characterSheetCyberScanlines') };
+}
+
+export function applyLineToggles(toggles) {
+  const t = toggles || storedLineToggles();
+  document.body.classList.toggle('no-cyber-grid', !t.grid);
+  document.body.classList.toggle('no-cyber-scanlines', !t.scanlines);
+}
+
+export function saveLineToggle(field, value) {
+  const key = field === 'grid' ? 'characterSheetCyberGrid' : 'characterSheetCyberScanlines';
+  localStorage.setItem(key, value ? 'true' : 'false');
+  const toggles = storedLineToggles();
+  applyLineToggles(toggles);
+  persistTheme();
+  return toggles;
 }

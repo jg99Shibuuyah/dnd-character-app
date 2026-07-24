@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import SheetWindow from './sheet/SheetWindow.jsx';
-import { applyTheme, storedTheme, getStoredCustomTheme, getDefaultCustomTheme, saveCustomThemeField, persistTheme } from '../theme.js';
+import { applyTheme, storedTheme, getStoredCustomTheme, getDefaultCustomTheme, saveCustomThemeField, persistTheme, storedLineToggles, saveLineToggle } from '../theme.js';
 import { storedZoom, applyZoom, nudgeZoom, ZOOM_STEP, ZOOM_MIN, ZOOM_MAX } from '../zoom.js';
 
 const THEMES = ['dark', 'light', 'ember', 'rain', 'space', 'custom'];
@@ -22,6 +22,7 @@ export default function ThemesWindow({ onClose }) {
   const [custom, setCustom] = useState(getStoredCustomTheme);
   const [zoom, setZoom] = useState(storedZoom);
   const [saved, setSaved] = useState(false);
+  const [lines, setLines] = useState(storedLineToggles);
 
   const changeZoom = (delta) => setZoom(nudgeZoom(delta));
   const resetZoom = () => setZoom(applyZoom(1));
@@ -40,6 +41,7 @@ export default function ThemesWindow({ onClose }) {
     setSaved(false);
   };
   const saveCustom = () => { persistTheme(); setSaved(true); setTimeout(() => setSaved(false), 1600); };
+  const toggleLine = (field) => setLines(saveLineToggle(field, !lines[field]));
 
   return (
     <SheetWindow title="Themes" icon="🎨" defaultSize={{ width: 520, height: 540 }} onClose={onClose}>
@@ -79,6 +81,14 @@ export default function ThemesWindow({ onClose }) {
             <button type="button" className="add-btn theme-save-btn" onClick={saveCustom}>
               {saved ? '✓ Saved to account' : 'Save custom theme'}
             </button>
+
+            <div className="options-label" style={{ marginTop: 16 }}>Cyberpunk Lines</div>
+            <div className="line-toggle-controls">
+              <button type="button" className={'option-chip line-toggle' + (lines.grid ? ' active' : '')}
+                onClick={() => toggleLine('grid')}>Background grid{lines.grid ? ' · on' : ' · off'}</button>
+              <button type="button" className={'option-chip line-toggle' + (lines.scanlines ? ' active' : '')}
+                onClick={() => toggleLine('scanlines')}>CRT scanlines{lines.scanlines ? ' · on' : ' · off'}</button>
+            </div>
 
             <div className="options-label" style={{ marginTop: 16 }}>Zoom</div>
             <div className="zoom-control">

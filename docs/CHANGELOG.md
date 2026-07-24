@@ -48,3 +48,12 @@ logged. Edit or reword entries freely; the hook only appends, it never rewrites 
 - feat: add read-only party snapshots (frozen + refresh) to DM Screen (`c1f16f0`)
 - feat: add persisted DM notepad to DM Screen (`d5899d9`)
 - feat: add persisted free-form turn-order tracker with counters (`6837f65`)
+
+## 2026-07-24
+
+- DM progress (`e7d00ac`)
+
+## 2026-07-24
+
+- feat: DM Screen round 2 — snapshot tabs, tracker linking/drag, combat log, notes history (`e1e0c74`)
+- fix: guard SnapshotSheet derive so a partial character can't crash the DM Screen (`ed3f82d`)
