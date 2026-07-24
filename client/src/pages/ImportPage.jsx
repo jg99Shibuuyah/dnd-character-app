@@ -7,7 +7,8 @@ import { parseFeatureLines } from '../rules/classes.js';
 import {
   DEFAULT_SPELL_TAGS, parseTraitLines, parseSkillNames, parseNameList,
   featuresToLines, traitsToLines, builtinSpellInfo,
-  collectBulkEntries, prepareBulkQueue, exportLibraryEntries, BULK_TYPE_ORDER
+  collectBulkEntries, prepareBulkQueue, exportLibraryEntries, BULK_TYPE_ORDER,
+  monsterFormToData, monsterDataToForm
 } from '../rules/import-forms.js';
 import referenceHtml from '../content/json-reference.html?raw';
 
@@ -23,6 +24,7 @@ const IMPORT_TABS = [
   { id: 'species', label: 'Species' },
   { id: 'backgrounds', label: 'Backgrounds' },
   { id: 'spells', label: 'Spells' },
+  { id: 'monsters', label: 'Monsters' },
   { id: 'bulk', label: 'Bulk Import' },
   { id: 'reference', label: 'JSON Reference' }
 ];
@@ -830,6 +832,132 @@ function SpellForm({ registry, reload, editTarget }) {
   );
 }
 
+// ---------- Monster form (DM Screen library) ----------
+const MONSTER_BLANK = monsterDataToForm({ abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 } });
+
+function MonsterForm({ registry, reload, editTarget }) {
+  const customMonsters = registry.customMonsters || {};
+  const builtin = (registry.data.monsterData || []).reduce((acc, m) => { acc[m.name] = m; return acc; }, {});
+  const [f, setF] = useState(MONSTER_BLANK);
+  const [msg, setMsg] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+
+  const fill = (name) => {
+    const imp = customMonsters[name];
+    const data = imp || (builtin[name] && builtin[name].data);
+    if (!data) return;
+    // Built-in seed data has no `data.name` (the name is the top-level key),
+    // so set it explicitly from the known key rather than trusting the
+    // converted form.
+    setF({ ...monsterDataToForm(data), name });
+    setDeleteId(imp ? imp.customId : null);
+    setMsg(loadedMsg(name));
+  };
+  useEffect(() => { if (editTarget) fill(editTarget); }, [editTarget]);
+
+  const submit = async (payload) => {
+    try {
+      if (!payload) {
+        const data = monsterFormToData(f);
+        if (!data.name) throw new Error('Monster name is required.');
+        payload = { name: data.name, source: f.source || 'Homebrew', data };
+      }
+      if (!payload.name) throw new Error('Monster name is required.');
+      if (!payload.data || typeof payload.data !== 'object') throw new Error('Monster data is required.');
+      const source = importedAs(payload.source);
+      await api.monsters.import({ name: payload.name, source, data: payload.data });
+      setMsg({ kind: 'ok', text: `Imported "${payload.name}" (${source}) — searchable in the DM Screen library.` });
+      reload();
+    } catch (err) {
+      setMsg({ kind: 'err', text: 'Import failed: ' + err.message });
+    }
+  };
+
+  const remove = async (id, name) => {
+    if (!window.confirm(`Remove imported monster "${name}"?`)) return;
+    await api.monsters.delete(id);
+    setDeleteId(null);
+    setMsg({ kind: 'ok', text: `Deleted "${name}".` });
+    reload();
+  };
+
+  const names = new Set([...Object.keys(builtin), ...Object.keys(customMonsters)]);
+  const editOptions = [...names].sort().map((n) => {
+    const imp = customMonsters[n];
+    const cr = (imp || builtin[n].data || {}).cr;
+    return { value: n, label: `${n}${cr ? ' · CR ' + cr : ''} · ${imp ? imp.source + ' · imported' : 'built-in'}` };
+  });
+
+  const field = (label, key, placeholder, full) => (
+    <div className={'set-field' + (full ? ' full' : '')}><label>{label}</label>
+      <input value={f[key]} onChange={(e) => set(key, e.target.value)} placeholder={placeholder} /></div>
+  );
+  const area = (label, key, placeholder) => (
+    <div className="set-field full"><label>{label}</label>
+      <textarea className="import-ta" style={{ minHeight: 60 }} value={f[key]}
+        onChange={(e) => set(key, e.target.value)} placeholder={placeholder} />
+      <div className="import-note">One per line: <span className="hl">name | description</span>.</div>
+    </div>
+  );
+
+  return (
+    <div className="panel">
+      <h2><span>Import Monster</span><span className="rune">🐉</span></h2>
+      <div className="picker-hint">Add a monster for the <span className="hl">DM Screen</span> library. Monsters are saved to the shared database but only ever appear when a DM looks them up — never on the public Library. Re-importing with the <span className="hl">same name overwrites</span> it.</div>
+      <div className="import-grid">
+        <EditSelect note={<span>Pick any built-in or imported monster to load it into the form.</span>}
+          options={editOptions} onPick={fill} />
+        {field('Monster Name', 'name', 'e.g. Adult Copper Dragon', true)}
+        <div className="set-field"><label>Source</label><SourceSelect value={f.source} onChange={(v) => set('source', v)} /></div>
+        {field('Size', 'size', 'Gargantuan')}
+        {field('Type', 'type', 'Dragon')}
+        {field('Alignment', 'alignment', 'Chaotic Good')}
+        {field('Armor Class', 'ac', '18')}
+        {field('AC Note', 'acNote', 'natural armor')}
+        {field('Max HP', 'hpMax', '184')}
+        {field('HP Formula', 'hpFormula', '16d12 + 80')}
+        {field('Speed', 'speed', '40 ft., fly 80 ft.', true)}
+        {field('STR', 'str', '23')}
+        {field('DEX', 'dex', '12')}
+        {field('CON', 'con', '21')}
+        {field('INT', 'int', '18')}
+        {field('WIS', 'wis', '15')}
+        {field('CHA', 'cha', '17')}
+        {field('Saving Throws', 'saves', 'Dex +6, Con +10', true)}
+        {field('Skills', 'skills', 'Perception +12', true)}
+        {field('Damage Resistances', 'resistances', '')}
+        {field('Damage Immunities', 'immunities', 'Acid')}
+        {field('Damage Vulnerabilities', 'vulnerabilities', '')}
+        {field('Condition Immunities', 'conditionImmunities', '')}
+        {field('Senses', 'senses', 'Darkvision 120 ft., PP 22', true)}
+        {field('Languages', 'languages', 'Common, Draconic', true)}
+        {field('Challenge Rating', 'cr', '14')}
+        {field('Proficiency Bonus', 'pb', '+5')}
+        {field('XP', 'xp', '11,500')}
+        {field('Legendary Action Count', 'legendaryCount', '3')}
+        {field('Legendary Actions Note', 'legendaryNote', 'The dragon can take 3 legendary actions…', true)}
+        {area('Traits', 'traits', 'Legendary Resistance | If it fails a save, it can succeed instead.')}
+        {area('Actions', 'actions', 'Bite | +11 to hit, 17 (2d10 + 6) piercing damage.')}
+        {area('Reactions', 'reactions', '')}
+        {area('Legendary Actions', 'legendary', 'Detect | The dragon makes a Perception check.')}
+        {area('Items', 'items', 'Longsword | A plain steel blade.')}
+        <div className="set-field full"><label>Lore</label>
+          <textarea className="import-ta" style={{ minHeight: 60 }} value={f.lore}
+            onChange={(e) => set('lore', e.target.value)} placeholder="Flavor / description." /></div>
+        <SubmitRow label="Import Monster" jsonLabel="Monster JSON" setMsg={setMsg}
+          jsonPlaceholder='{ "name":"Adult Copper Dragon", "source":"5E", "data":{ "size":"Gargantuan", "type":"Dragon", "ac":18, "hpMax":184, "abilities":{"str":23,"dex":12,"con":21,"int":18,"wis":15,"cha":17} } }'
+          onSubmit={() => submit()} onJson={(obj) => submit(obj)}
+          deletable={deleteId != null} onDelete={() => remove(deleteId, f.name)} />
+      </div>
+      <Msg msg={msg} />
+      <ImportedList title="Imported monsters — searchable on the DM Screen." onEdit={(it) => fill(it.name)}
+        onDelete={(it) => remove(it.id, it.name)}
+        items={Object.entries(customMonsters).map(([n, s]) => ({ name: n, source: s.source, id: s.customId, levelTag: s.cr ? 'CR ' + s.cr : '' }))} />
+    </div>
+  );
+}
+
 // ---------- Bulk import ----------
 function BulkImport({ registry, reload }) {
   const [text, setText] = useState('');
@@ -1019,6 +1147,9 @@ export default function ImportPage() {
             {tab === 'spells' && <div className="grid grid-half">
               <SpellForm registry={registry} reload={reload} editTarget={editTargets.spell} />
             </div>}
+          </div>
+          <div className={'tab-pane' + (tab === 'monsters' ? ' active' : '')}>
+            {tab === 'monsters' && <MonsterForm registry={registry} reload={reload} editTarget={editTargets.monster} />}
           </div>
           <div className={'tab-pane' + (tab === 'bulk' ? ' active' : '')}>
             {tab === 'bulk' && <BulkImport registry={registry} reload={reload} />}
