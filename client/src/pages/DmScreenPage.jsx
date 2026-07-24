@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import DmNotes from '../components/DmNotes.jsx';
 import Layout from '../components/Layout.jsx';
 import LibrarySearch from '../components/LibrarySearch.jsx';
 import MonsterDetail from '../components/MonsterDetail.jsx';
@@ -113,7 +114,7 @@ export default function DmScreenPage() {
       {/* Region 1 — Reference + monsters */}
       {registry && <LibrarySearch registry={registry} includeMonsters onOpenMonster={openMonster} />}
 
-      {/* Region 4 — DM notepad (Task 12 inserts <DmNotes …/> here) */}
+      {detail && <DmNotes sessionId={sessionId} />}
 
       {monsterWindows.map((w, i) => (
         <SheetWindow key={w.key} title={w.monster.name} icon="🐉" offset={i * 26} onClose={() => closeMonster(w.key)}>
