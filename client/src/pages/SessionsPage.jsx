@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import * as api from '../api/client.js';
 
@@ -88,6 +89,7 @@ function HostCharacters({ detail, myCharacters, onError, refresh }) {
 }
 
 function SessionDetail({ detail, myCharacters, onError, refresh, onClosed }) {
+  const navigate = useNavigate();
   const me = detail.members.find((m) => m.isYou);
   const mc = me && me.character;
   // The select lists only your own profiles; a borrowed host character gets a
@@ -155,6 +157,8 @@ function SessionDetail({ detail, myCharacters, onError, refresh, onClosed }) {
         </label>
         {!detail.isDm && <button className="pbtn danger" type="button" onClick={leave}>Leave session</button>}
         {detail.isDm && <button className="pbtn danger" type="button" onClick={remove}>Delete session</button>}
+        {detail.isDm && <button className="pbtn dm-screen-open" type="button"
+          onClick={() => navigate('/dm/' + detail.id)}>Open DM Screen</button>}
       </div>
     </div>
   );

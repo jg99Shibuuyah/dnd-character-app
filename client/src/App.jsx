@@ -3,6 +3,7 @@ import SessionsPage from './pages/SessionsPage.jsx';
 import LibraryPage from './pages/LibraryPage.jsx';
 import ImportPage from './pages/ImportPage.jsx';
 import SheetPage from './pages/SheetPage.jsx';
+import DmScreenPage from './pages/DmScreenPage.jsx';
 
 // The React app is served at / (see vite.config.js `base` and the SPA fallback
 // in src/app.js). login/reset stay server-rendered by Express.
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/library" element={<LibraryPage />} />
         <Route path="/import" element={<ImportPage />} />
+        <Route path="/dm/:sessionId" element={<DmScreenPage />} />
       </Routes>
     </BrowserRouter>
   );
